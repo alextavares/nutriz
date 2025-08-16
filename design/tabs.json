@@ -1,0 +1,11 @@
+{
+  "tabs": [
+    {"id": "diary", "label_pt": "Diário", "label_en": "Diary", "icon": "today"},
+    {"id": "search", "label_pt": "Buscar", "label_en": "Search", "icon": "search"},
+    {"id": "goals", "label_pt": "Metas", "label_en": "Goals", "icon": "flag"},
+    {"id": "analytics", "label_pt": "Analytics", "label_en": "Analytics", "icon": "insights"}
+  ],
+  "fab": {"id": "add", "label_pt": "Adicionar", "label_en": "Add", "icon": "add"},
+  "settings": {"access": "appbar", "icon": "settings"}
+}
+

@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Design Tokens Schema",
+  "type": "object",
+  "properties": {
+    "meta": {
+      "type": "object",
+      "properties": {
+        "source": {"type": "string"},
+        "generatedAt": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "light": {
+      "$ref": "#/definitions/theme"
+    },
+    "dark": {
+      "$ref": "#/definitions/theme"
+    }
+  },
+  "required": ["light", "dark"],
+  "additionalProperties": false,
+  "definitions": {
+    "theme": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "object",
+          "properties": {
+            "primary": {"type": "string"},
+            "onPrimary": {"type": "string"},
+            "secondary": {"type": "string"},
+            "onSecondary": {"type": "string"},
+            "background": {"type": "string"},
+            "onBackground": {"type": "string"},
+            "surface": {"type": "string"},
+            "onSurface": {"type": "string"},
+            "success": {"type": "string"},
+            "warning": {"type": "string"},
+            "error": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "typography": {
+          "type": "object",
+          "properties": {
+            "fontFamily": {"type": "string"},
+            "scale": {
+              "type": "object",
+              "properties": {
+                "h1": {"type": "number"},
+                "h2": {"type": "number"},
+                "h3": {"type": "number"},
+                "subtitle": {"type": "number"},
+                "body": {"type": "number"},
+                "caption": {"type": "number"}
+              },
+              "additionalProperties": false
+            },
+            "lineHeight": {
+              "type": "object",
+              "properties": {
+                "tight": {"type": "number"},
+                "normal": {"type": "number"},
+                "relaxed": {"type": "number"}
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "spacing": {
+          "type": "object",
+          "properties": {
+            "xs": {"type": "number"},
+            "sm": {"type": "number"},
+            "md": {"type": "number"},
+            "lg": {"type": "number"},
+            "xl": {"type": "number"}
+          },
+          "additionalProperties": false
+        },
+        "radius": {
+          "type": "object",
+          "properties": {
+            "sm": {"type": "number"},
+            "md": {"type": "number"},
+            "lg": {"type": "number"}
+          },
+          "additionalProperties": false
+        },
+        "elevation": {
+          "type": "object",
+          "properties": {
+            "card": {"type": "number"},
+            "modal": {"type": "number"},
+            "fab": {"type": "number"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
+

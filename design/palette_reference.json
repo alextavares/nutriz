@@ -1,0 +1,300 @@
+{
+  "byImage": {
+    "assets/reference_yazio/yazio_diary.png": [
+      {
+        "hex": "#FFFFFF",
+        "count": 29754
+      },
+      {
+        "hex": "#F9FAFB",
+        "count": 27599
+      },
+      {
+        "hex": "#B6C1C7",
+        "count": 7041
+      },
+      {
+        "hex": "#F1FBFE",
+        "count": 5897
+      },
+      {
+        "hex": "#FCFCFD",
+        "count": 911
+      },
+      {
+        "hex": "#FAFAFB",
+        "count": 545
+      },
+      {
+        "hex": "#FFFFFB",
+        "count": 166
+      },
+      {
+        "hex": "#FFFEFA",
+        "count": 87
+      }
+    ],
+    "assets/reference_yazio/yazio_add_meal_open.png": [
+      {
+        "hex": "#FAF8FF",
+        "count": 57495
+      },
+      {
+        "hex": "#848894",
+        "count": 5004
+      },
+      {
+        "hex": "#F5F3FA",
+        "count": 4462
+      },
+      {
+        "hex": "#E3E3EA",
+        "count": 2373
+      },
+      {
+        "hex": "#FDFBFF",
+        "count": 1632
+      },
+      {
+        "hex": "#FAF8FD",
+        "count": 506
+      },
+      {
+        "hex": "#FBF8FF",
+        "count": 458
+      },
+      {
+        "hex": "#F8F9FD",
+        "count": 70
+      }
+    ],
+    "assets/reference_yazio/yazio_search.png": [
+      {
+        "hex": "#FFFFFF",
+        "count": 49675
+      },
+      {
+        "hex": "#EDF6FC",
+        "count": 6516
+      },
+      {
+        "hex": "#9E2C3C",
+        "count": 6027
+      },
+      {
+        "hex": "#3D91DA",
+        "count": 4541
+      },
+      {
+        "hex": "#C0D8DB",
+        "count": 3460
+      },
+      {
+        "hex": "#FAFFFF",
+        "count": 946
+      },
+      {
+        "hex": "#F2E4BC",
+        "count": 723
+      },
+      {
+        "hex": "#F8FFD4",
+        "count": 112
+      }
+    ],
+    "assets/reference_yazio/yazio_settings.png": [
+      {
+        "hex": "#EDEBF2",
+        "count": 52710
+      },
+      {
+        "hex": "#F7F5FC",
+        "count": 5546
+      },
+      {
+        "hex": "#7B808C",
+        "count": 5292
+      },
+      {
+        "hex": "#EDEBF1",
+        "count": 4152
+      },
+      {
+        "hex": "#E2E1E6",
+        "count": 2409
+      },
+      {
+        "hex": "#EEEBF2",
+        "count": 1552
+      },
+      {
+        "hex": "#ECEBF2",
+        "count": 250
+      },
+      {
+        "hex": "#EDEBF3",
+        "count": 89
+      }
+    ],
+    "assets/reference_yazio/yazio_food_detail.png": [
+      {
+        "hex": "#EDEBF2",
+        "count": 52710
+      },
+      {
+        "hex": "#F7F5FC",
+        "count": 5546
+      },
+      {
+        "hex": "#7B808C",
+        "count": 5292
+      },
+      {
+        "hex": "#EDEBF1",
+        "count": 4152
+      },
+      {
+        "hex": "#E2E1E6",
+        "count": 2409
+      },
+      {
+        "hex": "#EEEBF2",
+        "count": 1552
+      },
+      {
+        "hex": "#ECEBF2",
+        "count": 250
+      },
+      {
+        "hex": "#EDEBF3",
+        "count": 89
+      }
+    ]
+  },
+  "merged": [
+    {
+      "hex": "#EDEBF2",
+      "score": 105420
+    },
+    {
+      "hex": "#FFFFFF",
+      "score": 79429
+    },
+    {
+      "hex": "#FAF8FF",
+      "score": 57495
+    },
+    {
+      "hex": "#F9FAFB",
+      "score": 27599
+    },
+    {
+      "hex": "#F7F5FC",
+      "score": 11092
+    },
+    {
+      "hex": "#7B808C",
+      "score": 10584
+    },
+    {
+      "hex": "#EDEBF1",
+      "score": 8304
+    },
+    {
+      "hex": "#B6C1C7",
+      "score": 7041
+    },
+    {
+      "hex": "#EDF6FC",
+      "score": 6516
+    },
+    {
+      "hex": "#9E2C3C",
+      "score": 6027
+    },
+    {
+      "hex": "#F1FBFE",
+      "score": 5897
+    },
+    {
+      "hex": "#848894",
+      "score": 5004
+    },
+    {
+      "hex": "#E2E1E6",
+      "score": 4818
+    },
+    {
+      "hex": "#3D91DA",
+      "score": 4541
+    },
+    {
+      "hex": "#F5F3FA",
+      "score": 4462
+    },
+    {
+      "hex": "#C0D8DB",
+      "score": 3460
+    },
+    {
+      "hex": "#EEEBF2",
+      "score": 3104
+    },
+    {
+      "hex": "#E3E3EA",
+      "score": 2373
+    },
+    {
+      "hex": "#FDFBFF",
+      "score": 1632
+    },
+    {
+      "hex": "#FAFFFF",
+      "score": 946
+    },
+    {
+      "hex": "#FCFCFD",
+      "score": 911
+    },
+    {
+      "hex": "#F2E4BC",
+      "score": 723
+    },
+    {
+      "hex": "#FAFAFB",
+      "score": 545
+    },
+    {
+      "hex": "#FAF8FD",
+      "score": 506
+    },
+    {
+      "hex": "#ECEBF2",
+      "score": 500
+    },
+    {
+      "hex": "#FBF8FF",
+      "score": 458
+    },
+    {
+      "hex": "#EDEBF3",
+      "score": 178
+    },
+    {
+      "hex": "#FFFFFB",
+      "score": 166
+    },
+    {
+      "hex": "#F8FFD4",
+      "score": 112
+    },
+    {
+      "hex": "#FFFEFA",
+      "score": 87
+    },
+    {
+      "hex": "#F8F9FD",
+      "score": 70
+    }
+  ]
+}
