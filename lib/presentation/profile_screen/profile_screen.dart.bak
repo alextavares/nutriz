@@ -1,0 +1,138 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sizer/sizer.dart';
+
+import '../../core/app_export.dart';
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String? _email;
+  bool _isPremium = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _email = prefs.getString('user_email') ?? 'usuário@nutritracker.com';
+      _isPremium = prefs.getBool('premium_status') ?? false;
+    });
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_authenticated', false);
+    await prefs.remove('user_email');
+
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.login,
+      (route) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.primaryBackgroundDark,
+      appBar: AppBar(
+        title: const Text('Perfil'),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(4.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(4.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryBackgroundDark,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 8.w,
+                      backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.2),
+                      child: Text(
+                        (_email ?? 'U').substring(0, 1).toUpperCase(),
+                        style: AppTheme.darkTheme.textTheme.headlineSmall,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _email ?? '-',
+                            style: AppTheme.darkTheme.textTheme.titleMedium,
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Row(
+                            children: [
+                              CustomIconWidget(
+                                iconName: _isPremium ? 'star' : 'person',
+                                color: _isPremium
+                                    ? AppTheme.premiumGold
+                                    : AppTheme.textSecondary,
+                                size: 5.w,
+                              ),
+                              SizedBox(width: 2.w),
+                              Text(
+                                _isPremium ? 'Assinatura PRO' : 'Plano Gratuito',
+                                style: AppTheme.darkTheme.textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 3.h),
+              ElevatedButton(
+                onPressed: _logout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.errorRed,
+                  padding: EdgeInsets.symmetric(vertical: 2.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CustomIconWidget(
+                      iconName: 'logout',
+                      color: AppTheme.textPrimary,
+                      size: 5.w,
+                    ),
+                    SizedBox(width: 2.w),
+                    const Text('Sair'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
