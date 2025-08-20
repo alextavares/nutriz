@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
-SCREEN="home"; MODE="dark"
+SCREEN="home"; MODE="dark"; LOCALE=""
 NUTRI_SERIAL="${NUTRI_SERIAL:-}"; YAZIO_SERIAL="${YAZIO_SERIAL:-}"
 NUTRI_PKG="com.nutritracker.app"; YAZIO_PKG="com.yazio.android"
-usage(){ echo "Usage: $0 [--screen <name>] [--mode dark|light] [--nutri-serial S] [--yazio-serial S]"; }
+usage(){ echo "Usage: $0 [--screen <name>] [--mode dark|light] [--locale xx-YY] [--nutri-serial S] [--yazio-serial S]"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --screen) SCREEN="$2"; shift 2;;
     --mode) MODE="$2"; shift 2;;
     --nutri-serial) NUTRI_SERIAL="$2"; shift 2;;
     --yazio-serial) YAZIO_SERIAL="$2"; shift 2;;
+    --locale) LOCALE="$2"; shift 2;;
     -h|--help) usage; exit 0;;
     *) echo "Unknown arg: $1"; usage; exit 1;;
   esac
@@ -28,6 +29,10 @@ detect_serials() {
   done
 }
 set_theme() { local s="$1" v="2"; [[ "$MODE" == "light" ]] && v="1"; adb -s "$s" shell settings put secure ui_night_mode "$v" >/dev/null 2>&1 || true; }
+set_locale() {
+  local s="$1" l="$2"; [[ -z "$l" ]] && return 0
+  adb -s "$s" shell cmd locale set "$l" >/dev/null 2>&1 || true
+}
 launch_cap() {
   local s="$1" pkg="$2" tag="$3" out="pr_captures/${SCREEN}/${tag}_${MODE}.png"
   mkdir -p "pr_captures/${SCREEN}"
@@ -45,6 +50,8 @@ if [[ -z "$NUTRI_SERIAL" || -z "$YAZIO_SERIAL" ]]; then echo "Serials not resolv
 echo "Using NUTRI_SERIAL=$NUTRI_SERIAL, YAZIO_SERIAL=$YAZIO_SERIAL"
 print_locale "$NUTRI_SERIAL" || true
 print_locale "$YAZIO_SERIAL" || true
+set_locale "$NUTRI_SERIAL" "$LOCALE" || true
+set_locale "$YAZIO_SERIAL" "$LOCALE" || true
 set_theme "$NUTRI_SERIAL"; set_theme "$YAZIO_SERIAL"
 launch_cap "$NUTRI_SERIAL" "$NUTRI_PKG" "nutri_${SCREEN}"
 launch_cap "$YAZIO_SERIAL" "$YAZIO_PKG" "yazio_${SCREEN}"

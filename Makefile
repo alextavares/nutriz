@@ -40,3 +40,12 @@ compare-profile:
 	./scripts/compare_capture.sh --screen profile --mode light --nutri-serial $${NUTRI_SERIAL:-emulator-5556} --yazio-serial $${YAZIO_SERIAL:-emulator-5554} || true
 	./scripts/gen_compare_html.sh profile
 
+
+# i18n capture for Home (dark only) across locales
+LOCALES ?= en-US es-ES pt-BR
+compare-home-i18n:
+	@for L in $(LOCALES); do \
+		echo "==> Capturing Home for locale $$L (dark)"; \
+		./scripts/compare_capture.sh --screen home_$${L} --mode dark --locale $$L --nutri-serial $${NUTRI_SERIAL:-emulator-5556} --yazio-serial $${YAZIO_SERIAL:-emulator-5554} || true; \
+		./scripts/gen_compare_html.sh home_$${L}; \
+	done
