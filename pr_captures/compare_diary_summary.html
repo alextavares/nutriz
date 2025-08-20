@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Comparação — Card Summary (Diary)</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
+      h1 { font-size: 18px; margin: 0 0 12px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .cell { border: 1px solid #333; border-radius: 8px; padding: 8px; background: #111; }
+      .label { font-weight: 600; color: #ddd; margin-bottom: 8px; }
+      img { width: 100%; height: auto; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <h1>Comparação — YAZIO vs NutriTracker (Diary → Card Summary)</h1>
+    <div class="grid">
+      <div class="cell">
+        <div class="label">YAZIO (referência)</div>
+        <img src="./yazio_retry.png" alt="YAZIO" />
+      </div>
+      <div class="cell">
+        <div class="label">NutriTracker (atual)</div>
+        <img src="./nutritracker_pixel9proxl_5554.png" alt="NutriTracker" />
+      </div>
+    </div>
+    <h1 style="margin-top:16px">Recorte — Apenas Card de Resumo</h1>
+    <div class="grid">
+      <div class="cell">
+        <div class="label">YAZIO (card)</div>
+        <img src="./yazio_card.png" alt="YAZIO Card" />
+      </div>
+      <div class="cell">
+        <div class="label">NutriTracker (card)</div>
+        <img src="./nutritracker_card.png" alt="NutriTracker Card" />
+      </div>
+    </div>
+  </body>
+ </html>

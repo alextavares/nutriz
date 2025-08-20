@@ -1,0 +1,2 @@
+Physical size: 1344x2992
+Override size: 360x800

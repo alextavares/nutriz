@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>NutriTracker — Responsivo (emulador 5556)</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; background:#111; color:#eee; margin:16px; }
+    .row { display:flex; gap:16px; flex-wrap:wrap; }
+    figure { margin:0; }
+    img { max-width: 45vw; height:auto; border:1px solid #333; border-radius:8px; }
+    figcaption { text-align:center; margin-top:6px; color:#ccc; font-size:14px; }
+    code { color:#ccc; }
+    .meta { margin-bottom:12px; color:#aaa; }
+  </style>
+</head>
+<body>
+  <h1>Comparativo Responsivo — Emulador 5556</h1>
+  <div class="meta">
+    <div>Tamanho antes: <code id="before"></code></div>
+    <div>Tamanho depois (reset): <code id="after"></code></div>
+  </div>
+  <div class="row">
+    <figure>
+      <a href="./emulator-5556-360x800.png" target="_blank"><img src="./emulator-5556-360x800.png" alt="360x800" /></a>
+      <figcaption>360 x 800</figcaption>
+    </figure>
+    <figure>
+      <a href="./emulator-5556-411x891.png" target="_blank"><img src="./emulator-5556-411x891.png" alt="411x891" /></a>
+      <figcaption>411 x 891</figcaption>
+    </figure>
+    <figure>
+      <a href="./emulator-5556-480x960.png" target="_blank"><img src="./emulator-5556-480x960.png" alt="480x960" /></a>
+      <figcaption>480 x 960</figcaption>
+    </figure>
+  </div>
+  <script>
+    fetch('./emulator-5556.size.before.txt').then(r=>r.text()).then(t=>document.getElementById('before').textContent=t.trim());
+    fetch('./emulator-5556.size.after.txt').then(r=>r.text()).then(t=>document.getElementById('after').textContent=t.trim());
+  </script>
+</body>
+</html>
