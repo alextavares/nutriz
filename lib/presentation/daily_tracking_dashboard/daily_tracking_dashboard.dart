@@ -95,12 +95,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   }) {
     final TextStyle label = AppTheme.darkTheme.textTheme.bodySmall!
         .copyWith(color: AppTheme.textSecondary);
-    final TextStyle numStyle = AppTheme.darkTheme.textTheme.titleLarge!
-        .copyWith(
-          color: AppTheme.activeBlue,
-          fontWeight: FontWeight.w700,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        );
+    final TextStyle numStyle =
+        AppTheme.darkTheme.textTheme.titleLarge!.copyWith(
+      color: AppTheme.activeBlue,
+      fontWeight: FontWeight.w700,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
     final base = AppTheme.darkTheme.textTheme.bodyMedium!;
     final double eqSize = base.fontSize ?? 14;
     final TextStyle eqStyle = base.copyWith(
@@ -142,13 +142,25 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               style: eqStyle.copyWith(color: AppTheme.textSecondary),
               children: [
                 const TextSpan(text: 'Objetivo '),
-                TextSpan(text: '$goal', style: eqStyle.copyWith(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+                TextSpan(
+                    text: '$goal',
+                    style: eqStyle.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600)),
                 TextSpan(text: ' − ', style: opStyle),
                 const TextSpan(text: 'Alimentação '),
-                TextSpan(text: '$food', style: eqStyle.copyWith(color: AppTheme.warningAmber, fontWeight: FontWeight.w700)),
+                TextSpan(
+                    text: '$food',
+                    style: eqStyle.copyWith(
+                        color: AppTheme.warningAmber,
+                        fontWeight: FontWeight.w700)),
                 TextSpan(text: ' + ', style: opStyle),
                 const TextSpan(text: 'Exercício '),
-                TextSpan(text: '$exercise', style: eqStyle.copyWith(color: AppTheme.successGreen, fontWeight: FontWeight.w700)),
+                TextSpan(
+                    text: '$exercise',
+                    style: eqStyle.copyWith(
+                        color: AppTheme.successGreen,
+                        fontWeight: FontWeight.w700)),
               ],
             ),
           ),
@@ -161,7 +173,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     ButtonStyle style(Color color) => OutlinedButton.styleFrom(
           side: BorderSide(color: color.withValues(alpha: 0.6)),
           foregroundColor: color,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         );
 
     void goToLogging(String meal) {
@@ -240,54 +253,54 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
- IconData _macroIconFor(String label) {
-   final l = label.toLowerCase();
-   if (l.contains('carb') || l.contains('carbo')) return Icons.bakery_dining;
-   if (l.contains('prot')) return Icons.set_meal;
-   if (l.contains('gord') || l.contains('fat')) return Icons.local_pizza;
-   return Icons.circle;
- }
+  IconData _macroIconFor(String label) {
+    final l = label.toLowerCase();
+    if (l.contains('carb') || l.contains('carbo')) return Icons.bakery_dining;
+    if (l.contains('prot')) return Icons.set_meal;
+    if (l.contains('gord') || l.contains('fat')) return Icons.local_pizza;
+    return Icons.circle;
+  }
 
- Color _macroColorFor(String label) {
-   final l = label.toLowerCase();
-   if (l.contains('carb') || l.contains('carbo')) return AppTheme.warningAmber;
-   if (l.contains('prot')) return AppTheme.successGreen;
-   if (l.contains('gord') || l.contains('fat')) return AppTheme.activeBlue;
-   return AppTheme.textSecondary;
- }
+  Color _macroColorFor(String label) {
+    final l = label.toLowerCase();
+    if (l.contains('carb') || l.contains('carbo')) return AppTheme.warningAmber;
+    if (l.contains('prot')) return AppTheme.successGreen;
+    if (l.contains('gord') || l.contains('fat')) return AppTheme.activeBlue;
+    return AppTheme.textSecondary;
+  }
 
- Widget _macroSummary(String label, int consumed, int goal) {
-   final color = _macroColorFor(label);
-   return Column(
-     mainAxisSize: MainAxisSize.min,
-     children: [
-       Row(
-         mainAxisSize: MainAxisSize.min,
-         children: [
-           Icon(_macroIconFor(label), color: color, size: 16),
-           SizedBox(width: 4),
-           Text(
-             label,
-             style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-               color: AppTheme.textSecondary,
-               fontWeight: FontWeight.w600,
-             ),
-           ),
-         ],
-       ),
-       SizedBox(height: 0.3.h),
-       Text(
-         "$consumed / $goal g",
-         style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-           color: color,
-           fontWeight: FontWeight.w700,
-         ),
-       ),
-     ],
-   );
- }
+  Widget _macroSummary(String label, int consumed, int goal) {
+    final color = _macroColorFor(label);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_macroIconFor(label), color: color, size: 16),
+            SizedBox(width: 4),
+            Text(
+              label,
+              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 0.3.h),
+        Text(
+          "$consumed / $goal g",
+          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
 
- Widget _buildPerMealProgressSection() {
+  Widget _buildPerMealProgressSection() {
     Color barColorFor(String meal) {
       switch (meal) {
         case 'breakfast':
@@ -305,7 +318,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       final totals = _mealTotals[mealKey]!;
       final goal = _mealGoals[mealKey]?.kcal ?? 0;
       // Top bar similar ao app de referência
-      
 
       final value = totals['kcal'] ?? 0;
       final ratio = goal <= 0 ? 0.0 : (value / goal).clamp(0.0, 1.0);
@@ -377,7 +389,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         children: [
           Row(
             children: [
-              const Icon(Icons.restaurant_menu, color: AppTheme.textSecondary, size: 18),
+              const Icon(Icons.restaurant_menu,
+                  color: AppTheme.textSecondary, size: 18),
               const SizedBox(width: 8),
               Text(
                 'Metas por refeição',
@@ -439,8 +452,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             visualDensity: VisualDensity.compact,
             backgroundColor: AppTheme.secondaryBackgroundDark,
             shape: StadiumBorder(
-              side: BorderSide(
-                  color: AppTheme.errorRed.withValues(alpha: 0.6)),
+              side: BorderSide(color: AppTheme.errorRed.withValues(alpha: 0.6)),
             ),
             labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
               color: AppTheme.errorRed,
@@ -496,8 +508,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final remainingCalories =
-        (_dailyData["totalCalories"] as int? ?? 0) - (_dailyData["consumedCalories"] as int? ?? 0);
+    final remainingCalories = (_dailyData["totalCalories"] as int? ?? 0) -
+        (_dailyData["consumedCalories"] as int? ?? 0);
 
     return Scaffold(
       backgroundColor: AppTheme.primaryBackgroundDark,
@@ -514,11 +526,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 // Top dashboard header estilo imagem de referência
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 2.2.h, horizontal: 4.w),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 2.2.h, horizontal: 4.w),
                   decoration: BoxDecoration(
                     color: AppTheme.secondaryBackgroundDark,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                    border: Border.all(
+                        color: AppTheme.dividerGray.withValues(alpha: 0.6)),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.shadowDark,
@@ -538,16 +552,23 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           ChoiceChip(
                             label: const Text('Hoje'),
                             selected: _isDayView,
-                            onSelected: (v) => setState(() => _isDayView = true),
-                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                              color: _isDayView ? AppTheme.activeBlue : AppTheme.textSecondary,
+                            onSelected: (v) =>
+                                setState(() => _isDayView = true),
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall
+                                ?.copyWith(
+                              color: _isDayView
+                                  ? AppTheme.activeBlue
+                                  : AppTheme.textSecondary,
                               fontWeight: FontWeight.w700,
                             ),
                             backgroundColor: AppTheme.secondaryBackgroundDark,
-                            selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
+                            selectedColor:
+                                AppTheme.activeBlue.withValues(alpha: 0.12),
                             shape: StadiumBorder(
                               side: BorderSide(
-                                color: (_isDayView ? AppTheme.activeBlue : AppTheme.dividerGray)
+                                color: (_isDayView
+                                        ? AppTheme.activeBlue
+                                        : AppTheme.dividerGray)
                                     .withValues(alpha: 0.6),
                               ),
                             ),
@@ -555,16 +576,23 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           ChoiceChip(
                             label: const Text('Semana'),
                             selected: !_isDayView,
-                            onSelected: (v) => setState(() => _isDayView = false),
-                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                              color: !_isDayView ? AppTheme.activeBlue : AppTheme.textSecondary,
+                            onSelected: (v) =>
+                                setState(() => _isDayView = false),
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall
+                                ?.copyWith(
+                              color: !_isDayView
+                                  ? AppTheme.activeBlue
+                                  : AppTheme.textSecondary,
                               fontWeight: FontWeight.w700,
                             ),
                             backgroundColor: AppTheme.secondaryBackgroundDark,
-                            selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
+                            selectedColor:
+                                AppTheme.activeBlue.withValues(alpha: 0.12),
                             shape: StadiumBorder(
                               side: BorderSide(
-                                color: (!_isDayView ? AppTheme.activeBlue : AppTheme.dividerGray)
+                                color: (!_isDayView
+                                        ? AppTheme.activeBlue
+                                        : AppTheme.dividerGray)
                                     .withValues(alpha: 0.6),
                               ),
                             ),
@@ -588,7 +616,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         children: [
                           Builder(builder: (context) {
                             final exceeded = remainingCalories <= 0;
-                            final color = exceeded ? AppTheme.errorRed : AppTheme.activeBlue;
+                            final color = exceeded
+                                ? AppTheme.errorRed
+                                : AppTheme.activeBlue;
                             final text = exceeded
                                 ? '${remainingCalories.abs()} kcal excedeu'
                                 : '${remainingCalories} kcal restantes';
@@ -596,21 +626,27 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               label: Text(text),
                               backgroundColor: AppTheme.secondaryBackgroundDark,
                               shape: StadiumBorder(
-                                side: BorderSide(color: color.withValues(alpha: 0.6)),
+                                side: BorderSide(
+                                    color: color.withValues(alpha: 0.6)),
                               ),
-                              labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                              labelStyle: AppTheme.darkTheme.textTheme.bodySmall
+                                  ?.copyWith(
                                 color: color,
                                 fontWeight: FontWeight.w700,
                               ),
                             );
                           }),
                           Chip(
-                            label: Text('Água: ${(_dailyData['waterMl'] as int?) ?? 0} ml'),
+                            label: Text(
+                                'Água: ${(_dailyData['waterMl'] as int?) ?? 0} ml'),
                             backgroundColor: AppTheme.secondaryBackgroundDark,
                             shape: StadiumBorder(
-                              side: BorderSide(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                              side: BorderSide(
+                                  color: AppTheme.dividerGray
+                                      .withValues(alpha: 0.6)),
                             ),
-                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall
+                                ?.copyWith(
                               color: AppTheme.textSecondary,
                             ),
                           ),
@@ -622,16 +658,28 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         children: [
                           _macroSummary(
                               "Carb",
-                              (_dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ?? 0),
-                              (_dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 0)),
+                              (_dailyData["macronutrients"]["carbohydrates"]
+                                      ["consumed"] as int? ??
+                                  0),
+                              (_dailyData["macronutrients"]["carbohydrates"]
+                                      ["total"] as int? ??
+                                  0)),
                           _macroSummary(
                               "Prot",
-                              (_dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0),
-                              (_dailyData["macronutrients"]["proteins"]["total"] as int? ?? 0)),
+                              (_dailyData["macronutrients"]["proteins"]
+                                      ["consumed"] as int? ??
+                                  0),
+                              (_dailyData["macronutrients"]["proteins"]["total"]
+                                      as int? ??
+                                  0)),
                           _macroSummary(
                               "Gord",
-                              (_dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0),
-                              (_dailyData["macronutrients"]["fats"]["total"] as int? ?? 0)),
+                              (_dailyData["macronutrients"]["fats"]["consumed"]
+                                      as int? ??
+                                  0),
+                              (_dailyData["macronutrients"]["fats"]["total"]
+                                      as int? ??
+                                  0)),
                         ],
                       ),
                     ],
@@ -655,7 +703,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     goal: _dailyData["totalCalories"] as int? ?? 0,
                     food: _dailyData["consumedCalories"] as int? ?? 0,
                     exercise: _dailyData["spentCalories"] as int? ?? 0,
-                    remaining: remainingCalories + (_dailyData["spentCalories"] as int? ?? 0),
+                    remaining: remainingCalories +
+                        (_dailyData["spentCalories"] as int? ?? 0),
                   ),
                 ),
 
@@ -665,8 +714,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   child: _quickMealActionsRow(),
                 ),
 
-                                // Circular chart moved to header
+                // Circular chart moved to header
                 const SizedBox.shrink(),
+
+                // Per-meal progress (kcal and macros) — aligns with YAZIO cards
+                SizedBox(height: 1.6.h),
+                _buildPerMealProgressSection(),
 
                 SizedBox(height: 3.h),
 
@@ -677,7 +730,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   decoration: BoxDecoration(
                     color: AppTheme.secondaryBackgroundDark,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                    border: Border.all(
+                        color: AppTheme.dividerGray.withValues(alpha: 0.6)),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.shadowDark,
@@ -694,11 +748,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.water_drop_outlined, color: AppTheme.activeBlue, size: 18),
+                              const Icon(Icons.water_drop_outlined,
+                                  color: AppTheme.activeBlue, size: 18),
                               const SizedBox(width: 8),
                               Text(
                                 'Água',
-                                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                                style: AppTheme.darkTheme.textTheme.titleMedium
+                                    ?.copyWith(
                                   color: AppTheme.textPrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -951,7 +1007,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         showOnlyNew = v;
                                         setStateFilter(() {});
                                       },
-                                      
                                     ),
                                   ],
                                 ),
@@ -1326,13 +1381,18 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       final entries = await NutritionStorage.getEntriesForDate(date);
       if (entries.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Sem refeições para duplicar hoje'), backgroundColor: AppTheme.warningAmber),
+          SnackBar(
+              content: const Text('Sem refeições para duplicar hoje'),
+              backgroundColor: AppTheme.warningAmber),
         );
         return;
       }
-      entries.sort((a, b) => ((b['createdAt'] as String?) ?? '').compareTo((a['createdAt'] as String?) ?? ''));
+      entries.sort((a, b) => ((b['createdAt'] as String?) ?? '')
+          .compareTo((a['createdAt'] as String?) ?? ''));
       final lastMealTime = (entries.first['mealTime'] as String?) ?? 'snack';
-      final sameMeal = entries.where((e) => (e['mealTime'] as String?) == lastMealTime).toList();
+      final sameMeal = entries
+          .where((e) => (e['mealTime'] as String?) == lastMealTime)
+          .toList();
       for (final e in sameMeal) {
         final dup = Map<String, dynamic>.from(e);
         dup['id'] = null;
@@ -1342,7 +1402,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       if (!mounted) return;
       await _loadToday();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Refeição duplicada (${lastMealTime})'), backgroundColor: AppTheme.successGreen),
+        SnackBar(
+            content: Text('Refeição duplicada (${lastMealTime})'),
+            backgroundColor: AppTheme.successGreen),
       );
     } catch (_) {}
   }
@@ -1372,20 +1434,24 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 title: const Text('Favoritos'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/food-logging-screen', arguments: { 'activeTab': 'favorites' });
+                  Navigator.pushNamed(context, '/food-logging-screen',
+                      arguments: {'activeTab': 'favorites'});
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.restaurant, color: AppTheme.textPrimary),
+                leading:
+                    const Icon(Icons.restaurant, color: AppTheme.textPrimary),
                 title: const Text('Meus Alimentos'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/food-logging-screen', arguments: { 'activeTab': 'mine' });
+                  Navigator.pushNamed(context, '/food-logging-screen',
+                      arguments: {'activeTab': 'mine'});
                 },
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.playlist_add, color: AppTheme.textPrimary),
+                leading:
+                    const Icon(Icons.playlist_add, color: AppTheme.textPrimary),
                 title: const Text('Duplicar última refeição'),
                 onTap: () async {
                   Navigator.pop(ctx);
@@ -1403,8 +1469,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   Future<void> _loadToday() async {
     List<Map<String, dynamic>> entries = [];
     try {
-      entries = await NutritionStorage
-          .getEntriesForDate(_selectedDate)
+      entries = await NutritionStorage.getEntriesForDate(_selectedDate)
           .timeout(const Duration(seconds: 5), onTimeout: () {
         debugPrint("Aviso: Timeout ao carregar entradas de hoje");
         return [];
@@ -2631,7 +2696,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                       ),
                                       controlAffinity:
                                           ListTileControlAffinity.leading,
-                                      
                                     ),
                                 ],
                               );
@@ -2941,7 +3005,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       style: AppTheme.darkTheme.textTheme.bodyMedium
                           ?.copyWith(color: AppTheme.textPrimary)),
                   controlAffinity: ListTileControlAffinity.leading,
-                  
                 );
               }),
               for (final t in templates)
