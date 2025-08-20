@@ -1,0 +1,33 @@
+Analyzing nutritracker...                                       
+
+warning • Unused import: '../../services/gemini_service.dart' • lib/presentation/ai_food_detection_screen/ai_food_detection_screen.dart:15:8 • unused_import
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/presentation/ai_food_detection_screen/ai_food_detection_screen.dart:221:37 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/presentation/ai_food_detection_screen/ai_food_detection_screen.dart:245:39 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/presentation/ai_food_detection_screen/ai_food_detection_screen.dart:904:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/presentation/ai_food_detection_screen/ai_food_detection_screen.dart:905:17 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/presentation/ai_food_detection_screen/ai_food_detection_screen.dart:910:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/presentation/ai_food_detection_screen/ai_food_detection_screen.dart:911:17 • deprecated_member_use
+warning • Unused import: './widgets/date_picker_widget.dart' • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:12:8 • unused_import
+warning • The value of the local variable 'label' isn't used • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:125:21 • unused_local_variable
+warning • The value of the local variable 'numStyle' isn't used • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:127:21 • unused_local_variable
+warning • The value of the local variable 'opStyle' isn't used • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:138:21 • unused_local_variable
+warning • Unnecessary cast • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:175:24 • unnecessary_cast
+warning • Unnecessary cast • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:176:45 • unnecessary_cast
+warning • The value of the local variable 'stroke' isn't used • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:178:30 • unused_local_variable
+warning • Unnecessary cast • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:178:40 • unnecessary_cast
+warning • The declaration '_miniStat' isn't referenced • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:589:10 • unused_element
+warning • Unnecessary cast • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:708:33 • unnecessary_cast
+   info • 'textScaleFactor' is deprecated and shouldn't be used. Use textScaler instead. Use of textScaleFactor was deprecated in preparation for the upcoming nonlinear text scaling support. This feature was deprecated after v3.12.0-2.0.pre • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:708:37 • deprecated_member_use
+   info • 'textScaleFactor' is deprecated and shouldn't be used. Use textScaler instead. Use of textScaleFactor was deprecated in preparation for the upcoming nonlinear text scaling support. This feature was deprecated after v3.12.0-2.0.pre • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:711:25 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:1190:39 • deprecated_member_use
+warning • The declaration '_showCalorieBreakdown' isn't referenced • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:1487:8 • unused_element
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:2808:21 • deprecated_member_use
+warning • The value of the local variable 'scale' isn't used • lib/presentation/daily_tracking_dashboard/widgets/circular_progress_chart_widget.dart:69:18 • unused_local_variable
+warning • The value of the local variable 'kcalStyle' isn't used • lib/presentation/daily_tracking_dashboard/widgets/logged_meals_list_widget.dart:178:17 • unused_local_variable
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/presentation/food_logging_screen/food_logging_screen.dart:288:21 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/presentation/food_logging_screen/widgets/food_search_results_widget.dart:129:23 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/presentation/food_logging_screen/widgets/manual_entry_widget.dart:263:19 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/presentation/intermittent_fasting_tracker/widgets/notification_settings_widget.dart:134:17 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/presentation/weekly_progress_screen/weekly_progress_screen.dart:1169:39 • deprecated_member_use
+warning • The operand can't be 'null', so the condition is always 'false' • lib/services/ai_provider.dart:70:15 • unnecessary_null_comparison
+
