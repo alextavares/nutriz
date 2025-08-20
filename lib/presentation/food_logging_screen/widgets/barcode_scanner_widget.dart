@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';

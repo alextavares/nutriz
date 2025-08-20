@@ -8,7 +8,6 @@ import '../../core/app_export.dart';
 import './widgets/achievement_badges_widget.dart';
 import './widgets/action_button_widget.dart';
 import './widgets/circular_progress_chart_widget.dart';
-import './widgets/date_picker_widget.dart';
 import './widgets/macronutrient_progress_widget.dart';
 import './widgets/weekly_progress_widget.dart';
 import '../../services/nutrition_storage.dart';
@@ -20,7 +19,6 @@ import 'package:nutritracker/util/download_stub.dart'
 import 'package:nutritracker/util/upload_stub.dart'
     if (dart.library.html) 'package:nutritracker/util/upload_web.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:ui' show FontFeature;
 
 class DailyTrackingDashboard extends StatefulWidget {
   const DailyTrackingDashboard({super.key});
@@ -307,45 +305,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       final totals = _mealTotals[mealKey]!;
       final goal = _mealGoals[mealKey]?.kcal ?? 0;
       // Top bar similar ao app de referência
-      final topStatsBar = Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Hoje",
-                  style: AppTheme.darkTheme.textTheme.headlineSmall?.copyWith(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  "Semana 147",
-                  style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                )
-              ],
-            ),
-            Row(
-              children: [
-                Icon(Icons.diamond, color: Colors.blueAccent, size: 20),
-                SizedBox(width: 1.w),
-                Text("0", style: TextStyle(color: AppTheme.textPrimary)),
-                SizedBox(width: 3.w),
-                Icon(Icons.local_fire_department, color: Colors.redAccent, size: 20),
-                SizedBox(width: 1.w),
-                Text("1", style: TextStyle(color: AppTheme.textPrimary)),
-                SizedBox(width: 3.w),
-                Icon(Icons.show_chart, color: AppTheme.textPrimary, size: 20),
-              ],
-            )
-          ],
-        ),
-      );
+      
 
       final value = totals['kcal'] ?? 0;
       final ratio = goal <= 0 ? 0.0 : (value / goal).clamp(0.0, 1.0);
@@ -991,7 +951,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         showOnlyNew = v;
                                         setStateFilter(() {});
                                       },
-                                      activeColor: AppTheme.activeBlue,
+                                      
                                     ),
                                   ],
                                 ),
@@ -1135,14 +1095,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ],
       ),
     );
-  }
-
-  void _onDateChanged(DateTime newDate) {
-    setState(() {
-      _selectedDate = newDate;
-    });
-    // Here you would typically fetch data for the new date
-    _refreshData();
   }
 
   void _onWeekChanged(int newWeek) {
@@ -1610,59 +1562,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Meta de água atualizada'),
-                  backgroundColor: AppTheme.successGreen,
-                ),
-              );
-            },
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _openEditCalorieGoalDialog() async {
-    final goals = await UserPreferences.getGoals();
-    final controller =
-        TextEditingController(text: goals.totalCalories.toString());
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
-        title: Text('Ajustar meta de calorias',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'kcal por dia'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
-                style: TextStyle(color: AppTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final val =
-                  int.tryParse(controller.text.trim()) ?? goals.totalCalories;
-              await UserPreferences.setGoals(
-                totalCalories: val,
-                carbs: goals.carbs,
-                proteins: goals.proteins,
-                fats: goals.fats,
-              );
-              if (!mounted) return;
-              setState(() {
-                _dailyData["totalCalories"] = val;
-              });
-              _loadGoals();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Meta de calorias atualizada'),
                   backgroundColor: AppTheme.successGreen,
                 ),
               );
@@ -2435,7 +2334,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   ),
                   SizedBox(height: 10),
                   DropdownButtonFormField<String>(
-                    value: selectedMeal,
+                    initialValue: selectedMeal,
                     decoration: const InputDecoration(labelText: 'Período'),
                     items: mealOptions
                         .map((m) => DropdownMenuItem<String>(
@@ -2548,30 +2447,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     setState(() {
       _mealGoals = goals;
     });
-  }
-
-  void _onBottomNavTap(int index) {
-    switch (index) {
-      case 0:
-        // Already on Diário tab
-        break;
-      case 1:
-        Navigator.pushNamed(context, '/intermittent-fasting-tracker');
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/recipe-browser');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/profile-screen').then((_) {
-          _loadGoals();
-          _loadToday();
-          _loadWeek();
-        });
-        break;
-      case 4:
-        // Navigate to PRO screen (not implemented)
-        break;
-    }
   }
 
   void _openDayActionsMenu() {
@@ -2756,7 +2631,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                       ),
                                       controlAffinity:
                                           ListTileControlAffinity.leading,
-                                      activeColor: AppTheme.activeBlue,
+                                      
                                     ),
                                 ],
                               );
@@ -2928,7 +2803,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                               color: AppTheme.textPrimary)),
                                   controlAffinity:
                                       ListTileControlAffinity.leading,
-                                  activeColor: AppTheme.activeBlue,
                                 );
                               }),
                               TextField(
@@ -3067,7 +2941,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       style: AppTheme.darkTheme.textTheme.bodyMedium
                           ?.copyWith(color: AppTheme.textPrimary)),
                   controlAffinity: ListTileControlAffinity.leading,
-                  activeColor: AppTheme.activeBlue,
+                  
                 );
               }),
               for (final t in templates)

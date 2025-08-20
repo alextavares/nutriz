@@ -74,14 +74,13 @@ class GeminiClient {
         } on DioException catch (e) {
           lastDioError = e;
           final code = e.response?.statusCode ?? 0;
-          final msg = e.response?.data?['error']?['message'] ?? e.message ?? '';
           final gcode = e.response?.data?['error']?['status'] ?? '';
 
           final transient =
               code == 429 || code == 503 || gcode == 'RESOURCE_EXHAUSTED' || gcode == 'UNAVAILABLE';
 
           if (attempt < maxRetriesPerModel && transient) {
-            final backoffMs = (pow(2, attempt) as num).toInt() * 500 + Random().nextInt(400);
+            final backoffMs = pow(2, attempt).toInt() * 500 + Random().nextInt(400);
             await Future.delayed(Duration(milliseconds: backoffMs));
             continue;
           }

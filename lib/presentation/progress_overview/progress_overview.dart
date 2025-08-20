@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:fl_chart/fl_chart.dart';
