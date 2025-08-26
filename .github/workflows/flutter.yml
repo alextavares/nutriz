@@ -1,0 +1,84 @@
+# Flutter Application CI/CD
+# Automated testing and building for Flutter mobile app
+name: Flutter
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  test:
+    name: Test Flutter App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Flutter app
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Verify Flutter installation
+        run: flutter --version
+
+      - name: Install app dependencies
+        run: flutter pub get
+
+      - name: Analyze Flutter code
+        run: flutter analyze
+
+      - name: Run Flutter widget tests
+        run: flutter test --coverage
+
+      - name: Run fasting feature tests
+        run: flutter test test/fasting_storage_test.dart
+
+      - name: Run banner feature tests
+        run: flutter test test/daily_dashboard_fasting_banner_test.dart
+
+      - name: Generate coverage report
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+          genhtml -o coverage/html coverage/lcov.info
+
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-test-coverage
+          path: |
+            coverage/lcov.info
+            coverage/html/
+          retention-days: 7
+
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout Flutter app
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --debug
+
+      - name: Upload built APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
