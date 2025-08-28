@@ -280,19 +280,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 12.w,
-                          height: 12.w,
-                          decoration: BoxDecoration(
-                            color: AppTheme.activeBlue.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: CustomIconWidget(
-                            iconName: 'restaurant',
-                            color: AppTheme.activeBlue,
-                            size: 6.w,
-                          ),
-                        ),
+                        _leadingThumb(food),
                         SizedBox(width: 3.w),
                         Expanded(
                           child: Column(
@@ -308,16 +296,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               SizedBox(height: 0.5.h),
-                              Text(
-                                food['brand'] as String? ?? 'Genérico',
-                                style: AppTheme.darkTheme.textTheme.bodySmall
-                                    ?.copyWith(
-                                  color: AppTheme
-                                      .darkTheme.colorScheme.onSurfaceVariant,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              _brandRow(food),
                               SizedBox(height: 1.h),
                               Wrap(
                                 spacing: 8,
@@ -431,6 +410,78 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
               );
             },
           ),
+      ],
+    );
+  }
+
+  Widget _leadingThumb(Map<String, dynamic> food) {
+    final String? url = (food['imageUrl'] as String?);
+    if (url != null && url.startsWith('http')) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 12.w,
+          height: 12.w,
+          color: AppTheme.darkTheme.colorScheme.outline.withValues(alpha: 0.08),
+          child: Image.network(url, fit: BoxFit.cover),
+        ),
+      );
+    }
+    return Container(
+      width: 12.w,
+      height: 12.w,
+      decoration: BoxDecoration(
+        color: AppTheme.activeBlue.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: CustomIconWidget(
+        iconName: 'restaurant',
+        color: AppTheme.activeBlue,
+        size: 6.w,
+      ),
+    );
+  }
+
+  bool _isVerified(Map<String, dynamic> food) {
+    final barcode = (food['barcode'] as String?) ?? '';
+    final verified = (food['verified'] as bool?) ?? false;
+    final source = (food['source'] as String?) ?? '';
+    return verified || barcode.isNotEmpty || source.toUpperCase() == 'OFF';
+  }
+
+  Widget _brandRow(Map<String, dynamic> food) {
+    final brand = (food['brand'] as String?) ?? 'Genérico';
+    final verified = _isVerified(food);
+    final style = AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+      color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+    );
+    if (!verified) {
+      return Text(
+        brand,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            brand,
+            style: style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        SizedBox(width: 1.w),
+        Tooltip(
+          message: 'Dados verificados (código de barras)',
+          child: Icon(
+            Icons.verified,
+            size: 16,
+            color: AppTheme.premiumGold,
+          ),
+        ),
       ],
     );
   }

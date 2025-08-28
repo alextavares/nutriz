@@ -59,6 +59,11 @@ class OpenFoodFactsService {
       fat = (nutriments['fat_100g'] as num?)?.toDouble() ?? fat;
     }
 
+    // Try to fetch a decent product image
+    final imageUrl = (p['image_url'] as String?) ??
+        (p['image_front_url'] as String?) ??
+        (p['image_small_url'] as String?);
+
     return FoodDbItem(
       description: desc,
       brand: brand,
@@ -67,6 +72,7 @@ class OpenFoodFactsService {
       proteinPer100g: prot,
       fatPer100g: fat,
       source: 'OFF',
+      imageUrl: imageUrl,
     );
   }
 }

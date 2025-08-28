@@ -945,6 +945,10 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
         'brand': item.brand ?? 'Genérico',
         'serving': '100 g',
         'barcode': barcode,
+        'source': 'OFF',
+        'verified': true,
+        if (item.imageUrl != null && item.imageUrl!.isNotEmpty)
+          'imageUrl': item.imageUrl,
       };
       if (!mounted) return;
       setState(() {

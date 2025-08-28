@@ -63,75 +63,39 @@ class MealTimingSelectorWidget extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 2.h),
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.darkTheme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.darkTheme.colorScheme.outline
-                    .withValues(alpha: 0.2),
-              ),
-            ),
-            child: Column(
-              children: mealTimes.map((meal) {
-                final isSelected = selectedMealTime == meal['id'];
-                return GestureDetector(
-                  onTap: () => onMealTimeChanged(meal['id'] as String),
-                  child: Container(
-                    padding: EdgeInsets.all(4.w),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.activeBlue.withValues(alpha: 0.1)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 12.w,
-                          height: 12.w,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.activeBlue.withValues(alpha: 0.2)
-                                : AppTheme.darkTheme.colorScheme.outline
-                                    .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              meal['emoji'] as String,
-                              style: TextStyle(fontSize: 6.w),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 3.w),
-                        Expanded(
-                          child: Text(
-                            meal['name'] as String,
-                            style: AppTheme.darkTheme.textTheme.bodyLarge
-                                ?.copyWith(
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                              color: isSelected
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.darkTheme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          CustomIconWidget(
-                            iconName: 'check_circle',
-                            color: AppTheme.activeBlue,
-                            size: 5.w,
-                          ),
-                      ],
-                    ),
+          SizedBox(height: 1.2.h),
+          Wrap(
+            spacing: 2.w,
+            runSpacing: 1.h,
+            children: mealTimes.map((meal) {
+              final isSelected = selectedMealTime == meal['id'];
+              return ChoiceChip(
+                selected: isSelected,
+                onSelected: (_) => onMealTimeChanged(meal['id'] as String),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(meal['emoji'] as String, style: TextStyle(fontSize: 14)),
+                    SizedBox(width: 1.w),
+                    Text(meal['name'] as String),
+                  ],
+                ),
+                labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                  color: isSelected ? AppTheme.activeBlue : AppTheme.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
+                backgroundColor: AppTheme.secondaryBackgroundDark,
+                selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
+                shape: StadiumBorder(
+                  side: BorderSide(
+                    color: (isSelected
+                            ? AppTheme.activeBlue
+                            : AppTheme.dividerGray)
+                        .withValues(alpha: 0.6),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),

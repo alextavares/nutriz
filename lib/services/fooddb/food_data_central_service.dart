@@ -9,6 +9,8 @@ class FoodDbItem {
   final double fatPer100g;
   // Source database identifier: 'FDC' or 'OFF'
   final String source;
+  // Optional image URL when available (e.g., OFF products)
+  final String? imageUrl;
 
   const FoodDbItem({
     required this.description,
@@ -18,6 +20,7 @@ class FoodDbItem {
     required this.proteinPer100g,
     required this.fatPer100g,
     required this.source,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,6 +31,7 @@ class FoodDbItem {
         'proteinPer100g': proteinPer100g,
         'fatPer100g': fatPer100g,
         'source': source,
+        'imageUrl': imageUrl,
       };
 
   factory FoodDbItem.fromJson(Map<String, dynamic> json) => FoodDbItem(
@@ -38,6 +42,7 @@ class FoodDbItem {
         proteinPer100g: (json['proteinPer100g'] as num?)?.toDouble() ?? 0,
         fatPer100g: (json['fatPer100g'] as num?)?.toDouble() ?? 0,
         source: (json['source'] as String?) ?? 'FDC',
+        imageUrl: json['imageUrl'] as String?,
       );
 }
 
