@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../presentation/splash_screen/splash_screen.dart';
 import '../presentation/food_logging_screen/food_logging_screen.dart';
+import '../presentation/food_logging_screen/add_food_entry_screen.dart';
 import '../presentation/login_screen/login_screen.dart';
 import '../presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart';
 import '../presentation/enhanced_dashboard_screen/enhanced_dashboard_screen.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String exerciseLogging = '/exercise-logging';
   static const String bodyMetrics = '/body-metrics';
   static const String notes = '/notes';
+  static const String addFoodEntry = '/add-food-entry';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
@@ -59,6 +61,7 @@ class AppRoutes {
     exerciseLogging: (context) => const ExerciseLoggingScreen(),
     bodyMetrics: (context) => const BodyMetricsScreen(),
     notes: (context) => const NotesScreen(),
+    addFoodEntry: (context) => const AddFoodEntryScreen(),
     // TODO: Add your other routes here
   };
 }

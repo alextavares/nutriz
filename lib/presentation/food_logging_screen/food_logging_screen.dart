@@ -633,7 +633,21 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
             _selectedFood = prefillFood.cast<String, dynamic>();
             _searchResults = [prefillFood.cast<String, dynamic>()];
           }
-          final dynamic dateArg = args['date'];
+          final dynamic prefillFoods = args['prefillFoods'];
+          if (prefillFoods is List) {
+            try {
+              final list = prefillFoods.cast<Map<String, dynamic>>();
+              if (list.isNotEmpty) {
+                _selectedFood = list.first;
+                _searchResults = list;
+              }
+            } catch (_) {}
+          }
+          final dynamic openScanner = args['openScanner'];
+          if (openScanner == true) {
+            _showBarcodeScanner = true;
+          }
+          final dynamic dateArg = args['date'] ?? args['targetDate'];
           if (dateArg is DateTime) {
             _targetDate = DateTime(dateArg.year, dateArg.month, dateArg.day);
           } else if (dateArg is String) {
