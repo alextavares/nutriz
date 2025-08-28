@@ -99,7 +99,7 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
             children: [
               // Header
               Padding(
-                padding: EdgeInsets.all(4.w),
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
                 child: Row(
                   children: [
                     GestureDetector(
@@ -128,7 +128,7 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
-                              fontSize: 14.sp,
+                              fontSize: 18.sp,
                             ),
                           ),
                         ],

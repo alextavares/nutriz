@@ -1536,14 +1536,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
               // Header
               SafeArea(
                 child: Container(
-                  padding: EdgeInsets.all(4.w),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: cs.outlineVariant.withValues(alpha: 0.2),
-                      ),
-                    ),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -1572,6 +1565,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: -0.2,
+                                fontSize: 18.sp,
                               ),
                             ),
                           ],
