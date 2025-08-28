@@ -145,8 +145,13 @@ class LoggedMealsListWidget extends StatelessWidget {
               ),
               SizedBox(width: 2.w),
               OutlinedButton.icon(
-                onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.foodLogging),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.addFoodEntry,
+                  arguments: {
+                    'mealKey': mealKey,
+                  },
+                ),
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Adicionar'),
                 style: OutlinedButton.styleFrom(
@@ -283,8 +288,12 @@ class LoggedMealsListWidget extends StatelessWidget {
               SizedBox(width: 2.w),
               OutlinedButton.icon(
                 onPressed: () => Navigator.pushNamed(
-                    context, AppRoutes.foodLogging,
-                    arguments: label),
+                  context,
+                  AppRoutes.addFoodEntry,
+                  arguments: {
+                    'mealName': label,
+                  },
+                ),
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Adicionar'),
                 style: OutlinedButton.styleFrom(

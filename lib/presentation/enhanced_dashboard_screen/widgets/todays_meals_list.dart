@@ -75,7 +75,7 @@ class TodaysMealsList extends StatelessWidget {
 
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.foodLogging);
+              Navigator.pushNamed(context, AppRoutes.addFoodEntry);
             },
             icon: const Icon(Icons.add),
             label: const Text('Adicionar Refeição'),

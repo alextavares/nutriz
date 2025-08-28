@@ -212,7 +212,7 @@ class _EnhancedDashboardScreenState extends State<EnhancedDashboardScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.foodLogging);
+                        Navigator.pushNamed(context, AppRoutes.addFoodEntry);
                       },
                       child: Text(
                         'Ver Todas',
@@ -237,7 +237,7 @@ class _EnhancedDashboardScreenState extends State<EnhancedDashboardScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.pushNamed(context, AppRoutes.foodLogging);
+          Navigator.pushNamed(context, AppRoutes.addFoodEntry);
         },
         backgroundColor: AppTheme.activeBlue,
         foregroundColor: AppTheme.textPrimary,

@@ -102,7 +102,8 @@ class _RootShellState extends State<RootShell> {
                   title: const Text('Adicionar alimento'),
                   onTap: () {
                     Navigator.of(ctx).pop();
-                    setState(() => _currentIndex = 1); // ir para Busca
+                    setState(() => _currentIndex = 0); // ir para Diário
+                    Navigator.of(context).pushNamed(AppRoutes.addFoodEntry);
                   },
                 ),
                 const Divider(height: 1),
@@ -114,11 +115,10 @@ class _RootShellState extends State<RootShell> {
                     // Garanta que, ao voltar, o tab visível não seja o slot vazio (index 2)
                     setState(() => _currentIndex = 0); // Diário
                     Navigator.of(context).pushNamed(
-                      AppRoutes.foodLogging,
+                      AppRoutes.addFoodEntry,
                       arguments: {
-                        'activeTab': 'recent',
-                        'meal': 'breakfast',
-                        'date': _selectedDate.value.toIso8601String(),
+                        'mealKey': 'breakfast',
+                        'targetDate': _selectedDate.value.toIso8601String(),
                       },
                     );
                   },
@@ -130,11 +130,10 @@ class _RootShellState extends State<RootShell> {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
                     Navigator.of(context).pushNamed(
-                      AppRoutes.foodLogging,
+                      AppRoutes.addFoodEntry,
                       arguments: {
-                        'activeTab': 'recent',
-                        'meal': 'lunch',
-                        'date': _selectedDate.value.toIso8601String(),
+                        'mealKey': 'lunch',
+                        'targetDate': _selectedDate.value.toIso8601String(),
                       },
                     );
                   },
@@ -146,11 +145,10 @@ class _RootShellState extends State<RootShell> {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
                     Navigator.of(context).pushNamed(
-                      AppRoutes.foodLogging,
+                      AppRoutes.addFoodEntry,
                       arguments: {
-                        'activeTab': 'recent',
-                        'meal': 'dinner',
-                        'date': _selectedDate.value.toIso8601String(),
+                        'mealKey': 'dinner',
+                        'targetDate': _selectedDate.value.toIso8601String(),
                       },
                     );
                   },
@@ -162,11 +160,10 @@ class _RootShellState extends State<RootShell> {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
                     Navigator.of(context).pushNamed(
-                      AppRoutes.foodLogging,
+                      AppRoutes.addFoodEntry,
                       arguments: {
-                        'activeTab': 'recent',
-                        'meal': 'snack',
-                        'date': _selectedDate.value.toIso8601String(),
+                        'mealKey': 'snack',
+                        'targetDate': _selectedDate.value.toIso8601String(),
                       },
                     );
                   },

@@ -936,9 +936,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     }
 
     void _goToLoggingForMeal(String mealKey) {
-      Navigator.pushNamed(context, AppRoutes.foodLogging, arguments: {
+      Navigator.pushNamed(context, AppRoutes.addFoodEntry, arguments: {
         'mealKey': mealKey,
-        'date': _selectedDate.toIso8601String(),
+        'targetDate': _selectedDate.toIso8601String(),
       }).then((_) async {
         // Recarrega sempre ao voltar do registro de alimentos,
         // independente do valor retornado.

@@ -14,7 +14,7 @@ class QuickActionsGrid extends StatelessWidget {
         label: 'Adicionar\nRefeição',
         color: AppTheme.activeBlue,
         onTap: () {
-          Navigator.pushNamed(context, AppRoutes.foodLogging);
+          Navigator.pushNamed(context, AppRoutes.addFoodEntry);
         },
       ),
       _QuickAction(
