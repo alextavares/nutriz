@@ -37,6 +37,8 @@ class UserPreferences {
       'ui_quick_portion_grams_dinner_v1';
   static const String _kQuickPortionGramsSnack =
       'ui_quick_portion_grams_snack_v1';
+  // Search results macros view: per 100g or per porção
+  static const String _kResultsPer100g = 'ui_results_per_100g_v1';
   // Fasting eating window times
   static const String _kStartEatHour = 'fast_start_eat_hour_v1';
   static const String _kStartEatMinute = 'fast_start_eat_min_v1';
@@ -115,6 +117,17 @@ class UserPreferences {
   static Future<int> getNewBadgeMinutes() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kNewBadgeMinutes) ?? 5;
+  }
+
+  // Toggle: show macros per 100g (true) or per porção (false)
+  static Future<void> setResultsShowPer100g(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kResultsPer100g, value);
+  }
+
+  static Future<bool> getResultsShowPer100g() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kResultsPer100g) ?? true;
   }
 
   // Search filters

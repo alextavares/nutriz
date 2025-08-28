@@ -455,6 +455,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
   bool _showBarcodeScanner = false;
   DateTime? _targetDate;
   String _activeTab = 'recent'; // recent | favorites | mine
+  bool _showPer100g = true; // results macros mode
   List<Map<String, dynamic>> _favorites = [];
   List<Map<String, dynamic>> _myFoods = [];
   RangeValues _kcalRange = const RangeValues(0, 1000);
@@ -607,6 +608,9 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
     _restoreSearchFilters();
     _loadSearchHistory();
     // Read initial meal time from route args, if provided
+    UserPreferences.getResultsShowPer100g().then((v) {
+      if (mounted) setState(() => _showPer100g = v);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args != null) {
@@ -646,6 +650,11 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
         _searchFocus.requestFocus();
       }
     });
+  }
+
+  Future<void> _setShowPer100g(bool v) async {
+    setState(() => _showPer100g = v);
+    await UserPreferences.setResultsShowPer100g(v);
   }
 
   Future<void> _restoreSearchFilters() async {
@@ -1696,6 +1705,56 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                 ),
               ),
 
+              // Quick actions (Yazio-like)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _onBarcodePressed,
+                        icon: const Icon(Icons.qr_code_scanner),
+                        label: const Text('Escanear'),
+                      ),
+                    ),
+                    SizedBox(width: 2.w),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          final Map<String, dynamic> blankFood = {
+                            'name': '',
+                            'brand': '',
+                            'calories': 0,
+                            'carbs': 0,
+                            'protein': 0,
+                            'fat': 0,
+                            'unitPresets': {
+                              'unidade': 100.0,
+                              'colher': 15.0,
+                              'xícara': 240.0,
+                            },
+                          };
+                          _openEditMyFood(blankFood);
+                        },
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('Novo alimento'),
+                      ),
+                    ),
+                    SizedBox(width: 2.w),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRoutes.recipeBrowser);
+                        },
+                        icon: const Icon(Icons.menu_book_outlined),
+                        label: const Text('Receitas'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 1.h),
+
               // Active Filters chips
               if (_hasActiveFilters())
                 Padding(
@@ -1791,6 +1850,35 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                     ),
                   ),
                 ),
+
+              // Macro view toggle (100g vs porção)
+              Padding(
+                padding: EdgeInsets.only(left: 4.w, right: 4.w, bottom: 1.h),
+                child: Row(
+                  children: [
+                    Text('Exibir macros por:',
+                        style: AppTheme.darkTheme.textTheme.bodySmall),
+                    SizedBox(width: 2.w),
+                    ChoiceChip(
+                      label: const Text('100g'),
+                      selected: _showPer100g,
+                      onSelected: (v) {
+                        if (!v) return;
+                        _setShowPer100g(true);
+                      },
+                    ),
+                    SizedBox(width: 2.w),
+                    ChoiceChip(
+                      label: const Text('porção'),
+                      selected: !_showPer100g,
+                      onSelected: (v) {
+                        if (!v) return;
+                        _setShowPer100g(false);
+                      },
+                    ),
+                  ],
+                ),
+              ),
 
               // Search history chips (shown when field vazio)
               if (_searchController.text.isEmpty && _searchHistory.isNotEmpty)
@@ -1899,6 +1987,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           },
                           headerRightText: 'Filtros',
                           onHeaderRightTap: _openFilters,
+                          showPer100g: _showPer100g,
                         ),
                       if (_searchController.text.isEmpty &&
                           _activeTab == 'mine')
@@ -2240,6 +2329,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           },
                           headerRightText: 'Filtros',
                           onHeaderRightTap: _openFilters,
+                          showPer100g: _showPer100g,
                         ),
 
                       // No Results

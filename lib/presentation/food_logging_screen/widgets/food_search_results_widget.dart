@@ -25,6 +25,8 @@ class FoodSearchResultsWidget extends StatefulWidget {
       onQuickAddWithGrams;
   final String? headerRightText;
   final VoidCallback? onHeaderRightTap;
+  // Controls whether to display macros per 100g or per serving
+  final bool showPer100g;
 
   const FoodSearchResultsWidget({
     Key? key,
@@ -43,6 +45,7 @@ class FoodSearchResultsWidget extends StatefulWidget {
     this.onQuickAddWithGrams,
     this.headerRightText,
     this.onHeaderRightTap,
+    this.showPer100g = true,
   }) : super(key: key);
 
   @override
@@ -321,18 +324,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                                 runSpacing: 6,
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
-                                  _buildNutrientChip(
-                                      '${_per100(food)['cal']} kcal/100g',
-                                      AppTheme.warningAmber),
-                                  _buildNutrientChip(
-                                      'C: ${_per100(food)['carb']}g',
-                                      AppTheme.successGreen),
-                                  _buildNutrientChip(
-                                      'P: ${_per100(food)['prot']}g',
-                                      AppTheme.activeBlue),
-                                  _buildNutrientChip(
-                                      'G: ${_per100(food)['fat']}g',
-                                      AppTheme.errorRed),
+                                  ..._macroChipsFor(food),
                                   FutureBuilder<bool>(
                                     future: FavoritesStorage.isFavorite(
                                         (food['name'] as String?) ?? ''),
@@ -443,6 +435,25 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
     );
   }
 
+  List<Widget> _macroChipsFor(Map<String, dynamic> food) {
+    if (widget.showPer100g) {
+      final per = _per100(food);
+      return [
+        _buildNutrientChip('${per['cal']} kcal/100g', AppTheme.warningAmber),
+        _buildNutrientChip('C: ${per['carb']}g', AppTheme.successGreen),
+        _buildNutrientChip('P: ${per['prot']}g', AppTheme.activeBlue),
+        _buildNutrientChip('G: ${per['fat']}g', AppTheme.errorRed),
+      ];
+    }
+    final perServing = _perServing(food);
+    return [
+      _buildNutrientChip('${perServing['cal']} kcal/porção', AppTheme.warningAmber),
+      _buildNutrientChip('C: ${perServing['carb']}g', AppTheme.successGreen),
+      _buildNutrientChip('P: ${perServing['prot']}g', AppTheme.activeBlue),
+      _buildNutrientChip('G: ${perServing['fat']}g', AppTheme.errorRed),
+    ];
+  }
+
   double _calcCaloriesPerGram(Map<String, dynamic> food) {
     try {
       final int calories = (food['calories'] as num).toInt();
@@ -457,6 +468,16 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
     } catch (_) {
       return 0.0;
     }
+  }
+
+  Map<String, int> _perServing(Map<String, dynamic> food) {
+    int toInt(num? v) => (v ?? 0).toInt();
+    return {
+      'cal': toInt(food['calories'] as num?),
+      'carb': toInt(food['carbs'] as num?),
+      'prot': toInt(food['protein'] as num?),
+      'fat': toInt(food['fat'] as num?),
+    };
   }
 
   Map<String, int> _per100(Map<String, dynamic> food) {
