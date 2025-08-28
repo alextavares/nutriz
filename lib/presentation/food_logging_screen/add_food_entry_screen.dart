@@ -91,145 +91,153 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
     final cs = theme.colorScheme;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          SafeArea(
-            child: Container(
-              padding: EdgeInsets.all(4.w),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: cs.outlineVariant.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 10.w,
-                      height: 10.w,
-                      decoration: BoxDecoration(
-                        color: cs.surface,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: CustomIconWidget(
-                        iconName: 'arrow_back',
-                        color: cs.onSurface,
-                        size: 5.w,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(bottom: 2.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: EdgeInsets.all(4.w),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 10.w,
+                        height: 10.w,
+                        decoration: BoxDecoration(
+                          color: cs.surface,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: CustomIconWidget(
+                          iconName: 'arrow_back',
+                          color: cs.onSurface,
+                          size: 5.w,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 3.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Adicionar alimento',
-                          style: theme.textTheme.titleLarge,
-                        ),
-                        Text(
-                          'Para ${_mealLabel()}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
+                    SizedBox(width: 3.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Adicionar alimento',
+                            style: theme.textTheme.titleLarge,
                           ),
-                        ),
-                      ],
+                          Text(
+                            'para ${_mealLabel()}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
 
-          // Meal chips
-          MealTimingSelectorWidget(
-            selectedMealTime: _selectedMealTime,
-            onMealTimeChanged: (m) => setState(() => _selectedMealTime = m),
-          ),
+              // Meal selector (chips)
+              MealTimingSelectorWidget(
+                selectedMealTime: _selectedMealTime,
+                onMealTimeChanged: (m) => setState(() => _selectedMealTime = m),
+              ),
 
-          // Big actions: Photo, Search, Scan
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: Column(
-              children: [
-                _actionCard(
-                  color: AppTheme.activeBlue,
-                  icon: 'photo_camera',
-                  title: 'Registre por foto',
-                  subtitle:
-                      'Use a câmera para identificar e registrar seu alimento',
-                  onTap: () async {
-                    final result = await Navigator.pushNamed(
-                      context,
-                      AppRoutes.aiFoodDetection,
-                    );
-                    // Se voltarmos com algo, mande para a tela de busca com prefill
-                    if (!mounted) return;
-                    if (result is Map<String, dynamic>) {
-                      final args = {
-                        ..._baseArgs(),
-                        'prefillFood': result,
-                      };
-                      Navigator.pushReplacementNamed(
-                        context,
-                        AppRoutes.foodLogging,
-                        arguments: args,
-                      );
-                    } else if (result is List) {
-                      // envia a lista como resultados iniciais
-                      final args = {
-                        ..._baseArgs(),
-                        'prefillFoods': result,
-                      };
-                      Navigator.pushReplacementNamed(
-                        context,
-                        AppRoutes.foodLogging,
-                        arguments: args,
-                      );
-                    }
-                  },
+              // Subtitle
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Text(
+                  'Como deseja registrar?',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                SizedBox(height: 1.6.h),
-                _actionCard(
-                  color: AppTheme.successGreen,
-                  icon: 'search',
-                  title: 'Pesquisar',
-                  subtitle: 'Busque por nome, marca ou tipo de alimento',
-                  onTap: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.foodLogging,
-                      arguments: {
-                        ..._baseArgs(),
-                        'activeTab': 'recent',
+              ),
+              SizedBox(height: 1.2.h),
+
+              // Big actions: Photo, Search, Scan
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Column(
+                  children: [
+                    _actionCard(
+                      color: AppTheme.activeBlue,
+                      icon: 'photo_camera',
+                      title: 'Registre por foto',
+                      subtitle:
+                          'Use a câmera para identificar e registrar seu alimento',
+                      onTap: () async {
+                        final result = await Navigator.pushNamed(
+                          context,
+                          AppRoutes.aiFoodDetection,
+                        );
+                        if (!mounted) return;
+                        if (result is Map<String, dynamic>) {
+                          final args = {
+                            ..._baseArgs(),
+                            'prefillFood': result,
+                          };
+                          Navigator.pushReplacementNamed(
+                            context,
+                            AppRoutes.foodLogging,
+                            arguments: args,
+                          );
+                        } else if (result is List) {
+                          final args = {
+                            ..._baseArgs(),
+                            'prefillFoods': result,
+                          };
+                          Navigator.pushReplacementNamed(
+                            context,
+                            AppRoutes.foodLogging,
+                            arguments: args,
+                          );
+                        }
                       },
-                    );
-                  },
-                ),
-                SizedBox(height: 1.6.h),
-                _actionCard(
-                  color: AppTheme.warningAmber,
-                  icon: 'qr_code_scanner',
-                  title: 'Escanear',
-                  subtitle: 'Leia o código de barras do produto',
-                  onTap: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.foodLogging,
-                      arguments: {
-                        ..._baseArgs(),
-                        'openScanner': true,
+                    ),
+                    SizedBox(height: 1.2.h),
+                    _actionCard(
+                      color: AppTheme.successGreen,
+                      icon: 'search',
+                      title: 'Pesquisar alimento',
+                      subtitle: 'Busque por nome, marca ou tipo de alimento',
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.foodLogging,
+                          arguments: {
+                            ..._baseArgs(),
+                            'activeTab': 'recent',
+                          },
+                        );
                       },
-                    );
-                  },
+                    ),
+                    SizedBox(height: 1.2.h),
+                    _actionCard(
+                      color: AppTheme.warningAmber,
+                      icon: 'qr_code_scanner',
+                      title: 'Escanear código de barras',
+                      subtitle: 'Leia o código de barras do produto',
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.foodLogging,
+                          arguments: {
+                            ..._baseArgs(),
+                            'openScanner': true,
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -304,4 +312,3 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
     );
   }
 }
-
