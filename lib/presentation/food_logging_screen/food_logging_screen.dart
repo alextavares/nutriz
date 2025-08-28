@@ -1568,17 +1568,10 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Adicionar alimento',
+                              _currentMealLabel(),
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: -0.2,
-                              ),
-                            ),
-                            Text(
-                              'para ${_currentMealLabel()}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],

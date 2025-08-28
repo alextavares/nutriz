@@ -124,19 +124,11 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Adicionar alimento',
+                            _mealLabel(),
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
                               fontSize: 14.sp,
-                            ),
-                          ),
-                          Text(
-                            'para ${_mealLabel()}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 10.sp,
                             ),
                           ),
                         ],
