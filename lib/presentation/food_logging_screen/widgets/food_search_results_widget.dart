@@ -198,7 +198,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
               return Dismissible(
                 key: Key('${food['id']}_$index'),
                 background: Container(
-                  margin: EdgeInsets.only(bottom: 2.h),
+                  margin: EdgeInsets.only(bottom: 1.2.h),
                   decoration: BoxDecoration(
                     color: AppTheme.successGreen,
                     borderRadius: BorderRadius.circular(12),
@@ -225,7 +225,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                   ),
                 ),
                 secondaryBackground: Container(
-                  margin: EdgeInsets.only(bottom: 2.h),
+                  margin: EdgeInsets.only(bottom: 1.2.h),
                   decoration: BoxDecoration(
                     color: AppTheme.activeBlue,
                     borderRadius: BorderRadius.circular(12),
@@ -262,7 +262,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                 child: GestureDetector(
                   onTap: () => widget.onFoodTap(food),
                   child: Container(
-                    margin: EdgeInsets.only(bottom: 2.h),
+                    margin: EdgeInsets.only(bottom: 1.2.h),
                     padding: EdgeInsets.all(4.w),
                     decoration: BoxDecoration(
                       color: AppTheme.secondaryBackgroundDark,
@@ -378,23 +378,21 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                           ),
                         ),
                         if (widget.onQuickSaveRequested != null)
-                          IconButton(
+                          TextButton.icon(
                             onPressed: () => widget.onQuickSaveRequested!(food),
-                            tooltip: widget.quickSaveMealLabel != null
-                                ? 'Salvar no diário — ${widget.quickSaveMealLabel}'
-                                : 'Salvar no diário',
-                            icon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.playlist_add),
-                                SizedBox(width: 1.w),
-                                Text(
-                                  widget.quickSaveMealLabel ?? '',
-                                  style: AppTheme.darkTheme.textTheme.bodySmall,
-                                ),
-                              ],
+                            icon: const Icon(Icons.playlist_add, size: 18),
+                            label: Text(
+                              widget.quickSaveMealLabel != null
+                                  ? 'Salvar — ${widget.quickSaveMealLabel}'
+                                  : 'Salvar no diário',
+                              style: AppTheme.darkTheme.textTheme.bodySmall,
                             ),
-                            color: AppTheme.successGreen,
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppTheme.successGreen,
+                              padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                              minimumSize: const Size(0, 0),
+                              visualDensity: VisualDensity.compact,
+                            ),
                           )
                         else
                           CustomIconWidget(
@@ -420,16 +418,16 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          width: 12.w,
-          height: 12.w,
+          width: 14.w,
+          height: 14.w,
           color: AppTheme.darkTheme.colorScheme.outline.withValues(alpha: 0.08),
           child: Image.network(url, fit: BoxFit.cover),
         ),
       );
     }
     return Container(
-      width: 12.w,
-      height: 12.w,
+      width: 14.w,
+      height: 14.w,
       decoration: BoxDecoration(
         color: AppTheme.activeBlue.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(8),
@@ -437,7 +435,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
       child: CustomIconWidget(
         iconName: 'restaurant',
         color: AppTheme.activeBlue,
-        size: 6.w,
+        size: 7.w,
       ),
     );
   }

@@ -203,6 +203,11 @@ class UserPreferences {
     await prefs.setString(_kSearchHistory, json.encode(list));
   }
 
+  static Future<void> clearSearchHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kSearchHistory);
+  }
+
   // UI: quick portion chips (grams)
   static Future<void> setQuickPortionGrams(List<double> grams) async {
     final prefs = await SharedPreferences.getInstance();

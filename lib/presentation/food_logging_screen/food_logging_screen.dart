@@ -1440,6 +1440,17 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
     });
   }
 
+  final List<String> _popularCategories = const [
+    'frutas', 'verduras', 'legumes', 'laticínios', 'carnes', 'cereais', 'bebidas', 'snacks'
+  ];
+
+  Future<void> _clearSearchHistoryPermanently() async {
+    await UserPreferences.clearSearchHistory();
+    final list = await UserPreferences.getSearchHistory();
+    if (!mounted) return;
+    setState(() => _searchHistory = list);
+  }
+
   void _onMealTimeChanged(String mealTime) {
     setState(() {
       _selectedMealTime = mealTime;
@@ -1908,6 +1919,48 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                   ),
                 ),
 
+              // Popular categories (when no query)
+              if (_searchController.text.isEmpty)
+                Padding(
+                  padding: EdgeInsets.only(left: 4.w, right: 4.w, bottom: 0.8.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Categorias populares',
+                        style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 0.6.h),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _popularCategories.map((c) {
+                          return ChoiceChip(
+                            label: Text(c),
+                            selected: false,
+                            onSelected: (_) {
+                              _searchController.text = c;
+                              _searchController.selection = TextSelection.fromPosition(
+                                TextPosition(offset: c.length),
+                              );
+                              _onSearchChanged();
+                            },
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall,
+                            backgroundColor: AppTheme.secondaryBackgroundDark,
+                            selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                  color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+
               // Macro view toggle (100g vs porção)
               Padding(
                 padding: EdgeInsets.only(left: 4.w, right: 4.w, bottom: 1.h),
@@ -1937,40 +1990,62 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                 ),
               ),
 
-              // Search history chips (shown when field vazio)
+              // Search history (when empty query)
               if (_searchController.text.isEmpty && _searchHistory.isNotEmpty)
                 Padding(
                   padding: EdgeInsets.only(left: 4.w, right: 4.w, bottom: 1.h),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _searchHistory.take(8).map((term) {
-                        return ChoiceChip(
-                          label: Text(term),
-                          selected: false,
-                          onSelected: (_) {
-                            _searchController.text = term;
-                            _searchController.selection =
-                                TextSelection.fromPosition(
-                              TextPosition(offset: term.length),
-                            );
-                            _searchFocus.requestFocus();
-                            _onSearchChanged();
-                          },
-                          labelStyle: AppTheme.darkTheme.textTheme.bodySmall,
-                          backgroundColor: AppTheme.secondaryBackgroundDark,
-                          selectedColor:
-                              AppTheme.activeBlue.withValues(alpha: 0.12),
-                          shape: StadiumBorder(
-                            side: BorderSide(
-                                color: AppTheme.dividerGray
-                                    .withValues(alpha: 0.6)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Pesquisas recentes',
+                              style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        );
-                      }).toList(),
-                    ),
+                          TextButton(
+                            onPressed: _clearSearchHistoryPermanently,
+                            child: const Text('Limpar histórico'),
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 0.4.h),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _searchHistory.take(8).map((term) {
+                            return ChoiceChip(
+                              label: Text(term),
+                              selected: false,
+                              onSelected: (_) {
+                                _searchController.text = term;
+                                _searchController.selection =
+                                    TextSelection.fromPosition(
+                                  TextPosition(offset: term.length),
+                                );
+                                _searchFocus.requestFocus();
+                                _onSearchChanged();
+                              },
+                              labelStyle: AppTheme.darkTheme.textTheme.bodySmall,
+                              backgroundColor: AppTheme.secondaryBackgroundDark,
+                              selectedColor:
+                                  AppTheme.activeBlue.withValues(alpha: 0.12),
+                              shape: StadiumBorder(
+                                side: BorderSide(
+                                    color: AppTheme.dividerGray
+                                        .withValues(alpha: 0.6)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
