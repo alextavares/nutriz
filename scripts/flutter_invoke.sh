@@ -2,6 +2,18 @@
 set -euo pipefail
 
 detect_flutter() {
+  local UNAME
+  UNAME=$(uname -s 2>/dev/null || echo unknown)
+
+  # 0) On Git Bash/Cygwin environments, prefer Windows flutter.bat
+  if echo "$UNAME" | grep -qiE 'mingw|msys|cygwin'; then
+    local baseWin="/c/Users/${USERNAME:-$USER}/AppData/Local/flutter/flutter/bin/flutter.bat"
+    if [ -f "$baseWin" ]; then
+      FLUTTER_INVOKE=("$baseWin")
+      return 0
+    fi
+  fi
+
   # 1) Project-local Flutter (Linux) if available
   if [ -x ".tooling/flutter/bin/flutter" ]; then
     FLUTTER_INVOKE=(".tooling/flutter/bin/flutter")

@@ -45,6 +45,12 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     'snack': 0,
   };
 
+  // Animation constants (aligned with dashboard)
+  static const Duration _kAnimDuration = Duration(milliseconds: 900);
+  static const Curve _kAnimCurve = Curves.easeOut;
+  // Per-bar stagger fraction (e.g., 0.04 => ~36ms on 900ms anim)
+  static const double _kBarStaggerFrac = 0.03;
+
   @override
   void initState() {
     super.initState();
@@ -848,16 +854,38 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   : false;
           final barColor = highlight ? AppTheme.errorRed : color;
           final isMarked = mark != null && mark.length > i && mark[i];
+          final double delay = (_kBarStaggerFrac * i).clamp(0.0, 0.5);
           return Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  height: (18.h * ratio),
-                  decoration: BoxDecoration(
-                    color: barColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                TweenAnimationBuilder<double>(
+                  key: ValueKey('bar_${i}_${v}_${cap}'),
+                  tween: Tween<double>(begin: 0, end: ratio),
+                  duration: _kAnimDuration,
+                  curve: Curves.linear,
+                  builder: (context, val, _) {
+                    if (ratio <= 0) {
+                      return Container(
+                        height: 0,
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      );
+                    }
+                    final p = (val / ratio).clamp(0.0, 1.0);
+                    final delayed = p <= delay ? 0.0 : (p - delay) / (1.0 - delay);
+                    final eased = _kAnimCurve.transform(delayed);
+                    final h = 18.h * (eased * ratio);
+                    return Container(
+                      height: h,
+                      decoration: BoxDecoration(
+                        color: barColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    );
+                  },
                 ),
                 SizedBox(height: 0.6.h),
                 Row(
@@ -904,13 +932,14 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       }
     }
 
-    Widget item(String label, String key) {
+    Widget item(String label, String key, int index) {
       final avg = _mealAvgKcal[key] ?? 0;
       final goal = _mealGoals[key]?.kcal ?? 0;
       final ratio = goal <= 0 ? 0.0 : (avg / goal).clamp(0.0, 1.0);
       final baseColor = colorFor(key);
       final over = goal > 0 && avg > goal;
       final color = over ? AppTheme.errorRed : baseColor;
+      final double delay = (_kBarStaggerFrac * index).clamp(0.0, 0.5);
       return Expanded(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 1.w),
@@ -930,12 +959,33 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    goal > 0 ? '$avg/$goal kcal' : '$avg kcal',
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  TweenAnimationBuilder<double>(
+                    key: ValueKey('meal_avg_${key}_$avg'),
+                    tween: Tween<double>(begin: 0, end: avg.toDouble()),
+                    duration: _kAnimDuration,
+                    curve: Curves.linear,
+                    builder: (context, v, _) {
+                      if (avg <= 0) {
+                        return Text(
+                          goal > 0 ? '0/$goal kcal' : '0 kcal',
+                          style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        );
+                      }
+                      final p = (v / avg).clamp(0.0, 1.0);
+                      final delayed = p <= delay ? 0.0 : (p - delay) / (1.0 - delay);
+                      final eased = _kAnimCurve.transform(delayed);
+                      final shown = (avg * eased).toInt();
+                      return Text(
+                        goal > 0 ? '$shown/$goal kcal' : '$shown kcal',
+                        style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      );
+                    },
                   ),
                   if (over)
                     Container(
@@ -959,11 +1009,30 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               SizedBox(height: 0.6.h),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: ratio,
-                  minHeight: 8,
-                  backgroundColor: AppTheme.dividerGray,
-                  color: color,
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey('meal_bar_${key}_$ratio'),
+                  tween: Tween<double>(begin: 0, end: ratio),
+                  duration: _kAnimDuration,
+                  curve: Curves.linear,
+                  builder: (context, val, _) {
+                    if (ratio <= 0) {
+                      return LinearProgressIndicator(
+                        value: 0,
+                        minHeight: 8,
+                        backgroundColor: AppTheme.dividerGray,
+                        color: color,
+                      );
+                    }
+                    final p = (val / ratio).clamp(0.0, 1.0);
+                    final delayed = p <= delay ? 0.0 : (p - delay) / (1.0 - delay);
+                    final eased = _kAnimCurve.transform(delayed);
+                    return LinearProgressIndicator(
+                      value: eased * ratio,
+                      minHeight: 8,
+                      backgroundColor: AppTheme.dividerGray,
+                      color: color,
+                    );
+                  },
                 ),
               ),
             ],
@@ -974,10 +1043,10 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
 
     return Row(
       children: [
-        item('Café', 'breakfast'),
-        item('Almoço', 'lunch'),
-        item('Jantar', 'dinner'),
-        item('Lanche', 'snack'),
+        item('Café', 'breakfast', 0),
+        item('Almoço', 'lunch', 1),
+        item('Jantar', 'dinner', 2),
+        item('Lanche', 'snack', 3),
       ],
     );
   }

@@ -142,8 +142,10 @@ class FastingMethodSelectorWidget extends StatelessWidget {
                       Expanded(
                         child: Text(
                           method["description"] as String,
-                          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                          style:
+                              AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                            color:
+                                AppTheme.textSecondary.withValues(alpha: 0.8),
                             fontSize: 9.sp,
                           ),
                           maxLines: 3,

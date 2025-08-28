@@ -61,7 +61,8 @@ class LoggedMealsListWidget extends StatelessWidget {
           // Render existing meal sections first
           ...grouped.entries.map((e) => _buildSection(context, e.key, e.value)),
           // Render empty states for missing meals
-          ..._missingMeals(grouped.keys.toList()).map((label) => _buildEmptySection(context, label)),
+          ..._missingMeals(grouped.keys.toList())
+              .map((label) => _buildEmptySection(context, label)),
         ],
       ),
     );
@@ -95,7 +96,8 @@ class LoggedMealsListWidget extends StatelessWidget {
     return Icons.fastfood_outlined;
   }
 
-  Widget _buildSection(BuildContext context, String label, List<Map<String, dynamic>> items) {
+  Widget _buildSection(
+      BuildContext context, String label, List<Map<String, dynamic>> items) {
     final totalKcal = items.fold<int>(
         0, (sum, it) => sum + ((it['calories'] as num?)?.toInt() ?? 0));
     final totalCarb = items.fold<int>(
@@ -143,11 +145,13 @@ class LoggedMealsListWidget extends StatelessWidget {
               ),
               SizedBox(width: 2.w),
               OutlinedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.foodLogging),
+                onPressed: () =>
+                    Navigator.pushNamed(context, AppRoutes.foodLogging),
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Adicionar'),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   minimumSize: const Size(0, 0),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -209,7 +213,8 @@ class LoggedMealsListWidget extends StatelessWidget {
                       height: 10,
                       child: LinearProgressIndicator(
                         value: pct,
-                        backgroundColor: AppTheme.dividerGray.withValues(alpha: 0.4),
+                        backgroundColor:
+                            AppTheme.dividerGray.withValues(alpha: 0.4),
                         color: barColor,
                       ),
                     ),
@@ -218,7 +223,8 @@ class LoggedMealsListWidget extends StatelessWidget {
                   Text(
                     '$totalKcal / $goal kcal',
                     style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                      color: exceeded ? AppTheme.errorRed : AppTheme.textSecondary,
+                      color:
+                          exceeded ? AppTheme.errorRed : AppTheme.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -276,11 +282,14 @@ class LoggedMealsListWidget extends StatelessWidget {
               ),
               SizedBox(width: 2.w),
               OutlinedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.foodLogging, arguments: label),
+                onPressed: () => Navigator.pushNamed(
+                    context, AppRoutes.foodLogging,
+                    arguments: label),
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Adicionar'),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   minimumSize: const Size(0, 0),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -297,7 +306,8 @@ class LoggedMealsListWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppTheme.darkTheme.colorScheme.surface,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.3)),
+            border:
+                Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [

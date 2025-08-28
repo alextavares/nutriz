@@ -421,17 +421,25 @@ class _ScannerOverlayPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     final double c = 18;
     // top-left
-    canvas.drawLine(r.outerRect.topLeft, r.outerRect.topLeft + Offset(c, 0), corner);
-    canvas.drawLine(r.outerRect.topLeft, r.outerRect.topLeft + Offset(0, c), corner);
+    canvas.drawLine(
+        r.outerRect.topLeft, r.outerRect.topLeft + Offset(c, 0), corner);
+    canvas.drawLine(
+        r.outerRect.topLeft, r.outerRect.topLeft + Offset(0, c), corner);
     // top-right
-    canvas.drawLine(r.outerRect.topRight, r.outerRect.topRight - Offset(c, 0), corner);
-    canvas.drawLine(r.outerRect.topRight, r.outerRect.topRight + Offset(0, c), corner);
+    canvas.drawLine(
+        r.outerRect.topRight, r.outerRect.topRight - Offset(c, 0), corner);
+    canvas.drawLine(
+        r.outerRect.topRight, r.outerRect.topRight + Offset(0, c), corner);
     // bottom-left
-    canvas.drawLine(r.outerRect.bottomLeft, r.outerRect.bottomLeft + Offset(c, 0), corner);
-    canvas.drawLine(r.outerRect.bottomLeft, r.outerRect.bottomLeft - Offset(0, c), corner);
+    canvas.drawLine(
+        r.outerRect.bottomLeft, r.outerRect.bottomLeft + Offset(c, 0), corner);
+    canvas.drawLine(
+        r.outerRect.bottomLeft, r.outerRect.bottomLeft - Offset(0, c), corner);
     // bottom-right
-    canvas.drawLine(r.outerRect.bottomRight, r.outerRect.bottomRight - Offset(c, 0), corner);
-    canvas.drawLine(r.outerRect.bottomRight, r.outerRect.bottomRight - Offset(0, c), corner);
+    canvas.drawLine(r.outerRect.bottomRight,
+        r.outerRect.bottomRight - Offset(c, 0), corner);
+    canvas.drawLine(r.outerRect.bottomRight,
+        r.outerRect.bottomRight - Offset(0, c), corner);
   }
 
   @override

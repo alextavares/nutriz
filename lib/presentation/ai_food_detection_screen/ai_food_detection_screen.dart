@@ -122,7 +122,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                             SizedBox(
                               width: 150,
                               child: DropdownButtonFormField<String>(
-                                initialValue: mealByIndex[i],
+                                value: mealByIndex[i],
                                 items: const [
                                   DropdownMenuItem(
                                       value: 'breakfast', child: Text('Café')),

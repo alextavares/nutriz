@@ -129,10 +129,12 @@ class _RecentFoodsWidgetState extends State<RecentFoodsWidget> {
             children: [
               for (final g in _quickOptions)
                 Chip(
-                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.2.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.2.h),
                   backgroundColor: AppTheme.secondaryBackgroundDark,
                   shape: StadiumBorder(
-                    side: BorderSide(color: AppTheme.activeBlue.withValues(alpha: 0.5)),
+                    side: BorderSide(
+                        color: AppTheme.activeBlue.withValues(alpha: 0.5)),
                   ),
                   label: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -241,8 +243,8 @@ class _RecentFoodsWidgetState extends State<RecentFoodsWidget> {
                                             Flexible(
                                               child: Text(
                                                 '${g.toInt()}g',
-                                                style: AppTheme
-                                                    .darkTheme.textTheme.bodySmall
+                                                style: AppTheme.darkTheme
+                                                    .textTheme.bodySmall
                                                     ?.copyWith(
                                                   color: AppTheme.activeBlue,
                                                   fontWeight: FontWeight.w600,

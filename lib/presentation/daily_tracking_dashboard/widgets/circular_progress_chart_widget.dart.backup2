@@ -1,0 +1,277 @@
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+import 'dart:math' as math;
+
+import '../../../core/app_export.dart';
+import '../../../theme/app_theme.dart';
+
+class CircularProgressChartWidget extends StatefulWidget {
+  final int consumedCalories;
+  final int remainingCalories;
+  final int spentCalories;
+  final int totalCalories;
+  final VoidCallback? onTap;
+  final int? waterMl;
+
+  const CircularProgressChartWidget({
+    super.key,
+    required this.consumedCalories,
+    required this.remainingCalories,
+    required this.spentCalories,
+    required this.totalCalories,
+    this.onTap,
+    this.waterMl,
+  });
+
+  @override
+  State<CircularProgressChartWidget> createState() =>
+      _CircularProgressChartWidgetState();
+}
+
+class _CircularProgressChartWidgetState
+    extends State<CircularProgressChartWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String _tConsumed() {
+      final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+      return lang == 'pt' ? 'Consumidas' : 'Eaten';
+    }
+    String _tBurned() {
+      final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+      return lang == 'pt' ? 'Queimadas' : 'Burned';
+    }
+    String _tRemaining(bool exceeded) {
+      final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+      if (lang == 'pt') return exceeded ? 'Excedeu' : 'Restantes';
+      return exceeded ? 'Exceeded' : 'Remaining';
+    }
+
+    Widget sideStat({
+      required String label,
+      required int value,
+      required Color color,
+      required TextAlign align,
+    }) {
+      final cs = Theme.of(context).colorScheme;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: align == TextAlign.right
+            ? CrossAxisAlignment.end
+            : (align == TextAlign.center
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start),
+        children: [
+          Text(
+            '$value',
+            textAlign: align,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  fontSize: 13.5,
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: align,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10.5,
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      );
+    }
+
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Padding(
+        // Remove extra horizontal padding so side labels align to card edges
+        padding: EdgeInsets.symmetric(horizontal: 0, vertical: 1.w),
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            final consumed = (widget.consumedCalories * _animation.value).toInt();
+            final burned = (widget.spentCalories * _animation.value).toInt();
+            // Net remaining can be negative; display absolute when exceeded
+            final exceeded = widget.remainingCalories <= 0;
+            final int baseRemaining = exceeded
+                ? -widget.remainingCalories
+                : widget.remainingCalories;
+            final remaining = (baseRemaining * _animation.value).toInt();
+            final cs = Theme.of(context).colorScheme;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LayoutBuilder(
+                  builder: (context, rowConstraints) {
+                    final totalW = rowConstraints.maxWidth;
+                    const gap = 12.0; // fixed visual gap from ring to sides
+                    // Ring target size ~36% of row width, clamped for balance
+                    double ringW = totalW * 0.36;
+                    ringW = ringW.clamp(120.0, 180.0);
+
+                    Widget ringBox = SizedBox(
+                      width: ringW,
+                      height: ringW,
+                      child: CustomPaint(
+                        painter: CircularProgressPainter(
+                          consumedCalories: widget.consumedCalories,
+                          totalCalories: widget.totalCalories,
+                          animationValue: _animation.value,
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '$remaining',
+                                style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
+                                  color: exceeded ? AppTheme.errorRed : AppTheme.activeBlue,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16.sp,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              Text(
+                                _tRemaining(exceeded),
+                                style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.1,
+                                  fontSize: 11.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: sideStat(
+                              label: _tConsumed(),
+                              value: consumed,
+                              color: AppTheme.warningAmber,
+                              align: TextAlign.left,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: gap),
+                        ringBox,
+                        const SizedBox(width: gap),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: sideStat(
+                              label: _tBurned(),
+                              value: burned,
+                              color: AppTheme.successGreen,
+                              align: TextAlign.right,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                SizedBox(height: 0.6.h),
+                // Removed Total goal chip to avoid repetition under the ring
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class CircularProgressPainter extends CustomPainter {
+  final int consumedCalories;
+  final int totalCalories;
+  final double animationValue;
+
+  CircularProgressPainter({
+    required this.consumedCalories,
+    required this.totalCalories,
+    required this.animationValue,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final stroke = 8.0; // Slimmer ring per layout balance
+    final radius = size.width / 2 - stroke;
+
+    // Background circle
+    final backgroundPaint = Paint()
+      ..color = AppTheme.dividerGray.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Progress arc
+    final progressPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+
+    final raw = (totalCalories <= 0) ? 0.0 : (consumedCalories / totalCalories);
+    final exceeded = raw > 1.0;
+    final progress = raw.clamp(0.0, 1.0);
+    final baseColor = exceeded
+        ? AppTheme.errorRed
+        : (Color.lerp(AppTheme.activeBlue, AppTheme.successGreen, progress) ??
+            AppTheme.activeBlue);
+    progressPaint.color = baseColor;
+    final sweepAngle = progress * 2 * math.pi * animationValue;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2, // Start from top
+      sweepAngle,
+      false,
+      progressPaint,
+    );
+
+    // End-cap dot removed for flatter appearance
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}

@@ -121,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Perfil'),
         actions: [
@@ -158,21 +158,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: EdgeInsets.all(4.w),
+                        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondaryBackgroundDark,
-                          borderRadius: BorderRadius.circular(12),
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
+                          ),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 8.w,
-                              backgroundColor:
-                                  AppTheme.activeBlue.withValues(alpha: 0.2),
+                              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                               child: Text(
                                 (_email ?? 'U').substring(0, 1).toUpperCase(),
-                                style:
-                                    AppTheme.darkTheme.textTheme.headlineSmall,
+                                style: Theme.of(context).textTheme.headlineSmall,
                               ),
                             ),
                             SizedBox(width: 4.w),
@@ -182,27 +183,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   Text(
                                     _email ?? '-',
-                                    style: AppTheme
-                                        .darkTheme.textTheme.titleMedium,
+                                    style: Theme.of(context).textTheme.titleMedium,
                                   ),
                                   SizedBox(height: 0.5.h),
                                   Row(
                                     children: [
                                       CustomIconWidget(
-                                        iconName:
-                                            _isPremium ? 'star' : 'person',
+                                        iconName: _isPremium ? 'star' : 'person',
                                         color: _isPremium
                                             ? AppTheme.premiumGold
-                                            : AppTheme.textSecondary,
+                                            : Theme.of(context).colorScheme.onSurfaceVariant,
                                         size: 5.w,
                                       ),
                                       SizedBox(width: 2.w),
                                       Text(
-                                        _isPremium
-                                            ? 'Assinatura PRO'
-                                            : 'Plano Gratuito',
-                                        style: AppTheme
-                                            .darkTheme.textTheme.bodyMedium,
+                                        _isPremium ? 'Assinatura PRO' : 'Plano Gratuito',
+                                        style: Theme.of(context).textTheme.bodyMedium,
                                       ),
                                     ],
                                   ),
@@ -268,12 +264,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGoalsForm() {
+  return Builder(builder: (context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+    decoration: BoxDecoration(
+      color: cs.surface,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+    ),
       child: Column(
         children: [
           _rowField('Calorias (kcal)', _calController),
@@ -315,22 +314,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  });
   }
 
   Widget _buildHydrationReminderSection() {
+  return Builder(builder: (context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+    decoration: BoxDecoration(
+      color: cs.surface,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+    ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Lembretes de Hidratação',
-            style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.textPrimary,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: cs.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -340,8 +343,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Expanded(
                 child: Text(
                   'Ativar lembretes',
-                  style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textPrimary,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurface,
                   ),
                 ),
               ),
@@ -365,8 +368,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Expanded(
                 child: Text(
                   'Intervalo (minutos)',
-                  style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textPrimary,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurface,
                   ),
                 ),
               ),
@@ -391,17 +394,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  });
   }
 
   Widget _rowField(String label, TextEditingController controller,
       {List<TextInputFormatter>? inputFormatters}) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
           child: Text(
             label,
-            style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textPrimary,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: cs.onSurface,
             ),
           ),
         ),
@@ -422,19 +427,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBackupSection() {
+  return Builder(builder: (context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+    decoration: BoxDecoration(
+      color: cs.surface,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+    ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Backup do Diário',
-            style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.textPrimary,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: cs.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -459,8 +467,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: 2.h),
           Text(
             'Templates (Dia/Semana)',
-            style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.textPrimary,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: cs.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -493,8 +501,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: 2.h),
           Text(
             'Alimentos (Favoritos / Meus)',
-            style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.textPrimary,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: cs.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -527,16 +535,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  });
   }
 
   Widget _buildUiPreferencesSection() {
     final controller = TextEditingController();
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
-        borderRadius: BorderRadius.circular(12),
-      ),
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+    decoration: BoxDecoration(
+      color: AppTheme.secondaryBackgroundDark,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.2)),
+    ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

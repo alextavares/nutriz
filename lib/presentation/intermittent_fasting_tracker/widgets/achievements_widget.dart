@@ -55,6 +55,7 @@ class AchievementsWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildStatCard(
+                  context: context,
                   icon: 'calendar_today',
                   value: '$totalFastingDays',
                   label: 'Dias Total',
@@ -64,6 +65,7 @@ class AchievementsWidget extends StatelessWidget {
               SizedBox(width: 3.w),
               Expanded(
                 child: _buildStatCard(
+                  context: context,
                   icon: 'local_fire_department',
                   value: '$longestStreak',
                   label: 'Maior Sequência',
@@ -88,7 +90,7 @@ class AchievementsWidget extends StatelessWidget {
             itemCount: achievements.length,
             itemBuilder: (context, index) {
               final achievement = achievements[index];
-              return _buildAchievementCard(achievement);
+              return _buildAchievementCard(context, achievement);
             },
           ),
         ],
@@ -97,13 +99,19 @@ class AchievementsWidget extends StatelessWidget {
   }
 
   Widget _buildStatCard({
+    required BuildContext context,
     required String icon,
     required String value,
     required String label,
     required Color color,
   }) {
+    final w = MediaQuery.of(context).size.width;
+    final double fsValue = w < 340 ? 13.sp : (w < 380 ? 15.sp : 16.sp);
+    final double fsLabel = w < 340 ? 8.sp : (w < 380 ? 9.sp : 10.sp);
+    final double iconSize = w < 360 ? 18 : 20;
+    final double pad = w < 360 ? 10 : 12;
     return Container(
-      padding: EdgeInsets.all(3.w),
+      padding: EdgeInsets.all(pad),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
@@ -116,14 +124,14 @@ class AchievementsWidget extends StatelessWidget {
           CustomIconWidget(
             iconName: icon,
             color: color,
-            size: 20,
+            size: iconSize,
           ),
           SizedBox(height: 1.h),
           Text(
             value,
             style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
               color: color,
-              fontSize: 16.sp,
+              fontSize: fsValue,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -131,7 +139,7 @@ class AchievementsWidget extends StatelessWidget {
             label,
             style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
               color: AppTheme.textSecondary,
-              fontSize: 10.sp,
+              fontSize: fsLabel,
             ),
             textAlign: TextAlign.center,
           ),
@@ -140,15 +148,20 @@ class AchievementsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildAchievementCard(Map<String, dynamic> achievement) {
+  Widget _buildAchievementCard(BuildContext context, Map<String, dynamic> achievement) {
     final isUnlocked = achievement["unlocked"] as bool;
     final title = achievement["title"] as String;
     // description unused here by design (card compact)
     final progress = achievement["progress"] as double;
     final target = achievement["target"] as int;
+    final w = MediaQuery.of(context).size.width;
+    final double iconSize = w < 360 ? 18 : 20;
+    final double titleFs = w < 340 ? 8.sp : (w < 380 ? 9.sp : 10.sp);
+    final double progFs = w < 340 ? 7.sp : (w < 380 ? 8.sp : 9.sp);
+    final double pad = w < 360 ? 8 : 10;
 
     return Container(
-      padding: EdgeInsets.all(2.w),
+      padding: EdgeInsets.all(pad.toDouble()),
       decoration: BoxDecoration(
         color: isUnlocked
             ? AppTheme.premiumGold.withValues(alpha: 0.1)
@@ -166,14 +179,14 @@ class AchievementsWidget extends StatelessWidget {
           CustomIconWidget(
             iconName: isUnlocked ? 'diamond' : 'lock',
             color: isUnlocked ? AppTheme.premiumGold : AppTheme.textSecondary,
-            size: 20,
+            size: iconSize,
           ),
           SizedBox(height: 1.h),
           Text(
             title,
             style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
               color: isUnlocked ? AppTheme.premiumGold : AppTheme.textSecondary,
-              fontSize: 9.sp,
+              fontSize: titleFs,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
@@ -186,7 +199,7 @@ class AchievementsWidget extends StatelessWidget {
               '${(progress * target).toInt()}/$target',
               style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.textSecondary,
-                fontSize: 8.sp,
+                fontSize: progFs,
               ),
             ),
           ],

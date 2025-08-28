@@ -59,7 +59,8 @@ class _MacronutrientProgressWidgetState
       icon = Icons.bakery_dining;
     } else if (widget.name.toLowerCase().contains('prot')) {
       icon = Icons.set_meal;
-    } else if (widget.name.toLowerCase().contains('gord') || widget.name.toLowerCase().contains('fat')) {
+    } else if (widget.name.toLowerCase().contains('gord') ||
+        widget.name.toLowerCase().contains('fat')) {
       icon = Icons.local_pizza;
     } else {
       icon = Icons.circle;
@@ -84,6 +85,8 @@ class _MacronutrientProgressWidgetState
                       color: AppTheme.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ]),
                 Row(children: [
@@ -100,6 +103,8 @@ class _MacronutrientProgressWidgetState
                     style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ]),
               ],

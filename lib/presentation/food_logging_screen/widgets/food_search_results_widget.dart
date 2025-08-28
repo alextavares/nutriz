@@ -174,6 +174,13 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                SizedBox(height: 2.h),
+                if (widget.onHeaderRightTap != null)
+                  ElevatedButton.icon(
+                    onPressed: widget.onHeaderRightTap,
+                    icon: const Icon(Icons.tune),
+                    label: const Text('Abrir filtros'),
+                  ),
               ],
             ),
           ),
@@ -314,10 +321,18 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                                 runSpacing: 6,
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
-                                  _buildNutrientChip('${_per100(food)['cal']} kcal/100g', AppTheme.warningAmber),
-                                  _buildNutrientChip('C: ${_per100(food)['carb']}g', AppTheme.successGreen),
-                                  _buildNutrientChip('P: ${_per100(food)['prot']}g', AppTheme.activeBlue),
-                                  _buildNutrientChip('G: ${_per100(food)['fat']}g', AppTheme.errorRed),
+                                  _buildNutrientChip(
+                                      '${_per100(food)['cal']} kcal/100g',
+                                      AppTheme.warningAmber),
+                                  _buildNutrientChip(
+                                      'C: ${_per100(food)['carb']}g',
+                                      AppTheme.successGreen),
+                                  _buildNutrientChip(
+                                      'P: ${_per100(food)['prot']}g',
+                                      AppTheme.activeBlue),
+                                  _buildNutrientChip(
+                                      'G: ${_per100(food)['fat']}g',
+                                      AppTheme.errorRed),
                                   FutureBuilder<bool>(
                                     future: FavoritesStorage.isFavorite(
                                         (food['name'] as String?) ?? ''),
@@ -327,16 +342,22 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                                         borderRadius: BorderRadius.circular(16),
                                         onTap: () async {
                                           HapticFeedback.selectionClick();
-                                          await FavoritesStorage.toggleFavorite(food);
+                                          await FavoritesStorage.toggleFavorite(
+                                              food);
                                           if (!mounted) return;
-                                          if (widget.onFavoritesChanged != null) {
+                                          if (widget.onFavoritesChanged !=
+                                              null) {
                                             await widget.onFavoritesChanged!();
                                           }
                                           await _refreshFavs();
                                           setState(() {});
                                           Fluttertoast.showToast(
-                                            msg: isFav ? 'Removido dos favoritos' : 'Adicionado aos favoritos',
-                                            backgroundColor: isFav ? AppTheme.errorRed : AppTheme.successGreen,
+                                            msg: isFav
+                                                ? 'Removido dos favoritos'
+                                                : 'Adicionado aos favoritos',
+                                            backgroundColor: isFav
+                                                ? AppTheme.errorRed
+                                                : AppTheme.successGreen,
                                             textColor: AppTheme.textPrimary,
                                           );
                                         },
@@ -345,7 +366,9 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               CustomIconWidget(
-                                                iconName: isFav ? 'star' : 'star_border',
+                                                iconName: isFav
+                                                    ? 'star'
+                                                    : 'star_border',
                                                 color: AppTheme.premiumGold,
                                                 size: 4.w,
                                               ),
@@ -354,11 +377,16 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                                             ],
                                           ),
                                           visualDensity: VisualDensity.compact,
-                                          backgroundColor: AppTheme.secondaryBackgroundDark,
+                                          backgroundColor:
+                                              AppTheme.secondaryBackgroundDark,
                                           shape: StadiumBorder(
-                                            side: BorderSide(color: AppTheme.premiumGold.withValues(alpha: 0.6)),
+                                            side: BorderSide(
+                                                color: AppTheme.premiumGold
+                                                    .withValues(alpha: 0.6)),
                                           ),
-                                          labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                                          labelStyle: AppTheme
+                                              .darkTheme.textTheme.bodySmall
+                                              ?.copyWith(
                                             color: AppTheme.premiumGold,
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -368,8 +396,10 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                                   ),
                                   if (widget.onQuickAddWithGrams != null)
                                     _QuickAddChips(
-                                      caloriesPerGram: _calcCaloriesPerGram(food),
-                                      onTap: (g) => widget.onQuickAddWithGrams!(food, g),
+                                      caloriesPerGram:
+                                          _calcCaloriesPerGram(food),
+                                      onTap: (g) =>
+                                          widget.onQuickAddWithGrams!(food, g),
                                     ),
                                 ],
                               ),

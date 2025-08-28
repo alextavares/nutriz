@@ -9,13 +9,15 @@ import '../../../theme/app_theme.dart';
 
 class FastingTimerWidget extends StatefulWidget {
   final bool isFasting;
-  final Duration remainingTime;
+  final Duration remainingTime; // dynamic remaining
+  final Duration totalDuration; // fixed total target
   final VoidCallback onTimerComplete;
 
   const FastingTimerWidget({
     Key? key,
     required this.isFasting,
     required this.remainingTime,
+    required this.totalDuration,
     required this.onTimerComplete,
   }) : super(key: key);
 
@@ -107,7 +109,7 @@ class _FastingTimerWidgetState extends State<FastingTimerWidget>
   @override
   Widget build(BuildContext context) {
     final progress = widget.isFasting
-        ? (_currentRemainingTime.inSeconds / widget.remainingTime.inSeconds)
+        ? (_currentRemainingTime.inSeconds / widget.totalDuration.inSeconds)
             .clamp(0.0, 1.0)
         : 0.0;
 

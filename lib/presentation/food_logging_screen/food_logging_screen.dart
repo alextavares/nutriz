@@ -46,6 +46,8 @@ class _PortionPickerState extends State<_PortionPicker> {
   String unit = 'g';
   double quantity = 1;
   double gramsPerPortion = 100;
+  final TextEditingController _qtyCtrl = TextEditingController(text: '1');
+  final TextEditingController _gramsCtrl = TextEditingController(text: '100');
   Map<String, double> unitPresets = {
     'unidade': 100,
     'colher': 15,
@@ -66,7 +68,16 @@ class _PortionPickerState extends State<_PortionPicker> {
       unit = 'unidade';
       gramsPerPortion = 100;
     }
+    _qtyCtrl.text = quantity.toString();
+    _gramsCtrl.text = gramsPerPortion.toStringAsFixed(0);
     _loadPresetsIfAny();
+  }
+
+  @override
+  void dispose() {
+    _qtyCtrl.dispose();
+    _gramsCtrl.dispose();
+    super.dispose();
   }
 
   String formatNum(double v) => v.toStringAsFixed(v % 1 == 0 ? 0 : 1);
@@ -108,7 +119,8 @@ class _PortionPickerState extends State<_PortionPicker> {
   // Expose preview to parent (for quick add CTA)
   Map<String, num> currentPreview() => _preview();
 
-  Map<String, dynamic> buildUpdatedFoodFromPreview() => _buildUpdatedFood(_preview());
+  Map<String, dynamic> buildUpdatedFoodFromPreview() =>
+      _buildUpdatedFood(_preview());
 
   Future<void> _loadPresetsIfAny() async {
     try {
@@ -150,6 +162,8 @@ class _PortionPickerState extends State<_PortionPicker> {
   @override
   Widget build(BuildContext context) {
     final preview = _preview();
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -172,24 +186,29 @@ class _PortionPickerState extends State<_PortionPicker> {
                         unit = u;
                         if (unit == 'g') {
                           gramsPerPortion = 1;
+                          _gramsCtrl.text = gramsPerPortion.toStringAsFixed(0);
                         } else if (unit == 'unidade') {
-                          gramsPerPortion = unitPresets['unidade'] ?? _baseGrams();
+                          gramsPerPortion =
+                              unitPresets['unidade'] ?? _baseGrams();
+                          _gramsCtrl.text = gramsPerPortion.toStringAsFixed(0);
                         } else if (unit == 'colher') {
                           gramsPerPortion = unitPresets['colher'] ?? 15;
+                          _gramsCtrl.text = gramsPerPortion.toStringAsFixed(0);
                         } else if (unit == 'xícara') {
                           gramsPerPortion = unitPresets['xícara'] ?? 240;
+                          _gramsCtrl.text = gramsPerPortion.toStringAsFixed(0);
                         }
                       });
                     },
-                    labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                      color: selected ? AppTheme.activeBlue : AppTheme.textSecondary,
+                    labelStyle: theme.textTheme.bodySmall?.copyWith(
+                      color: selected ? cs.primary : cs.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
                     ),
-                    backgroundColor: AppTheme.secondaryBackgroundDark,
-                    selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
+                    backgroundColor: cs.surface,
+                    selectedColor: cs.primary.withValues(alpha: 0.12),
                     shape: StadiumBorder(
                       side: BorderSide(
-                        color: (selected ? AppTheme.activeBlue : AppTheme.dividerGray)
+                        color: (selected ? cs.primary : cs.outlineVariant)
                             .withValues(alpha: 0.6),
                       ),
                     ),
@@ -199,11 +218,42 @@ class _PortionPickerState extends State<_PortionPicker> {
             ),
             SizedBox(width: 3.w),
             SizedBox(
-              width: 28.w,
-              child: TextField(
-                decoration: const InputDecoration(labelText: 'Quantidade'),
-                keyboardType: TextInputType.number,
-                onChanged: (v) => setState(() => quantity = double.tryParse(v.trim()) ?? 1),
+              width: 34.w,
+              child: Row(
+                children: [
+                  _roundIconButton(
+                    icon: Icons.remove,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        quantity = (quantity - 0.25).clamp(0.0, 100.0);
+                        _qtyCtrl.text = quantity.toString();
+                      });
+                    },
+                  ),
+                  SizedBox(width: 2.w),
+                  Expanded(
+                    child: TextField(
+                      controller: _qtyCtrl,
+                      decoration:
+                          const InputDecoration(labelText: 'Quantidade'),
+                      keyboardType: TextInputType.number,
+                      onChanged: (v) => setState(
+                          () => quantity = double.tryParse(v.trim()) ?? 1),
+                    ),
+                  ),
+                  SizedBox(width: 2.w),
+                  _roundIconButton(
+                    icon: Icons.add,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        quantity = (quantity + 0.25).clamp(0.0, 100.0);
+                        _qtyCtrl.text = quantity.toString();
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -214,14 +264,20 @@ class _PortionPickerState extends State<_PortionPicker> {
             children: [
               Expanded(
                 child: Text('Gramas por porção',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium),
+                    style: theme.textTheme.bodyMedium),
               ),
               SizedBox(
                 width: 28.w,
                 child: TextField(
+                  controller: _gramsCtrl,
                   decoration: const InputDecoration(hintText: '100'),
                   keyboardType: TextInputType.number,
-                  onChanged: (v) => setState(() => gramsPerPortion = double.tryParse(v.trim()) ?? gramsPerPortion),
+                  onChanged: (v) => setState(() {
+                    final parsed = double.tryParse(v.trim());
+                    if (parsed != null && parsed > 0) {
+                      gramsPerPortion = parsed;
+                    }
+                  }),
                 ),
               ),
             ],
@@ -233,22 +289,27 @@ class _PortionPickerState extends State<_PortionPicker> {
             runSpacing: 8,
             children: [
               for (final entry in unitPresets.entries)
-                if (['unidade','colher','xícara'].contains(entry.key))
+                if (['unidade', 'colher', 'xícara'].contains(entry.key))
                   ChoiceChip(
                     label: Text('${entry.key}: ${entry.value.toInt()} g'),
                     selected: gramsPerPortion.round() == entry.value.round(),
                     onSelected: (_) {
                       HapticFeedback.selectionClick();
-                      setState(() => gramsPerPortion = entry.value);
+                      setState(() {
+                        gramsPerPortion = entry.value;
+                        _gramsCtrl.text = gramsPerPortion.toStringAsFixed(0);
+                      });
                     },
-                    labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                    labelStyle:
+                        AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
                       color: AppTheme.textSecondary,
                       fontWeight: FontWeight.w700,
                     ),
                     backgroundColor: AppTheme.secondaryBackgroundDark,
                     selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
                     shape: StadiumBorder(
-                      side: BorderSide(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                      side: BorderSide(
+                          color: AppTheme.dividerGray.withValues(alpha: 0.6)),
                     ),
                   ),
             ],
@@ -260,24 +321,26 @@ class _PortionPickerState extends State<_PortionPicker> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.6.h),
               decoration: BoxDecoration(
-                color: AppTheme.secondaryBackgroundDark,
+                color: cs.surface,
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                border:
+                    Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.save_outlined, size: 16, color: AppTheme.textSecondary),
+                  Icon(Icons.save_outlined,
+                      size: 16, color: cs.onSurfaceVariant),
                   SizedBox(width: 1.w),
                   Text('Salvar como padrão',
-                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
                       )),
                   SizedBox(width: 2.w),
                   Switch(
                     value: saveAsDefault,
                     onChanged: (v) => setState(() => saveAsDefault = v),
-                    activeColor: AppTheme.activeBlue,
+                    activeColor: cs.primary,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ],
@@ -287,7 +350,8 @@ class _PortionPickerState extends State<_PortionPicker> {
         ],
         SizedBox(height: 1.2.h),
         Text(
-            'Prévia: ${formatNum(preview['cal']!.toDouble())} kcal • C ${formatNum(preview['carb']!.toDouble())}g • P ${formatNum(preview['prot']!.toDouble())}g • G ${formatNum(preview['fat']!.toDouble())}g'),
+          'Prévia: ${formatNum(preview['cal']!.toDouble())} kcal • ${formatNum(preview['grams']!.toDouble())} g • C ${formatNum(preview['carb']!.toDouble())}g • P ${formatNum(preview['prot']!.toDouble())}g • G ${formatNum(preview['fat']!.toDouble())}g',
+        ),
         SizedBox(height: 1.2.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -310,11 +374,31 @@ class _PortionPickerState extends State<_PortionPicker> {
                   await _maybeSavePreset(updated);
                   widget.onApplyAndSave!(updated);
                 },
-                child: const Text('Aplicar e salvar'),
+                child: Text(
+                  'Aplicar e adicionar — ${preview['cal']!.round()} kcal',
+                ),
               ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _roundIconButton({required IconData icon, required VoidCallback onTap}) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 10.w,
+        height: 10.w,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
+        ),
+        child: Icon(icon, color: cs.primary),
+      ),
     );
   }
 
@@ -557,6 +641,10 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
           }
         }
       }
+      // Acessibilidade: focar a barra de busca quando não há alimento selecionado
+      if (_selectedFood == null && _searchController.text.isEmpty) {
+        _searchFocus.requestFocus();
+      }
     });
   }
 
@@ -793,6 +881,32 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
     );
   }
 
+  bool _hasActiveFilters() {
+    final bool kcalChanged = _kcalRange.start > 0 || _kcalRange.end < 1000;
+    final bool macros = _filterProtein || _filterCarb || _filterFat;
+    final bool sorted = _sortKey != 'relevance';
+    return kcalChanged || macros || sorted;
+  }
+
+  void _clearAllFilters() {
+    setState(() {
+      _kcalRange = const RangeValues(0, 1000);
+      _filterProtein = false;
+      _filterCarb = false;
+      _filterFat = false;
+      _sortKey = 'relevance';
+    });
+    UserPreferences.setSearchFilters(
+      kcalMin: _kcalRange.start,
+      kcalMax: _kcalRange.end,
+      prioritizeProtein: _filterProtein,
+      prioritizeCarb: _filterCarb,
+      prioritizeFat: _filterFat,
+      sortKey: _sortKey,
+    );
+    _onSearchChanged();
+  }
+
   void _onBarcodePressed() {
     setState(() {
       _showBarcodeScanner = true;
@@ -881,22 +995,23 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        height: 60.h,
-        decoration: BoxDecoration(
-          color: AppTheme.darkTheme.scaffoldBackgroundColor,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
+      builder: (context) {
+        final theme = Theme.of(context);
+        final cs = theme.colorScheme;
+        return Container(
+          height: 60.h,
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
           children: [
             Container(
               padding: EdgeInsets.all(4.w),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppTheme.darkTheme.colorScheme.outline.withValues(
-                      alpha: 0.2,
-                    ),
+                    color: cs.outlineVariant.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -905,13 +1020,13 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                 children: [
                   Text(
                     'Informações Nutricionais',
-                    style: AppTheme.darkTheme.textTheme.titleLarge,
+                    style: theme.textTheme.titleLarge,
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: CustomIconWidget(
                       iconName: 'close',
-                      color: AppTheme.darkTheme.colorScheme.onSurface,
+                      color: cs.onSurface,
                       size: 6.w,
                     ),
                   ),
@@ -926,23 +1041,25 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                   children: [
                     Text(
                       food['name'] as String,
-                      style: AppTheme.darkTheme.textTheme.headlineSmall,
+                      style: theme.textTheme.headlineSmall,
                     ),
                     Text(
                       food['brand'] as String,
-                      style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     Builder(builder: (_) {
                       // Show base serving if available
                       final String? serving = food['serving'] as String?;
-                      final m = serving != null ? RegExp(r"(\\d+)\\s*g").firstMatch(serving) : null;
+                      final m = serving != null
+                          ? RegExp(r"(\\d+)\\s*g").firstMatch(serving)
+                          : null;
                       if (m == null) return const SizedBox.shrink();
                       return Text(
                         'Base de porção: ${m.group(1)} g',
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
                       );
                     }),
@@ -951,14 +1068,17 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _macroChip('${food['calories']} kcal', AppTheme.warningAmber),
-                        _macroChip('C ${food['carbs']}g', AppTheme.successGreen),
-                        _macroChip('P ${food['protein']}g', AppTheme.activeBlue),
+                        _macroChip(
+                            '${food['calories']} kcal', AppTheme.warningAmber),
+                        _macroChip(
+                            'C ${food['carbs']}g', AppTheme.successGreen),
+                        _macroChip(
+                            'P ${food['protein']}g', AppTheme.activeBlue),
                         _macroChip('G ${food['fat']}g', AppTheme.errorRed),
                       ],
                     ),
                     SizedBox(height: 1.2.h),
-                    Divider(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                    Divider(color: cs.outlineVariant.withValues(alpha: 0.6)),
                     SizedBox(height: 1.2.h),
                     _buildNutrientRow(
                       'Calorias',
@@ -994,7 +1114,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                         Fluttertoast.showToast(
                           msg: 'Porção aplicada',
                           backgroundColor: AppTheme.successGreen,
-                          textColor: AppTheme.textPrimary,
+                          textColor: Theme.of(context).colorScheme.onSurface,
                         );
                       },
                       onApplyAndSave: (updated) async {
@@ -1022,7 +1142,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                         Fluttertoast.showToast(
                           msg: 'Salvo com porção aplicada',
                           backgroundColor: AppTheme.successGreen,
-                          textColor: AppTheme.textPrimary,
+                          textColor: Theme.of(context).colorScheme.onSurface,
                         );
                       },
                     ),
@@ -1036,7 +1156,8 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                             final state = pickerKey.currentState;
                             if (state == null) return;
                             final updated = state.buildUpdatedFoodFromPreview();
-                            final DateTime saveDate = _targetDate ?? DateTime.now();
+                            final DateTime saveDate =
+                                _targetDate ?? DateTime.now();
                             final newId = DateTime.now().millisecondsSinceEpoch;
                             final entry = {
                               'id': newId,
@@ -1045,7 +1166,8 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                               'carbs': updated['carbs'],
                               'protein': updated['protein'],
                               'fat': updated['fat'],
-                              'brand': (updated['brand'] as String?) ?? 'Genérico',
+                              'brand':
+                                  (updated['brand'] as String?) ?? 'Genérico',
                               'quantity': 1.0,
                               'serving': updated['serving'],
                               'mealTime': _selectedMealTime,
@@ -1055,11 +1177,14 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                             if (!mounted) return;
                             Navigator.pop(context);
                             _showUndoSnackBar(saveDate, newId,
-                                message: 'Adicionado ao diário (' + _currentMealLabel() + ')');
+                                message: 'Adicionado ao diário (' +
+                                    _currentMealLabel() +
+                                    ')');
                           } catch (_) {}
                         },
                         icon: const Icon(Icons.playlist_add),
-                        label: Text('Adicionar ao diário — ' + _currentMealLabel()),
+                        label: Text(
+                            'Adicionar ao diário — ' + _currentMealLabel()),
                       ),
                     ),
                     SizedBox(height: 0.5.h),
@@ -1121,7 +1246,8 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
             ),
           ],
         ),
-      ),
+      );
+    },
     );
   }
 
@@ -1372,8 +1498,10 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return Scaffold(
-      backgroundColor: AppTheme.darkTheme.scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           Column(
@@ -1385,8 +1513,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: AppTheme.darkTheme.colorScheme.outline
-                            .withValues(alpha: 0.2),
+                        color: cs.outlineVariant.withValues(alpha: 0.2),
                       ),
                     ),
                   ),
@@ -1398,12 +1525,12 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           width: 10.w,
                           height: 10.w,
                           decoration: BoxDecoration(
-                            color: AppTheme.darkTheme.colorScheme.surface,
+                            color: cs.surface,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: CustomIconWidget(
                             iconName: 'arrow_back',
-                            color: AppTheme.darkTheme.colorScheme.onSurface,
+                            color: cs.onSurface,
                             size: 5.w,
                           ),
                         ),
@@ -1415,14 +1542,12 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           children: [
                             Text(
                               'Registrar Alimento',
-                              style: AppTheme.darkTheme.textTheme.titleLarge,
+                              style: theme.textTheme.titleLarge,
                             ),
                             Text(
                               'Adicione alimentos à sua refeição',
-                              style: AppTheme.darkTheme.textTheme.bodySmall
-                                  ?.copyWith(
-                                color: AppTheme
-                                    .darkTheme.colorScheme.onSurfaceVariant,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -1436,9 +1561,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                         },
                         icon: const Icon(Icons.tune),
                         label: const Text('Chips'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.activeBlue,
-                        ),
+                        style: TextButton.styleFrom(foregroundColor: cs.primary),
                       ),
                       // Chips prefs shortcut next to meal selector would be implemented in the MealTimingSelectorWidget; for now, header has a shortcut.
                       // AI Detection button
@@ -1502,15 +1625,15 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                         child: Container(
                           padding: EdgeInsets.all(2.w),
                           decoration: BoxDecoration(
-                            color: AppTheme.activeBlue.withValues(alpha: 0.2),
+                            color: cs.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppTheme.activeBlue),
+                            border: Border.all(color: cs.primary),
                           ),
-                          child: Column(
-                            children: [
+        child: Column(
+          children: [
                               CustomIconWidget(
                                 iconName: 'psychology',
-                                color: AppTheme.activeBlue,
+                                color: cs.primary,
                                 size: 6.w,
                               ),
                               SizedBox(height: 0.5.h),
@@ -1546,13 +1669,16 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                   onOpenFilters: _openFilters,
                   onDuplicateLastMeal: () async {
                     final DateTime date = _targetDate ?? DateTime.now();
-                    final entries = await NutritionStorage.getEntriesForDate(date);
+                    final entries =
+                        await NutritionStorage.getEntriesForDate(date);
                     if (entries.isEmpty) return;
                     entries.sort((a, b) => ((b['createdAt'] as String?) ?? '')
                         .compareTo((a['createdAt'] as String?) ?? ''));
-                    final lastMealTime = (entries.first['mealTime'] as String?) ?? 'snack';
+                    final lastMealTime =
+                        (entries.first['mealTime'] as String?) ?? 'snack';
                     final sameMeal = entries
-                        .where((e) => (e['mealTime'] as String?) == lastMealTime)
+                        .where(
+                            (e) => (e['mealTime'] as String?) == lastMealTime)
                         .toList();
                     for (final e in sameMeal) {
                       final dup = Map<String, dynamic>.from(e);
@@ -1570,6 +1696,102 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                 ),
               ),
 
+              // Active Filters chips
+              if (_hasActiveFilters())
+                Padding(
+                  padding: EdgeInsets.only(left: 4.w, right: 4.w, bottom: 1.h),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        // Kcal range chip (only when narrowed)
+                        if (_kcalRange.start > 0 || _kcalRange.end < 1000)
+                          Chip(
+                            label: Text(
+                                'Kcal: ${_kcalRange.start.round()}–${_kcalRange.end.round()}'),
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor:
+                                AppTheme.secondaryBackgroundDark.withValues(alpha: 0.18),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                  color: AppTheme.activeBlue.withValues(alpha: 0.6)),
+                            ),
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                              color: AppTheme.activeBlue,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        if (_filterProtein)
+                          Chip(
+                            label: const Text('Foco proteína'),
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor:
+                                AppTheme.secondaryBackgroundDark.withValues(alpha: 0.18),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                  color: AppTheme.activeBlue.withValues(alpha: 0.6)),
+                            ),
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                              color: AppTheme.activeBlue,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        if (_filterCarb)
+                          Chip(
+                            label: const Text('Foco carbo'),
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor:
+                                AppTheme.secondaryBackgroundDark.withValues(alpha: 0.18),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                  color: AppTheme.successGreen.withValues(alpha: 0.6)),
+                            ),
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                              color: AppTheme.successGreen,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        if (_filterFat)
+                          Chip(
+                            label: const Text('Foco gorduras'),
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor:
+                                AppTheme.secondaryBackgroundDark.withValues(alpha: 0.18),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                  color: AppTheme.errorRed.withValues(alpha: 0.6)),
+                            ),
+                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                              color: AppTheme.errorRed,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        if (_sortKey != 'relevance')
+                          Chip(
+                            label: Text('Ordenação: ${_sortKey}') ,
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor:
+                                AppTheme.secondaryBackgroundDark.withValues(alpha: 0.18),
+                            shape: const StadiumBorder(),
+                          ),
+                        // Actions: Edit and Clear
+                        ActionChip(
+                          label: const Text('Editar filtros'),
+                          onPressed: _openFilters,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        ActionChip(
+                          label: const Text('Limpar'),
+                          onPressed: _clearAllFilters,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
               // Search history chips (shown when field vazio)
               if (_searchController.text.isEmpty && _searchHistory.isNotEmpty)
                 Padding(
@@ -1585,7 +1807,8 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           selected: false,
                           onSelected: (_) {
                             _searchController.text = term;
-                            _searchController.selection = TextSelection.fromPosition(
+                            _searchController.selection =
+                                TextSelection.fromPosition(
                               TextPosition(offset: term.length),
                             );
                             _searchFocus.requestFocus();
@@ -1593,9 +1816,12 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           },
                           labelStyle: AppTheme.darkTheme.textTheme.bodySmall,
                           backgroundColor: AppTheme.secondaryBackgroundDark,
-                          selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
+                          selectedColor:
+                              AppTheme.activeBlue.withValues(alpha: 0.12),
                           shape: StadiumBorder(
-                            side: BorderSide(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+                            side: BorderSide(
+                                color: AppTheme.dividerGray
+                                    .withValues(alpha: 0.6)),
                           ),
                         );
                       }).toList(),
@@ -1739,6 +1965,33 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                                         icon: const Icon(Icons.add),
                                         label:
                                             const Text('Adicionar manualmente'),
+                                      ),
+                                      SizedBox(height: 1.h),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        alignment: WrapAlignment.center,
+                                        children: [
+                                          OutlinedButton.icon(
+                                            onPressed: () {
+                                              Navigator.pushNamed(
+                                                context,
+                                                AppRoutes.profile,
+                                                arguments: {'scrollTo': 'foods_import'},
+                                              );
+                                            },
+                                            icon: const Icon(Icons.file_upload),
+                                            label: const Text('Importar alimentos'),
+                                          ),
+                                          TextButton.icon(
+                                            onPressed: () {
+                                              Navigator.pushNamed(
+                                                  context, AppRoutes.recipeBrowser);
+                                            },
+                                            icon: const Icon(Icons.menu_book_outlined),
+                                            label: const Text('Explorar receitas'),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -2010,13 +2263,30 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                                 textAlign: TextAlign.center,
                               ),
                               Text(
-                                'Tente buscar com outros termos ou usar a IA',
+                                'Tente buscar com outros termos, ajustar filtros ou usar a IA',
                                 style: AppTheme.darkTheme.textTheme.bodyMedium
                                     ?.copyWith(
                                   color: AppTheme
                                       .darkTheme.colorScheme.onSurfaceVariant,
                                 ),
                                 textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 2.h),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: _openFilters,
+                                    icon: const Icon(Icons.tune),
+                                    label: const Text('Ajustar filtros'),
+                                  ),
+                                  SizedBox(width: 2.w),
+                                  OutlinedButton.icon(
+                                    onPressed: _clearAllFilters,
+                                    icon: const Icon(Icons.filter_list_off),
+                                    label: const Text('Limpar filtros'),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -2124,11 +2394,17 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           size: 5.w,
                         ),
                         SizedBox(width: 2.w),
-                        Text(
-                          'Salvar Alimento',
-                          style: AppTheme.darkTheme.textTheme.bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
+                        Builder(builder: (context) {
+                          final num baseKcal =
+                              (_selectedFood!['calories'] as num?) ?? 0;
+                          final int totalKcal = (baseKcal * _quantity).round();
+                          return Text(
+                            'Adicionar ao ' + _currentMealLabel() + ' • ' +
+                                totalKcal.toString() + ' kcal',
+                            style: AppTheme.darkTheme.textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          );
+                        }),
                       ],
                     ),
                   ),

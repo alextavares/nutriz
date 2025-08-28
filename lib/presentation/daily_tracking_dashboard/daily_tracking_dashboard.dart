@@ -5,14 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/app_export.dart';
-import './widgets/achievement_badges_widget.dart';
 import './widgets/action_button_widget.dart';
 import './widgets/circular_progress_chart_widget.dart';
 import './widgets/macronutrient_progress_widget.dart';
 import './widgets/weekly_progress_widget.dart';
 import '../../services/nutrition_storage.dart';
-import './widgets/logged_meals_list_widget.dart';
 import '../../services/user_preferences.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import '../../services/notes_storage.dart';
+import '../../services/body_metrics_storage.dart';
+import '../../services/fasting_storage.dart';
 import '../../services/notifications_service.dart';
 import 'package:nutritracker/util/download_stub.dart'
     if (dart.library.html) 'package:nutritracker/util/download_web.dart';
@@ -30,10 +32,15 @@ class DailyTrackingDashboard extends StatefulWidget {
 class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   DateTime _selectedDate = DateTime.now();
   int _currentWeek = 32;
-  bool _isDayView = true; // Hoje vs Semana toggle (UI)
+  // Removed old day/week toggle state — we follow YAZIO-like date nav
+  final Set<String> _expandedMealKeys = <String>{};
   List<Map<String, dynamic>> _todayEntries = [];
   List<int> _weeklyCalories = List.filled(7, 0);
   List<int> _weeklyWater = List.filled(7, 0);
+  Map<String, dynamic> _lastExerciseMeta = const {};
+  // Exercise UI state
+  int _exerciseStreak = 0;
+  bool _exerciseExpanded = false;
   Map<String, MealGoals> _mealGoals = const {
     'breakfast': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
     'lunch': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
@@ -48,6 +55,28 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   };
   final Set<String> _exceededMeals = {};
   // removed unused: _exceededMacroKeys
+  int _hydrationStreak = 0;
+  List<Map<String, dynamic>> _exerciseLogs = const [];
+  // Fasting mute banner state
+  bool _fastingActiveMuted = false;
+  DateTime? _fastMuteUntil;
+  DateTime? _fastEndAt;
+  String _fastMethod = 'custom';
+  String? _bannerDismissedOn; // YYYY-MM-DD
+  bool _bannerCollapsed = false;
+  bool _bannerAlwaysCollapsed = false;
+  // Eating window (for banner schedule labels)
+  int? _eatStartH;
+  int? _eatStartM;
+  int? _eatStopH;
+  int? _eatStopM;
+
+  // Global animation constants for dashboard sections
+  static const Duration _kAnimDuration = Duration(milliseconds: 900);
+  static const Curve _kAnimCurve = Curves.easeOut;
+  static const double _kDelayLeft = 0.03;   // ~27ms
+  static const double _kDelayCenter = 0.06; // ~54ms
+  static const double _kDelayRight = 0.09;  // ~81ms
 
   // Mock data for daily tracking
   final Map<String, dynamic> _dailyData = {
@@ -62,6 +91,43 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       "fats": {"consumed": 65, "total": 80},
     },
   };
+
+  // Simple ISO-like week number (Mon-first). Good enough for UI label.
+  int _computeIsoWeekNumber(DateTime date) {
+    final d = DateTime(date.year, date.month, date.day);
+    // Thursday in current week determines the year.
+    final thursday = d.add(Duration(days: 3 - ((d.weekday + 6) % 7)));
+    final firstThursday = DateTime(thursday.year, 1, 4);
+    final firstThursdayAdj = firstThursday.add(
+        Duration(days: -((firstThursday.weekday + 6) % 7)));
+    final week =
+        1 + ((thursday.difference(firstThursdayAdj).inDays) / 7).floor();
+    return week;
+  }
+
+  Widget _quickActivityChip(String label, VoidCallback onTap) {
+    final w = MediaQuery.of(context).size.width;
+    final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+    final double padH = w < 360 ? 8 : 10;
+    final double padV = w < 360 ? 4 : 6;
+    return ActionChip(
+      label: Text(label),
+      onPressed: onTap,
+      visualDensity: VisualDensity.compact,
+      backgroundColor: AppTheme.successGreen.withValues(alpha: 0.10),
+      labelPadding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+      labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+            fontSize: fs,
+          ),
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+    );
+  }
 
   List<Map<String, dynamic>> _achievements = [
     {
@@ -87,21 +153,285 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     },
   ];
 
-  Widget _calorieBudgetCard({
+  String _localizedTodayLabel(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+    return lang == 'pt' ? 'Hoje' : 'Today';
+  }
+
+  // Small debug banner with build info (debug-only)
+  Widget _debugBuildInfo(BuildContext context) {
+    if (!kDebugMode) return const SizedBox.shrink();
+    const String buildHash = String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
+    const String buildTime = String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
+    const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
+    const String buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
+    final String idOrHash = (buildHash.toLowerCase() != 'unknown' && buildHash.toLowerCase() != 'n/a')
+        ? buildHash
+        : buildId;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.info_outline, size: 14, color: cs.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                'v$appVersion • DEBUG • $idOrHash • $buildTime',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Compact version chip inside the header for easy visual check
+  Widget _versionChip(BuildContext context) {
+    // Show in debug, or when a UI_TAG is explicitly provided via --dart-define
+    const String uiTag = String.fromEnvironment('UI_TAG', defaultValue: '');
+    if (!kDebugMode && uiTag.isEmpty) return const SizedBox.shrink();
+    const String buildHash = String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
+    const String buildTime = String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
+    const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
+    const String buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
+    final String idOrHash = (buildHash.toLowerCase() != 'unknown' && buildHash.toLowerCase() != 'n/a')
+        ? buildHash
+        : buildId;
+    String hhmmZ = '';
+    if (buildTime.contains('T') && buildTime.endsWith('Z')) {
+      final t = buildTime.split('T');
+      if (t.length == 2) {
+        final h = t[1];
+        if (h.length >= 5) {
+          hhmmZ = h.substring(0, 5) + 'Z';
+        }
+      }
+    }
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.45)),
+      ),
+       child: Text(
+        (() {
+          final tag = uiTag.isNotEmpty ? uiTag : 'debug';
+          if (hhmmZ.isNotEmpty) return '$tag • v$appVersion • $idOrHash • $hhmmZ';
+          return '$tag • v$appVersion • $idOrHash';
+        })(),
+         style: Theme.of(context).textTheme.labelSmall?.copyWith(
+               color: cs.onSurfaceVariant,
+               fontWeight: FontWeight.w900,
+             ),
+         maxLines: 1,
+         overflow: TextOverflow.ellipsis,
+       ),
+     );
+  }
+
+  Widget _topActionsRow(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final iconColor = cs.onSurfaceVariant;
+    Widget action(IconData icon, String tip, VoidCallback onTap) => IconButton(
+          tooltip: tip,
+          icon: Icon(icon, size: 22, color: iconColor),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          onPressed: onTap,
+        );
+
+    Future<void> _pickDate() async {
+      final now = DateTime.now();
+      final picked = await showDatePicker(
+        context: context,
+        firstDate: DateTime(now.year - 1),
+        lastDate: DateTime(now.year + 1),
+        initialDate: _selectedDate,
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme:
+                  Theme.of(context).colorScheme.copyWith(primary: AppTheme.activeBlue),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (picked != null && mounted) {
+        setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
+        await _loadToday();
+        await _loadWeek();
+      }
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
+      child: Row(
+        children: [
+          // Date navigation moved to the top actions row
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            icon: Icon(Icons.chevron_left, color: cs.onSurfaceVariant),
+            onPressed: () async {
+              setState(() => _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
+              await _loadToday();
+              await _loadWeek();
+            },
+          ),
+          GestureDetector(
+            onTap: _pickDate,
+            child: Builder(builder: (context) {
+              final DateTime t = DateTime.now();
+              final today = DateTime(t.year, t.month, t.day);
+              final sel = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+              final isToday = sel == today;
+              final label = isToday
+                  ? _localizedTodayLabel(context)
+                  : '${sel.day.toString().padLeft(2, '0')}/${sel.month.toString().padLeft(2, '0')}/${sel.year}';
+              return Text(
+                label,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+              );
+            }),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            icon: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+            onPressed: () async {
+              setState(() => _selectedDate = _selectedDate.add(const Duration(days: 1)));
+              await _loadToday();
+              await _loadWeek();
+            },
+          ),
+          const Spacer(),
+          action(Icons.query_stats_outlined, 'Estatísticas', () {
+            Navigator.pushNamed(context, AppRoutes.progressOverview);
+          }),
+          action(Icons.calendar_today_outlined, 'Calendário', _pickDate),
+          action(Icons.accessibility_new_outlined, 'Valores corporais', () {
+            Navigator.pushNamed(context, AppRoutes.bodyMetrics);
+          }),
+          action(Icons.sticky_note_2_outlined, 'Anotações', () {
+            Navigator.pushNamed(context, AppRoutes.notes, arguments: {
+              'date': _selectedDate.toIso8601String(),
+            });
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _weekAgenda(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final DateTime selected = _selectedDate;
+    final DateTime t = DateTime.now();
+    final DateTime today = DateTime(t.year, t.month, t.day);
+    final int weekday = selected.weekday; // 1=Mon..7=Sun
+    final DateTime monday = selected.subtract(Duration(days: (weekday - 1)));
+    List<Widget> items = [];
+    // Locale-aware day labels
+    final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+    final labelsPt = const ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+    final labelsEn = const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final dayLabels = lang == 'pt' ? labelsPt : labelsEn;
+    for (int i = 0; i < 7; i++) {
+      final d = monday.add(Duration(days: i));
+      final bool isSelected = d.year == selected.year && d.month == selected.month && d.day == selected.day;
+      final bool isToday = d.year == today.year && d.month == today.month && d.day == today.day;
+      items.add(
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () async {
+              setState(() => _selectedDate = DateTime(d.year, d.month, d.day));
+              await _loadToday();
+              await _loadWeek();
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 0.6.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: isSelected ? cs.primary : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected
+                            ? cs.primary
+                            : (isToday ? cs.primary : cs.outlineVariant.withValues(alpha: 0.6)),
+                        width: isToday && !isSelected ? 1.5 : 1.0,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      d.day.toString(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: isSelected ? cs.onPrimary : cs.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                  SizedBox(height: 0.3.h),
+                  Text(
+                    dayLabels[i],
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Row(children: items),
+    );
+  }
+
+  Widget _calorieBudgetCard(BuildContext context, {
     required int goal,
     required int food,
     required int exercise,
     required int remaining,
   }) {
-    final TextStyle label = AppTheme.darkTheme.textTheme.bodySmall!
-        .copyWith(color: AppTheme.textSecondary);
-    final TextStyle numStyle =
-        AppTheme.darkTheme.textTheme.titleLarge!.copyWith(
-      color: AppTheme.activeBlue,
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final bool exceeded = remaining < 0;
+    final int display = exceeded ? -remaining : remaining;
+    final TextStyle label = theme.textTheme.bodySmall!
+        .copyWith(color: cs.onSurfaceVariant);
+    final TextStyle numStyle = theme.textTheme.titleLarge!.copyWith(
+      color: exceeded ? AppTheme.errorRed : cs.primary,
       fontWeight: FontWeight.w700,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
-    final base = AppTheme.darkTheme.textTheme.bodyMedium!;
+    final base = theme.textTheme.bodyMedium!;
     final double eqSize = base.fontSize ?? 14;
     final TextStyle eqStyle = base.copyWith(
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -115,37 +445,31 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.dividerGray),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.shadowDark,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          )
-        ],
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
+        boxShadow: const [],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Remaining big
-          Text('$remaining kcal', style: numStyle),
+          Text('$display kcal', style: numStyle),
           const SizedBox(height: 4),
-          Text('Restante', style: label),
+          Text(exceeded ? 'Excedeu' : 'Restante', style: label),
           const SizedBox(height: 8),
           // Equation row
           RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
-              style: eqStyle.copyWith(color: AppTheme.textSecondary),
+              style: eqStyle.copyWith(color: cs.onSurfaceVariant),
               children: [
                 const TextSpan(text: 'Objetivo '),
                 TextSpan(
                     text: '$goal',
                     style: eqStyle.copyWith(
-                        color: AppTheme.textPrimary,
+                        color: cs.onSurface,
                         fontWeight: FontWeight.w600)),
                 TextSpan(text: ' − ', style: opStyle),
                 const TextSpan(text: 'Alimentação '),
@@ -169,56 +493,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
-  Widget _quickMealActionsRow() {
-    ButtonStyle style(Color color) => OutlinedButton.styleFrom(
-          side: BorderSide(color: color.withValues(alpha: 0.6)),
-          foregroundColor: color,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        );
-
-    void goToLogging(String meal) {
-      HapticFeedback.selectionClick();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Adicionar em: $meal')),
-      );
-      Navigator.pushNamed(context, AppRoutes.foodLogging);
-    }
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        OutlinedButton(
-          onPressed: () => goToLogging('Café da manhã'),
-          style: style(AppTheme.warningAmber),
-          child: const Text('+ Café'),
-        ),
-        OutlinedButton(
-          onPressed: () => goToLogging('Almoço'),
-          style: style(AppTheme.successGreen),
-          child: const Text('+ Almoço'),
-        ),
-        OutlinedButton(
-          onPressed: () => goToLogging('Jantar'),
-          style: style(AppTheme.activeBlue),
-          child: const Text('+ Jantar'),
-        ),
-        OutlinedButton(
-          onPressed: () {
-            final current = (_dailyData['waterMl'] as int?) ?? 0;
-            setState(() => _dailyData['waterMl'] = current + 250);
-            HapticFeedback.lightImpact();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('+250 ml de água')),
-            );
-          },
-          style: style(AppTheme.activeBlue),
-          child: const Text('+ Água'),
-        ),
-      ],
-    );
-  }
+  // Removed unused quick action row
 
   @override
   void initState() {
@@ -230,28 +505,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     _loadMealGoals();
     _updateHydrationAchievements();
     _startHydrationReminderLoop();
+    _refreshFastingBanner();
+    _loadBannerPrefs();
+    _loadEatingTimes();
   }
 
-  Future<void> _clearNewHighlightsForSelectedDay() async {
-    // Regrava createdAt das entradas de hoje para um timestamp antigo, removendo destaque "novo"
-    final entries = await NutritionStorage.getEntriesForDate(_selectedDate);
-    if (entries.isEmpty) return;
-    final ancient =
-        DateTime.now().subtract(const Duration(days: 365)).toIso8601String();
-    for (final e in entries) {
-      final updated = Map<String, dynamic>.from(e);
-      updated['createdAt'] = ancient;
-      await NutritionStorage.updateEntryById(_selectedDate, e['id'], updated);
-    }
-    if (!mounted) return;
-    await _loadToday();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Destaques limpos para o dia selecionado'),
-        backgroundColor: AppTheme.successGreen,
-      ),
-    );
-  }
+  // Removed unused highlight clearer
 
   IconData _macroIconFor(String label) {
     final l = label.toLowerCase();
@@ -269,38 +528,400 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     return AppTheme.textSecondary;
   }
 
-  Widget _macroSummary(String label, int consumed, int goal) {
-    final color = _macroColorFor(label);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(_macroIconFor(label), color: color, size: 16),
-            SizedBox(width: 4),
-            Text(
-              label,
-              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 0.3.h),
-        Text(
-          "$consumed / $goal g",
-          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w700,
+  Widget _overallMacrosRow(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final double fsLabel = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+    final double fsValue = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+    final double barH = w < 360 ? 3 : 4;
+    final double vspace = w < 360 ? 4 : 6;
+
+    Widget cell(String label, int consumed, int total, Color color) {
+      final ratio = total <= 0 ? 0.0 : (consumed / total).clamp(0.0, 1.0);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  fontSize: fsLabel,
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
+          SizedBox(height: vspace),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: barH,
+              backgroundColor:
+                  Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
+              color: color,
+            ),
+          ),
+          SizedBox(height: vspace),
+          Text(
+            '${consumed}/${total} g',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  fontSize: fsValue,
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      );
+    }
+
+    final carbsC = (_dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ?? 0);
+    final carbsT = (_dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 0);
+    final protC = (_dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0);
+    final protT = (_dailyData["macronutrients"]["proteins"]["total"] as int? ?? 0);
+    final fatC = (_dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0);
+    final fatT = (_dailyData["macronutrients"]["fats"]["total"] as int? ?? 0);
+
+    final double hgap = w < 360 ? 8 : 12;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: cell('Carboidratos', carbsC, carbsT, AppTheme.warningAmber)),
+        SizedBox(width: hgap),
+        Expanded(child: cell('Proteína', protC, protT, AppTheme.successGreen)),
+        SizedBox(width: hgap),
+        Expanded(child: cell('Gordura', fatC, fatT, AppTheme.activeBlue)),
       ],
     );
   }
 
+  Future<void> _refreshFastingBanner() async {
+    final active = await FastingStorage.getActive();
+    final muteUntil = await NotificationsService.getFastingMuteUntil();
+    final prefs = await SharedPreferences.getInstance();
+    final dism = prefs.getString('fasting_banner_dismissed_on');
+    if (!mounted) return;
+    final now = DateTime.now();
+    final muted = muteUntil != null && now.isBefore(muteUntil);
+    setState(() {
+      _fastingActiveMuted = active != null && muted;
+      _fastMuteUntil = muteUntil;
+      _fastEndAt = active != null ? active.start.add(active.target) : null;
+      _fastMethod = active?.method ?? 'custom';
+      _bannerDismissedOn = dism;
+    });
+  }
+
+  Future<void> _loadBannerPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final always = prefs.getBool('fasting_banner_always_collapsed') ?? false;
+    if (!mounted) return;
+    setState(() {
+      _bannerAlwaysCollapsed = always;
+      if (always) _bannerCollapsed = true;
+    });
+  }
+
+  Future<void> _loadEatingTimes() async {
+    final t = await UserPreferences.getEatingTimes();
+    if (!mounted) return;
+    setState(() {
+      _eatStartH = t.startHour;
+      _eatStartM = t.startMinute;
+      _eatStopH = t.stopHour;
+      _eatStopM = t.stopMinute;
+    });
+  }
+
+  Widget _fastingMuteBanner(BuildContext context) {
+    if (!_fastingActiveMuted) return const SizedBox.shrink();
+    // Dismissal for today
+    String two(int v) => v.toString().padLeft(2, '0');
+    final todayKey = '${DateTime.now().year}-${two(DateTime.now().month)}-${two(DateTime.now().day)}';
+    if (_bannerDismissedOn == todayKey) return const SizedBox.shrink();
+    final until = _fastMuteUntil;
+    final untilLabel = (until != null)
+        ? '${two(until.day)}/${two(until.month)} ${two(until.hour)}:${two(until.minute)}'
+        : '';
+    final endAt = _fastEndAt;
+    String endLabel = '';
+    if (endAt != null) {
+      final now = DateTime.now();
+      final datePrefix = (endAt.day != now.day || endAt.month != now.month)
+          ? '${two(endAt.day)}/${two(endAt.month)} '
+          : '';
+      endLabel = ' • Término: ${datePrefix}${two(endAt.hour)}:${two(endAt.minute)}';
+    }
+    String schLabel = '';
+    if (_eatStartH != null && _eatStartM != null && _eatStopH != null && _eatStopM != null) {
+      schLabel = ' • Romper: ${two(_eatStartH!)}:${two(_eatStartM!)} • Iniciar: ${two(_eatStopH!)}:${two(_eatStopM!)}';
+    }
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: _bannerCollapsed ? 8 : 10),
+        decoration: BoxDecoration(
+          color: AppTheme.warningAmber.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.4)),
+        ),
+        constraints: BoxConstraints(
+          // Ensure a tidy, consistent height when collapsed
+          minHeight: _bannerCollapsed ? 52 : 0,
+        ),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+            Row(
+              children: [
+                Icon(Icons.notifications_off_outlined,
+                    size: 18,
+                    color: (Color.lerp(AppTheme.warningAmber, Colors.white, 0.2) ?? AppTheme.warningAmber)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Builder(builder: (context) {
+                    final w = MediaQuery.of(context).size.width;
+                    double? fs;
+                    if (_bannerCollapsed) {
+                      fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                    }
+                    return Text(
+                      until != null
+                          ? 'Jejum em andamento — silenciado até $untilLabel — término sem notificação$endLabel$schLabel'
+                          : 'Jejum em andamento — silenciado — término sem notificação$endLabel$schLabel',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                            fontSize: fs,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
+                ),
+                IconButton(
+                  tooltip: _bannerCollapsed ? 'Expandir' : 'Recolher',
+                  onPressed: () => setState(() => _bannerCollapsed = !_bannerCollapsed),
+                  icon: Icon(_bannerCollapsed ? Icons.expand_more : Icons.expand_less,
+                      size: 20, color: Theme.of(context).colorScheme.onSurface),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    // Dismiss for today
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('fasting_banner_dismissed_on', todayKey);
+                    if (!mounted) return;
+                    setState(() => _bannerDismissedOn = todayKey);
+                  },
+                  child: const Text('Dispensar hoje'),
+                ),
+              ],
+            ),
+            if (!_bannerCollapsed) const SizedBox(height: 8),
+            if (!_bannerCollapsed)
+              Builder(builder: (context) {
+                final w = MediaQuery.of(context).size.width;
+                final space = w < 360 ? 6.0 : 8.0;
+                final rspace = w < 360 ? 4.0 : 6.0;
+                final padH = w < 360 ? 8.0 : 10.0;
+                final padV = w < 360 ? 4.0 : 6.0;
+                return Wrap(
+                  spacing: space,
+                  runSpacing: rspace,
+                  children: [
+                    // Reativar inline
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await NotificationsService.setFastingMuteUntil(null);
+                        if (!mounted) return;
+                        setState(() => _fastMuteUntil = null);
+                        // Reschedule daily reminders
+                        final t = await UserPreferences.getEatingTimes();
+                        if (t.startHour != null && t.startMinute != null && t.stopHour != null && t.stopMinute != null) {
+                          await NotificationsService.scheduleDailyFastingReminders(
+                            startEatingHour: t.startHour!,
+                            startEatingMinute: t.startMinute!,
+                            stopEatingHour: t.stopHour!,
+                            stopEatingMinute: t.stopMinute!,
+                          );
+                        }
+                        // Also schedule end-of-fast if still active
+                        if (_fastEndAt != null) {
+                          NotificationsService.scheduleFastingEnd(endAt: _fastEndAt!, method: _fastMethod);
+                        }
+                        _refreshFastingBanner();
+                      },
+                      icon: const Icon(Icons.notifications_active_outlined, size: 16),
+                      label: const Text('Reativar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.successGreen,
+                        foregroundColor: Colors.white,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () async {
+                        final until = DateTime.now().add(const Duration(hours: 1));
+                        await NotificationsService.setFastingMuteUntil(until);
+                        await NotificationsService.cancelDailyFastingReminders();
+                        await NotificationsService.cancelFastingEnd();
+                        _refreshFastingBanner();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                      ),
+                      child: const Text('1h'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () async {
+                        final until = DateTime.now().add(const Duration(hours: 4));
+                        await NotificationsService.setFastingMuteUntil(until);
+                        await NotificationsService.cancelDailyFastingReminders();
+                        await NotificationsService.cancelFastingEnd();
+                        _refreshFastingBanner();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                      ),
+                      child: const Text('4h'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () async {
+                        final until = DateTime.now().add(const Duration(hours: 24));
+                        await NotificationsService.setFastingMuteUntil(until);
+                        await NotificationsService.cancelDailyFastingReminders();
+                        await NotificationsService.cancelFastingEnd();
+                        _refreshFastingBanner();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                      ),
+                      child: const Text('24h'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () async {
+                        final now = DateTime.now();
+                        final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+                        final until = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 8, 0);
+                        await NotificationsService.setFastingMuteUntil(until);
+                        await NotificationsService.cancelDailyFastingReminders();
+                        await NotificationsService.cancelFastingEnd();
+                        _refreshFastingBanner();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                      ),
+                      child: const Text('Amanhã 08:00'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await Navigator.pushNamed(context, AppRoutes.intermittentFastingTracker);
+                        if (!mounted) return;
+                        _refreshFastingBanner();
+                      },
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                      ),
+                      child: const Text('Gerenciar'),
+                    ),
+                  ],
+                );
+              }),
+            if (!_bannerCollapsed) const SizedBox(height: 6),
+            if (!_bannerCollapsed)
+              Row(
+                children: [
+                  Switch(
+                    value: _bannerAlwaysCollapsed,
+                    onChanged: (v) async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('fasting_banner_always_collapsed', v);
+                      if (!mounted) return;
+                      setState(() {
+                        _bannerAlwaysCollapsed = v;
+                        _bannerCollapsed = v ? true : _bannerCollapsed;
+                      });
+                    },
+                    activeColor: AppTheme.activeBlue,
+                  ),
+                  Text('Sempre recolher',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          )),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _macroSummary(String label, int consumed, int goal) {
+    String _short(String l) {
+      final lc = l.toLowerCase();
+      if (lc.startsWith('carb')) return 'C';
+      if (lc.startsWith('prot')) return 'P';
+      if (lc.startsWith('gord') || lc.startsWith('fat')) return 'G';
+      return l.characters.first;
+    }
+    final color = _macroColorFor(label);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.transparent),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_macroIconFor(label), color: color, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            _short(label),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            "$consumed/$goal g",
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPerMealProgressSection() {
+    List<Map<String, dynamic>> _mealPreview(String mealKey, int maxItems) {
+      final entries = _todayEntries.where((e) => (e['mealTime'] as String?) == mealKey).toList();
+      // Most recent first by createdAt, fallback as is
+      entries.sort((a, b) => ((b['createdAt'] as String?) ?? '')
+          .compareTo((a['createdAt'] as String?) ?? ''));
+      if (entries.length > maxItems) return entries.sublist(0, maxItems);
+      return entries;
+    }
     Color barColorFor(String meal) {
       switch (meal) {
         case 'breakfast':
@@ -314,6 +935,31 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       }
     }
 
+    void _goToLoggingForMeal(String mealKey) {
+      Navigator.pushNamed(context, AppRoutes.foodLogging, arguments: {
+        'mealKey': mealKey,
+        'date': _selectedDate.toIso8601String(),
+      }).then((_) async {
+        // Recarrega sempre ao voltar do registro de alimentos,
+        // independente do valor retornado.
+        await _loadToday();
+        await _loadWeek();
+      });
+    }
+
+    IconData mealIconFor(String mealKey) {
+      switch (mealKey) {
+        case 'breakfast':
+          return MdiIcons.coffee; // café da manhã
+        case 'lunch':
+          return MdiIcons.foodForkDrink; // almoço
+        case 'dinner':
+          return MdiIcons.food; // jantar
+        default:
+          return MdiIcons.cookie; // lanches
+      }
+    }
+
     Widget row(String title, String mealKey) {
       final totals = _mealTotals[mealKey]!;
       final goal = _mealGoals[mealKey]?.kcal ?? 0;
@@ -322,93 +968,167 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       final value = totals['kcal'] ?? 0;
       final ratio = goal <= 0 ? 0.0 : (value / goal).clamp(0.0, 1.0);
       final color = barColorFor(mealKey);
-      return Column(
+      void _openMealDetails() {
+        Navigator.pushNamed(context, AppRoutes.detailedMealTrackingScreen, arguments: {
+          'mealKey': mealKey,
+          'date': _selectedDate.toIso8601String(),
+        });
+      }
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: _openMealDetails,
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w600,
+              Builder(builder: (context) {
+                final ic = barColorFor(mealKey);
+                return CircleAvatar(
+                  radius: 16,
+                  backgroundColor: ic.withValues(alpha: 0.12),
+                  child: Icon(
+                    mealIconFor(mealKey),
+                    color: ic,
+                    size: 18,
+                  ),
+                );
+              }),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              Text(
-                goal > 0 ? '$value/$goal kcal' : '$value kcal',
-                style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
+              Builder(
+                builder: (context) {
+                  final bool over = goal > 0 && value > goal;
+                  final Color kcalColor = over
+                      ? AppTheme.errorRed
+                      : Theme.of(context).colorScheme.onSurfaceVariant;
+                  return Text(
+                    '$value/$goal kcal',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: kcalColor,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: Material(
+                  color: AppTheme.activeBlue,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => _goToLoggingForMeal(mealKey),
+                    child: const Icon(Icons.add, size: 18, color: Colors.white),
+                  ),
                 ),
               ),
+              // Removed trailing chevron to match YAZIO-like layout
             ],
           ),
-          SizedBox(height: 0.6.h),
+          const SizedBox(height: 6),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: ratio,
-              minHeight: 8,
-              backgroundColor: AppTheme.dividerGray,
+              minHeight: 3,
+              backgroundColor: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
               color: color,
             ),
           ),
-          SizedBox(height: 0.6.h),
-          // Macros bars per meal
-          _macroRow('Carb', totals['carbs'] ?? 0,
-              _mealGoals[mealKey]?.carbs ?? 0, AppTheme.warningAmber),
-          SizedBox(height: 0.4.h),
-          _macroRow('Prot', totals['proteins'] ?? 0,
-              _mealGoals[mealKey]?.proteins ?? 0, AppTheme.successGreen),
-          SizedBox(height: 0.4.h),
-          _macroRow('Gord', totals['fats'] ?? 0, _mealGoals[mealKey]?.fats ?? 0,
-              AppTheme.activeBlue),
-          SizedBox(height: 0.8.h),
+          const SizedBox(height: 6),
+          // Compact preview of items for this meal (tap to editar)
+          ...(() {
+            final all = _todayEntries
+                .where((e) => (e['mealTime'] as String?) == mealKey)
+                .toList()
+              ..sort((a, b) => ((b['createdAt'] as String?) ?? '')
+                  .compareTo((a['createdAt'] as String?) ?? ''));
+            final bool expanded = _expandedMealKeys.contains(mealKey);
+            final list = expanded ? all : _mealPreview(mealKey, 2);
+            if (list.isEmpty) return <Widget>[];
+            return [
+              ...list.map((e) => InkWell(
+                    onTap: () => _editEntry(e),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              (e['name'] as String?) ?? '-',
+                              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textSecondary,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            '${(e['calories'] as num?)?.toInt() ?? 0} kcal',
+                            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )),
+              if (all.length > 2)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        if (expanded) {
+                          _expandedMealKeys.remove(mealKey);
+                        } else {
+                          _expandedMealKeys.add(mealKey);
+                        }
+                      });
+                    },
+                    child: Text(expanded ? 'Mostrar menos' : 'Ver todos'),
+                  ),
+                ),
+              SizedBox(height: 0.8.h),
+            ];
+          }()),
         ],
+          ),
+        ),
       );
     }
 
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 2.4.w),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.shadowDark,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          )
-        ],
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+        boxShadow: const [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.restaurant_menu,
-                  color: AppTheme.textSecondary, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Metas por refeição',
-                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _openEditMealGoalsDialog,
-              child: const Text('Editar metas'),
-            ),
-          ),
-          SizedBox(height: 1.h),
+          // YAZIO-like: no section header; list meals directly
+          SizedBox(height: 0.6.h),
           row('Café da manhã', 'breakfast'),
           row('Almoço', 'lunch'),
           row('Jantar', 'dinner'),
@@ -425,11 +1145,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     return Row(
       children: [
         SizedBox(
-          width: 16.w,
+          width: 12.w,
           child: Text(
-            goal > 0 ? '$label $value/$goal g' : '$label $value g',
+            label,
             style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
               color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -439,27 +1160,87 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: ratio,
-              minHeight: 10,
-              backgroundColor: AppTheme.dividerGray.withValues(alpha: 0.6),
+              minHeight: 3,
+              backgroundColor: AppTheme.dividerGray.withValues(alpha: 0.35),
               color: color,
             ),
           ),
         ),
-        if (over) ...[
-          SizedBox(width: 2.w),
-          Chip(
-            label: const Text('Excedeu'),
-            visualDensity: VisualDensity.compact,
-            backgroundColor: AppTheme.secondaryBackgroundDark,
-            shape: StadiumBorder(
-              side: BorderSide(color: AppTheme.errorRed.withValues(alpha: 0.6)),
-            ),
-            labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.errorRed,
-              fontWeight: FontWeight.w700,
-            ),
+        SizedBox(width: 2.w),
+        Text(
+          goal > 0 ? '$value/$goal g' : '$value g',
+          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+            color: over ? AppTheme.errorRed : AppTheme.textSecondary,
+            fontWeight: over ? FontWeight.w700 : FontWeight.w500,
           ),
-        ]
+        ),
+      ],
+    );
+  }
+
+  // Water cups row (YAZIO-like): 250 ml per cup, clickable
+  Widget _waterCupsRow(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const int cupSize = 250;
+    final int goal = (_dailyData["waterGoalMl"] as int);
+    final int current = (_dailyData["waterMl"] as int);
+    // UIv3: use fixed 8 cups for a consistent look (YAZIO-like)
+    const int totalCups = 8;
+    final int filled = (current / cupSize).floor().clamp(0, totalCups);
+
+    List<Widget> cups = [];
+    for (int i = 0; i < totalCups; i++) {
+      final bool isFilled = i < filled;
+      cups.add(GestureDetector(
+        onTap: () async {
+          // Tapping a cup sets to that count (i+1)
+          final targetMl = (i + 1) * cupSize;
+          final next = await NutritionStorage.addWaterMl(
+              _selectedDate, targetMl - current);
+          if (!mounted) return;
+          setState(() => _dailyData["waterMl"] = next);
+        },
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 0.8.w, vertical: 0.4.h),
+          child: Icon(
+            isFilled ? Icons.water_drop : Icons.water_drop_outlined,
+            size: 18,
+            color: isFilled ? cs.primary : cs.onSurfaceVariant,
+          ),
+        ),
+      ));
+    }
+
+    return Row(
+      children: [
+        OutlinedButton(
+          onPressed: _removeWater,
+          style: OutlinedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            shape: const CircleBorder(),
+            padding: const EdgeInsets.all(6),
+            side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
+            foregroundColor: cs.primary,
+          ),
+          child: const Icon(Icons.remove, size: 16),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: cups),
+          ),
+        ),
+        OutlinedButton(
+          onPressed: _addWater,
+          style: OutlinedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            shape: const CircleBorder(),
+            padding: const EdgeInsets.all(6),
+            side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
+            foregroundColor: cs.primary,
+          ),
+          child: const Icon(Icons.add, size: 16),
+        ),
       ],
     );
   }
@@ -511,208 +1292,102 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final remainingCalories = (_dailyData["totalCalories"] as int? ?? 0) -
         (_dailyData["consumedCalories"] as int? ?? 0);
 
+    String _fmtDate(DateTime d) {
+      String two(int n) => n < 10 ? '0$n' : '$n';
+      return '${two(d.day)}/${two(d.month)}';
+    }
+
+    void _prevDay() {
+      setState(() => _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
+      _loadToday();
+      _loadWeek();
+    }
+
+    void _nextDay() {
+      setState(() => _selectedDate = _selectedDate.add(const Duration(days: 1)));
+      _loadToday();
+      _loadWeek();
+    }
+
+    // Removed unused local helpers: _goToday, _openSearch
+
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refreshData,
-          color: AppTheme.activeBlue,
-          backgroundColor: AppTheme.secondaryBackgroundDark,
+          color: Theme.of(context).colorScheme.primary,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Top actions (icons)
+                _topActionsRow(context),
+                SizedBox(height: 0.6.h),
+                // Show fasting banner prominently below header/top actions
+                _fastingMuteBanner(context),
+                SizedBox(height: 0.6.h),
+
                 // Top dashboard header estilo imagem de referência
-                Container(
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
                   width: double.infinity,
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
                   padding:
-                      EdgeInsets.symmetric(vertical: 2.2.h, horizontal: 4.w),
+                      EdgeInsets.symmetric(vertical: 1.0.h, horizontal: 4.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryBackgroundDark,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: AppTheme.dividerGray.withValues(alpha: 0.6)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.shadowDark,
-                        blurRadius: 10,
-                        offset: const Offset(0, 6),
-                      )
-                    ],
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+                    boxShadow: const [],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Toggle chips Hoje/Semana
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('Hoje'),
-                            selected: _isDayView,
-                            onSelected: (v) =>
-                                setState(() => _isDayView = true),
-                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall
-                                ?.copyWith(
-                              color: _isDayView
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.textSecondary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            backgroundColor: AppTheme.secondaryBackgroundDark,
-                            selectedColor:
-                                AppTheme.activeBlue.withValues(alpha: 0.12),
-                            shape: StadiumBorder(
-                              side: BorderSide(
-                                color: (_isDayView
-                                        ? AppTheme.activeBlue
-                                        : AppTheme.dividerGray)
-                                    .withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ),
-                          ChoiceChip(
-                            label: const Text('Semana'),
-                            selected: !_isDayView,
-                            onSelected: (v) =>
-                                setState(() => _isDayView = false),
-                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall
-                                ?.copyWith(
-                              color: !_isDayView
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.textSecondary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            backgroundColor: AppTheme.secondaryBackgroundDark,
-                            selectedColor:
-                                AppTheme.activeBlue.withValues(alpha: 0.12),
-                            shape: StadiumBorder(
-                              side: BorderSide(
-                                color: (!_isDayView
-                                        ? AppTheme.activeBlue
-                                        : AppTheme.dividerGray)
-                                    .withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 1.0.h),
+                      // Date navigation moved to top actions row
+                      const SizedBox.shrink(),
+                      // Chip "Semana N" removido (YAZIO-like)
+                      SizedBox(height: 0.2.h),
                       CircularProgressChartWidget(
                         consumedCalories: _dailyData["consumedCalories"],
-                        remainingCalories: remainingCalories,
+                        remainingCalories: remainingCalories + ((_dailyData["spentCalories"] as int?) ?? 0),
                         spentCalories: _dailyData["spentCalories"],
                         totalCalories: _dailyData["totalCalories"],
                         onTap: _showCalorieBreakdown,
                         waterMl: _dailyData["waterMl"] as int,
                       ),
+
+                      // YAZIO-like: show equation card under ring (Objetivo − Alimentação + Exercício)
                       SizedBox(height: 0.8.h),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 6,
-                        children: [
-                          Builder(builder: (context) {
-                            final exceeded = remainingCalories <= 0;
-                            final color = exceeded
-                                ? AppTheme.errorRed
-                                : AppTheme.activeBlue;
-                            final text = exceeded
-                                ? '${remainingCalories.abs()} kcal excedeu'
-                                : '${remainingCalories} kcal restantes';
-                            return Chip(
-                              label: Text(text),
-                              backgroundColor: AppTheme.secondaryBackgroundDark,
-                              shape: StadiumBorder(
-                                side: BorderSide(
-                                    color: color.withValues(alpha: 0.6)),
-                              ),
-                              labelStyle: AppTheme.darkTheme.textTheme.bodySmall
-                                  ?.copyWith(
-                                color: color,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            );
-                          }),
-                          Chip(
-                            label: Text(
-                                'Água: ${(_dailyData['waterMl'] as int?) ?? 0} ml'),
-                            backgroundColor: AppTheme.secondaryBackgroundDark,
-                            shape: StadiumBorder(
-                              side: BorderSide(
-                                  color: AppTheme.dividerGray
-                                      .withValues(alpha: 0.6)),
-                            ),
-                            labelStyle: AppTheme.darkTheme.textTheme.bodySmall
-                                ?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 1.2.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _macroSummary(
-                              "Carb",
-                              (_dailyData["macronutrients"]["carbohydrates"]
-                                      ["consumed"] as int? ??
-                                  0),
-                              (_dailyData["macronutrients"]["carbohydrates"]
-                                      ["total"] as int? ??
-                                  0)),
-                          _macroSummary(
-                              "Prot",
-                              (_dailyData["macronutrients"]["proteins"]
-                                      ["consumed"] as int? ??
-                                  0),
-                              (_dailyData["macronutrients"]["proteins"]["total"]
-                                      as int? ??
-                                  0)),
-                          _macroSummary(
-                              "Gord",
-                              (_dailyData["macronutrients"]["fats"]["consumed"]
-                                      as int? ??
-                                  0),
-                              (_dailyData["macronutrients"]["fats"]["total"]
-                                      as int? ??
-                                  0)),
-                        ],
-                      ),
+                      Builder(builder: (context) {
+                        final int goal = (_dailyData["totalCalories"] as int? ?? 0);
+                        final int food = (_dailyData["consumedCalories"] as int? ?? 0);
+                        final int exercise = (_dailyData["spentCalories"] as int? ?? 0);
+                        final int remaining = goal - food + exercise;
+                        return _calorieBudgetCard(
+                          context,
+                          goal: goal,
+                          food: food,
+                          exercise: exercise,
+                          remaining: remaining,
+                        );
+                      }),
+                      SizedBox(height: 1.0.h),
+                      SizedBox(height: 0.6.h),
+                      _overallMacrosRow(context),
                     ],
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: _openDayActionsMenu,
-                      child: const Text('Ações do dia'),
-                    ),
-                  ),
-                ),
+                );
+                }),
+                // Botão de ações removido para interface mais limpa/semelhante ao YAZIO
 
-                // Calorie budget card (Objetivo − Alimentação + Exercício = Restante)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  child: _calorieBudgetCard(
-                    goal: _dailyData["totalCalories"] as int? ?? 0,
-                    food: _dailyData["consumedCalories"] as int? ?? 0,
-                    exercise: _dailyData["spentCalories"] as int? ?? 0,
-                    remaining: remainingCalories +
-                        (_dailyData["spentCalories"] as int? ?? 0),
-                  ),
-                ),
+                // Removed duplicate calorie budget card to avoid repeating remaining kcal and label
+                const SizedBox.shrink(),
 
-                // Quick actions per meal
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-                  child: _quickMealActionsRow(),
-                ),
+                // Quick actions removidas para layout mais limpo (estilo YAZIO)
 
                 // Circular chart moved to header
                 const SizedBox.shrink(),
@@ -720,25 +1395,32 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 // Per-meal progress (kcal and macros) — aligns with YAZIO cards
                 SizedBox(height: 1.6.h),
                 _buildPerMealProgressSection(),
-
-                SizedBox(height: 3.h),
+                SizedBox(height: 1.2.h),
+                // Thin divider between meals and water
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.25),
+                  ),
+                ),
+                SizedBox(height: 1.2.h),
 
                 // Water progress
-                Container(
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
                   margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  padding: EdgeInsets.all(4.w),
+                  padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryBackgroundDark,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppTheme.dividerGray.withValues(alpha: 0.6)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.shadowDark,
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+                    boxShadow: const [],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -748,101 +1430,820 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.water_drop_outlined,
-                                  color: AppTheme.activeBlue, size: 18),
+                              Icon(Icons.water_drop_outlined,
+                                  color: cs.primary, size: 18),
                               const SizedBox(width: 8),
                               Text(
                                 'Água',
-                                style: AppTheme.darkTheme.textTheme.titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
-                                  color: AppTheme.textPrimary,
-                                  fontWeight: FontWeight.w700,
+                                  color: cs.onSurface,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
+                              const SizedBox(width: 10),
+                              if (_hydrationStreak > 0)
+                                Builder(builder: (context) {
+                                  final w = MediaQuery.of(context).size.width;
+                                  final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                                  final double padH = w < 360 ? 6 : 8;
+                                  final double padV = w < 360 ? 2 : 3;
+                                  return Chip(
+                                    label: Text('Streak: ${_hydrationStreak}d'),
+                                    visualDensity: VisualDensity.compact,
+                                    backgroundColor: cs.primary.withValues(alpha: 0.12),
+                                    side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+                                    labelPadding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                                    labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: fs,
+                                        ),
+                                  );
+                                }),
                             ],
                           ),
                           Row(
                             children: [
-                              Text(
-                                '${_dailyData["waterMl"]}/${_dailyData["waterGoalMl"]} ml',
-                                style: AppTheme.darkTheme.textTheme.bodyMedium
-                                    ?.copyWith(
-                                  color: AppTheme.activeBlue,
-                                  fontWeight: FontWeight.w600,
+                              TweenAnimationBuilder<double>(
+                                key: ValueKey(_dailyData["waterMl"] as int?),
+                                tween: Tween<double>(
+                                  begin: 0,
+                                  end: (_dailyData["waterMl"] as int).toDouble(),
                                 ),
+                                duration: _kAnimDuration,
+                                curve: Curves.linear,
+                                builder: (context, v, _) {
+                                  final int current = _dailyData["waterMl"] as int;
+                                  final int goal = _dailyData["waterGoalMl"] as int;
+                                  if (current <= 0) {
+                                    return Text(
+                                      '0/$goal ml',
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    );
+                                  }
+                                  final p = (v / current).clamp(0.0, 1.0);
+                                  final delayed = p <= _kDelayRight ? 0.0 : (p - _kDelayRight) / (1.0 - _kDelayRight);
+                                  final eased = _kAnimCurve.transform(delayed);
+                                  final shown = (current * eased).toInt();
+                                  return Text(
+                                    '$shown/$goal ml',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  );
+                                },
                               ),
-                              SizedBox(width: 2.w),
-                              TextButton(
+                              SizedBox(width: 1.2.w),
+                              IconButton(
+                                tooltip: 'Editar meta',
+                                icon: Icon(Icons.edit_outlined,
+                                    color: cs.onSurfaceVariant, size: 18),
                                 onPressed: _openEditWaterGoalDialog,
-                                child: const Text('Meta'),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      SizedBox(height: 1.h),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: (() {
-                            final int current = (_dailyData["waterMl"] as int);
-                            final int goal = (_dailyData["waterGoalMl"] as int);
-                            if (goal <= 0) return 0.0;
-                            final v = current / goal;
-                            return v.clamp(0.0, 1.0);
-                          }()),
-                          minHeight: 8,
-                          backgroundColor: AppTheme.dividerGray,
-                          color: AppTheme.activeBlue,
-                        ),
-                      ),
-                      SizedBox(height: 1.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          OutlinedButton(
-                            onPressed: _removeWater,
-                            child: const Text('-250 ml'),
-                          ),
-                          SizedBox(width: 2.w),
-                          ElevatedButton(
-                            onPressed: _addWater,
-                            child: const Text('+250 ml'),
-                          ),
-                        ],
-                      ),
+                      // Emphasize hydration: progress + remaining hint
+                      const SizedBox(height: 8),
+                      Builder(builder: (context) {
+                        final int goal = (_dailyData["waterGoalMl"] as int);
+                        final int current = (_dailyData["waterMl"] as int);
+                        final double ratio = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+                        final int remain = (goal - current).clamp(0, goal);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: TweenAnimationBuilder<double>(
+                                key: ValueKey(ratio),
+                                tween: Tween<double>(begin: 0, end: ratio),
+                                duration: _kAnimDuration,
+                                curve: Curves.linear,
+                                builder: (context, val, _) {
+                                  if (ratio <= 0) {
+                                    return LinearProgressIndicator(
+                                      value: 0,
+                                      minHeight: 6,
+                                      backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
+                                      color: cs.primary,
+                                    );
+                                  }
+                                  final p = (val / ratio).clamp(0.0, 1.0);
+                                  final eased = _kAnimCurve.transform(p);
+                                  return LinearProgressIndicator(
+                                    value: eased * ratio,
+                                    minHeight: 6,
+                                    backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
+                                    color: cs.primary,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: remain > 0
+                                      ? TweenAnimationBuilder<double>(
+                                          key: ValueKey(remain),
+                                          tween: Tween<double>(begin: 0, end: remain.toDouble()),
+                                          duration: _kAnimDuration,
+                                          curve: Curves.linear,
+                                          builder: (context, v, _) {
+                                            final p = (v / remain).clamp(0.0, 1.0);
+                                            final delayed = p <= _kDelayCenter
+                                                ? 0.0
+                                                : (p - _kDelayCenter) / (1.0 - _kDelayCenter);
+                                            final eased = _kAnimCurve.transform(delayed);
+                                            final shown = (remain * eased).toInt();
+                                            return Text(
+                                              'Faltam ${shown} ml para a meta',
+                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                    color: cs.primary,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            );
+                                          },
+                                        )
+                                      : Text(
+                                          'Meta de água alcançada! 🎉',
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                color: cs.primary,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton(
+                                  onPressed: _addWater,
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    side: BorderSide(color: cs.primary.withValues(alpha: 0.6)),
+                                    foregroundColor: cs.primary,
+                                  ),
+                                  child: const Text('+250 ml'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      }),
+                      const SizedBox(height: 8),
+                      _waterCupsRow(context),
                     ],
                   ),
-                ),
+                  );
+                }),
 
-                // Macronutrient progress bars
-                Container(
+                // Thin divider between activities and notes
+                SizedBox(height: 1.2.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.25),
+                  ),
+                ),
+                SizedBox(height: 1.2.h),
+
+                // Notes card (link to Notes screen)
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.12),
+                          child: const Icon(Icons.sticky_note_2_outlined, color: AppTheme.activeBlue, size: 18),
+                        ),
+                        SizedBox(width: 3.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Anotações',
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: cs.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              const SizedBox(height: 2),
+                              FutureBuilder<List<Map<String, dynamic>>>(
+                                future: NotesStorage.getAll(),
+                                builder: (context, snap) {
+                                  final list = snap.data ?? const [];
+                                  // count notes for selected date
+                                  int countToday = 0;
+                                  final d = _selectedDate;
+                                  final today = DateTime(d.year, d.month, d.day);
+                                  Map<String, dynamic>? last;
+                                  for (final n in list) {
+                                    final u = DateTime.tryParse((n['updatedAt'] ?? n['createdAt']) as String? ?? '') ?? DateTime(1970);
+                                    final dd = DateTime(u.year, u.month, u.day);
+                                    if (dd == today) {
+                                      countToday++;
+                                      if (last == null) {
+                                        last = n;
+                                      } else {
+                                        final lu = DateTime.tryParse((last!['updatedAt'] ?? last!['createdAt']) as String? ?? '') ?? DateTime(1970);
+                                        if (u.isAfter(lu)) last = n;
+                                      }
+                                    }
+                                  }
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Hoje: $countToday anotação(ões)',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                      if (last != null) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          ((last!['title'] as String?)?.trim().isNotEmpty == true)
+                                              ? (last!['title'] as String)
+                                              : ((last!['content'] as String?)?.trim() ?? ''),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ]
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 36,
+                              height: 36,
+                              child: Material(
+                                color: AppTheme.activeBlue,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: () {
+                                    Navigator.pushNamed(context, AppRoutes.notes, arguments: {
+                                      'date': _selectedDate.toIso8601String(),
+                                    });
+                                  },
+                                  child: const Icon(Icons.open_in_new, size: 18, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            SizedBox(
+                              width: 36,
+                              height: 36,
+                              child: Material(
+                                color: AppTheme.successGreen,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: () {
+                                    Navigator.pushNamed(context, AppRoutes.notes, arguments: {
+                                      'date': _selectedDate.toIso8601String(),
+                                      'openEditor': true,
+                                    });
+                                  },
+                                  child: const Icon(Icons.add, size: 18, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                // Body Metrics card (Valores corporais) — make it discoverable like YAZIO
+                SizedBox(height: 1.2.h),
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  double? _bmi(Map<String, dynamic> m) {
+                    final w = (m['weightKg'] as num?)?.toDouble();
+                    final hCm = (m['heightCm'] as num?)?.toDouble();
+                    if (w == null || hCm == null || hCm <= 0) return null;
+                    final h = hCm / 100.0;
+                    return w / (h * h);
+                  }
+                  return FutureBuilder<Map<String, dynamic>>(
+                    future: BodyMetricsStorage.getForDate(_selectedDate),
+                    builder: (context, snap) {
+                      final m = snap.data ?? const {};
+                      final has = m.isNotEmpty;
+                      final w = (m['weightKg'] as num?)?.toString();
+                      final h = (m['heightCm'] as num?)?.toString();
+                      final fat = (m['bodyFatPct'] as num?)?.toString();
+                      final bmi = _bmi(m);
+                      return Container(
+                        margin: EdgeInsets.symmetric(horizontal: 4.w),
+                        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+                        decoration: BoxDecoration(
+                          color: cs.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: AppTheme.premiumGold.withValues(alpha: 0.12),
+                              child: const Icon(Icons.monitor_weight, color: AppTheme.premiumGold, size: 18),
+                            ),
+                            SizedBox(width: 3.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Valores corporais',
+                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                          color: cs.onSurface,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  if (has)
+                                    Text(
+                                      [
+                                        if (w != null) 'Peso: ${w} kg',
+                                        if (h != null) 'Alt: ${h} cm',
+                                        if (bmi != null) 'IMC: ${bmi.toStringAsFixed(1)}',
+                                        if (fat != null) 'Gord: ${fat}%'
+                                      ].join('  •  '),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                    )
+                                  else
+                                    Text(
+                                      'Sem registro hoje — toque para registrar',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            color: AppTheme.activeBlue,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 36,
+                                  height: 36,
+                                  child: Material(
+                                    color: AppTheme.activeBlue,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      customBorder: const CircleBorder(),
+                                      onTap: () {
+                                        Navigator.pushNamed(context, AppRoutes.bodyMetrics, arguments: {
+                                          'date': _selectedDate.toIso8601String(),
+                                        });
+                                      },
+                                      child: const Icon(Icons.open_in_new, size: 18, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                SizedBox(
+                                  width: 36,
+                                  height: 36,
+                                  child: Material(
+                                    color: AppTheme.successGreen,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      customBorder: const CircleBorder(),
+                                      onTap: () {
+                                        Navigator.pushNamed(context, AppRoutes.bodyMetrics, arguments: {
+                                          'date': _selectedDate.toIso8601String(),
+                                          'openEditor': true,
+                                        });
+                                      },
+                                      child: const Icon(Icons.add, size: 18, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }),
+
+                // Thin divider between water and activities
+                SizedBox(height: 1.2.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.25),
+                  ),
+                ),
+                SizedBox(height: 1.2.h),
+
+                // Exercise / Activities (simple)
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  final int spent = _dailyData["spentCalories"] as int? ?? 0;
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
+                    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.6.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.successGreen.withValues(alpha: 0.10),
+                          cs.surface,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.25)),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Watermark icon
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Icon(Icons.local_fire_department,
+                              size: 42, color: AppTheme.successGreen.withValues(alpha: 0.18)),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
+                              child: const Icon(Icons.local_fire_department, color: AppTheme.successGreen, size: 20),
+                            ),
+                            SizedBox(width: 3.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text('Atividades',
+                                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                                  color: cs.onSurface,
+                                                  fontWeight: FontWeight.w700,
+                                                )),
+                                      ),
+                                      if (_exerciseStreak > 0)
+                                        Builder(builder: (context) {
+                                          final w = MediaQuery.of(context).size.width;
+                                          final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                                          final double padH = w < 360 ? 6 : 8;
+                                          final double padV = w < 360 ? 2 : 3;
+                                          return Chip(
+                                            label: Text('Streak: ${_exerciseStreak}d'),
+                                            visualDensity: VisualDensity.compact,
+                                            backgroundColor: AppTheme.successGreen.withValues(alpha: 0.12),
+                                            side: BorderSide(color: AppTheme.successGreen.withValues(alpha: 0.3)),
+                                            labelPadding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                                            labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                                  color: AppTheme.successGreen,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: fs,
+                                                ),
+                                          );
+                                        }),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  FutureBuilder<int>(
+                                    future: UserPreferences.getExerciseGoal(),
+                                    builder: (context, snap) {
+                                      final goal = snap.data ?? 300;
+                                      final ratio = goal > 0 ? (spent / goal).clamp(0.0, 1.0) : 0.0;
+                                      final remain = (goal - spent).clamp(0, goal);
+                                      return Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              TweenAnimationBuilder<double>(
+                                                key: ValueKey(spent),
+                                                tween: Tween(begin: 0.0, end: spent.toDouble()),
+                                                duration: _kAnimDuration,
+                                                curve: Curves.linear,
+                                                builder: (context, v, _) {
+                                                  if (spent <= 0) {
+                                                    return Text(
+                                                      '0/$goal kcal',
+                                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                            color: AppTheme.successGreen,
+                                                            fontWeight: FontWeight.w700,
+                                                          ),
+                                                    );
+                                                  }
+                                                  final p = (v / spent).clamp(0.0, 1.0);
+                                                  final delayed = p <= _kDelayLeft ? 0.0 : (p - _kDelayLeft) / (1.0 - _kDelayLeft);
+                                                  final eased = _kAnimCurve.transform(delayed);
+                                                  final shown = (spent * eased).toInt();
+                                                  return Text(
+                                                    '$shown/$goal kcal',
+                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                          color: AppTheme.successGreen,
+                                                          fontWeight: FontWeight.w700,
+                                                        ),
+                                                  );
+                                                },
+                                              ),
+                                              const SizedBox(width: 8),
+                                              if (remain > 0)
+                                                TweenAnimationBuilder<double>(
+                                                  key: ValueKey(remain),
+                                                  tween: Tween(begin: 0.0, end: remain.toDouble()),
+                                                  duration: _kAnimDuration,
+                                                  curve: Curves.linear,
+                                                  builder: (context, v, _) {
+                                                    final p = (v / remain).clamp(0.0, 1.0);
+                                                    final delayed = p <= _kDelayCenter
+                                                        ? 0.0
+                                                        : (p - _kDelayCenter) / (1.0 - _kDelayCenter);
+                                                    final eased = _kAnimCurve.transform(delayed);
+                                                    final shown = (remain * eased).toInt();
+                                                    return Text('Faltam $shown kcal',
+                                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                              color: cs.onSurfaceVariant,
+                                                              fontWeight: FontWeight.w600,
+                                                            ));
+                                                  },
+                                                ),
+                                              const SizedBox(width: 6),
+                                              IconButton(
+                                                tooltip: 'Editar meta',
+                                                icon: Icon(Icons.edit_outlined, size: 18, color: cs.onSurfaceVariant),
+                                                onPressed: () => _openEditExerciseGoalDialog(goal),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: TweenAnimationBuilder<double>(
+                                              key: ValueKey(ratio),
+                                              tween: Tween<double>(begin: 0, end: ratio),
+                                              duration: _kAnimDuration,
+                                              curve: Curves.linear,
+                                              builder: (context, val, _) {
+                                                if (ratio <= 0) {
+                                                  return LinearProgressIndicator(
+                                                    value: 0,
+                                                    minHeight: 6,
+                                                    backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
+                                                    color: AppTheme.successGreen,
+                                                  );
+                                                }
+                                                final p = (val / ratio).clamp(0.0, 1.0);
+                                                final eased = _kAnimCurve.transform(p);
+                                                return LinearProgressIndicator(
+                                                  value: eased * ratio,
+                                                  minHeight: 6,
+                                                  backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
+                                                  color: AppTheme.successGreen,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          if (_lastExerciseMeta.isNotEmpty)
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.fitness_center, size: 16, color: AppTheme.successGreen),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Builder(builder: (context) {
+                                                    final dt = DateTime.tryParse(((_lastExerciseMeta['savedAt'] as String?) ?? '')) ?? DateTime.now();
+                                                    final hh = dt.hour.toString().padLeft(2, '0');
+                                                    final mm = dt.minute.toString().padLeft(2, '0');
+                                                    return Text(
+                                                      'Último: ' +
+                                                          ((_lastExerciseMeta['name'] as String?) ?? '-') +
+                                                          ' · +' +
+                                                          (((_lastExerciseMeta['kcal'] as num?)?.toInt() ?? 0).toString()) +
+                                                          ' kcal' +
+                                                          ((_lastExerciseMeta['minutes'] != null)
+                                                              ? ' · ' + ((_lastExerciseMeta['minutes'] as num).toInt().toString()) + ' min'
+                                                              : '') +
+                                                          ' · ' + hh + ':' + mm,
+                                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                            color: cs.onSurfaceVariant,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    );
+                                                  }),
+                                                ),
+                                              ],
+                                            ),
+                                          if (_exerciseLogs.isNotEmpty) ...[
+                                            const SizedBox(height: 6),
+                                            Column(
+                                              children: [
+                                                for (final log in _exerciseLogs)
+                                                  Row(
+                                                    children: [
+                                                      const Icon(Icons.watch_later_outlined, size: 14, color: AppTheme.successGreen),
+                                                      const SizedBox(width: 6),
+                                                      Expanded(
+                                                        child: Text(
+                                                          '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min',
+                                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                              ],
+                                            ),
+                                          ],
+                                          const SizedBox(height: 8),
+                                          if (_exerciseLogs.isNotEmpty) ...[
+                                            Column(
+                                              children: [
+                                                for (final log in (_exerciseExpanded ? _exerciseLogs : _exerciseLogs.take(2)))
+                                                  Row(
+                                                    children: [
+                                                      const Icon(Icons.watch_later_outlined, size: 14, color: AppTheme.successGreen),
+                                                      const SizedBox(width: 6),
+                                                      Expanded(
+                                                        child: Builder(builder: (context) {
+                                                          final dt = DateTime.tryParse((log['savedAt'] as String?) ?? '') ?? DateTime.now();
+                                                          final hh = dt.hour.toString().padLeft(2, '0');
+                                                          final mm = dt.minute.toString().padLeft(2, '0');
+                                                          return Text(
+                                                            '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min · $hh:$mm',
+                                                            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          );
+                                                        }),
+                                                      ),
+                                                    ],
+                                                  ),
+                                              ],
+                                            ),
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: TextButton.icon(
+                                                onPressed: () => setState(() => _exerciseExpanded = !_exerciseExpanded),
+                                                icon: Icon(_exerciseExpanded ? Icons.expand_less : Icons.expand_more),
+                                                label: Builder(builder: (context) {
+                                                  final extra = (_exerciseLogs.length > 2) ? (_exerciseLogs.length - 2) : 0;
+                                                  return Text(_exerciseExpanded ? 'Mostrar menos' : (extra > 0 ? 'Ver todos (+$extra)' : 'Ver todos'));
+                                                }),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                          ],
+                                          Builder(builder: (context) {
+                                            final w = MediaQuery.of(context).size.width;
+                                            final double space = w < 360 ? 6.0 : 8.0;
+                                            final double rspace = w < 360 ? 4.0 : 6.0;
+                                            return Wrap(
+                                              spacing: space,
+                                              runSpacing: rspace,
+                                              children: [
+                                              _quickActivityChip('Caminhada 30m', () {
+                                                Navigator.pushNamed(context, AppRoutes.exerciseLogging, arguments: {
+                                                  'date': _selectedDate.toIso8601String(),
+                                                  'activityName': 'Caminhada',
+                                                  'minutes': 30,
+                                                  'intensity': 1,
+                                                }).then((_) => _loadExercise());
+                                              }),
+                                              _quickActivityChip('Corrida 20m', () {
+                                                Navigator.pushNamed(context, AppRoutes.exerciseLogging, arguments: {
+                                                  'date': _selectedDate.toIso8601String(),
+                                                  'activityName': 'Corrida',
+                                                  'minutes': 20,
+                                                  'intensity': 2,
+                                                }).then((_) => _loadExercise());
+                                              }),
+                                              _quickActivityChip('Bike 30m', () {
+                                                Navigator.pushNamed(context, AppRoutes.exerciseLogging, arguments: {
+                                                  'date': _selectedDate.toIso8601String(),
+                                                  'activityName': 'Ciclismo',
+                                                  'minutes': 30,
+                                                  'intensity': 1,
+                                                }).then((_) => _loadExercise());
+                                              }),
+                                              ],
+                                            );
+                                          }),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Material(
+                            color: AppTheme.activeBlue,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: _addExercise,
+                              child: const Icon(Icons.add, size: 22, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+                }),
+
+                // Macronutrient progress bars (compact)
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
                   margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  padding: EdgeInsets.all(4.w),
+                  padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 2.4.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryBackgroundDark,
+                    color: cs.surface,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+                    boxShadow: const [],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Macronutrientes',
-                        style:
-                            AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Macronutrientes',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Editar metas de macros',
+                            onPressed: _openEditMacroGoalsDialog,
+                            icon: Icon(Icons.edit_outlined,
+                                color: cs.onSurfaceVariant, size: 18),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 0.8.h),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _openEditMacroGoalsDialog,
-                          child: const Text('Meta Macros'),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 1.2.h),
                       MacronutrientProgressWidget(
                         name: 'Carboidratos',
                         consumed: (_dailyData["macronutrients"]["carbohydrates"]
@@ -874,243 +2275,56 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       ),
                     ],
                   ),
-                ),
+                );
+                }),
 
-                // Weekly progress mini bars (calorias e água)
-                WeeklyProgressWidget(
-                  currentWeek: _currentWeek,
-                  onWeekChanged: (w) => setState(() => _currentWeek = w),
-                  weeklyCalories: _weeklyCalories,
-                  dailyGoal: _dailyData["totalCalories"] as int? ?? 2000,
-                  weeklyWater: _weeklyWater,
-                  waterGoalMl: _dailyData["waterGoalMl"] as int? ?? 2000,
-                  onDayTap: (i) {},
-                ),
-
-                SizedBox(height: 2.h),
-
-                // Action button and quick actions
-                ActionButtonWidget(
-                  onPressed: _openFoodLogging,
-                  onWater: _addWater,
-                  onExercise: _addExercise,
-                  onAi: () async {
-                    final result = await Navigator.pushNamed(
-                      context,
-                      AppRoutes.aiFoodDetection,
-                    );
-                    if (result != null && result is Map<String, dynamic>) {
-                      // Pré-preencher a tela de comida com resultado da IA
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.foodLogging,
-                        arguments: {
-                          'prefillFood': result,
-                          'mealKey': 'snack',
-                          'date': _selectedDate.toIso8601String(),
-                        },
-                      ).then((value) {
-                        if (value == true) {
-                          _loadToday();
-                        }
-                      });
-                    }
-                  },
-                ),
-
-                // Weekly progress section
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.weeklyProgress,
-                            arguments: {
-                              'date': _selectedDate.toIso8601String(),
-                            },
-                          );
-                        },
-                        child: const Text('Ver semana'),
-                      ),
-                    ),
-                    WeeklyProgressWidget(
-                      currentWeek: _currentWeek,
-                      onWeekChanged: _onWeekChanged,
-                      weeklyCalories: _weeklyCalories,
-                      dailyGoal: _dailyData["totalCalories"] as int,
-                      onDayTap: _onWeekDayTap,
-                      weeklyWater: _weeklyWater,
-                      waterGoalMl: (_dailyData["waterGoalMl"] as int? ?? 2000),
-                    ),
-                  ],
-                ),
-
-                // Achievement badges
-                AchievementBadgesWidget(
-                  achievements: _achievements,
-                  onBadgeTap: _showAchievementDetails,
-                ),
-
-                // Logged meals list
-                _buildPerMealProgressSection(),
-                SizedBox(height: 1.h),
-                FutureBuilder<int>(
-                  future: UserPreferences.getNewBadgeMinutes(),
-                  builder: (context, snap) {
-                    final mins = snap.data ?? 5;
-                    final hl = Duration(minutes: mins);
-                    bool showOnlyNew = false;
-                    return StatefulBuilder(
-                      builder: (context, setStateFilter) {
-                        List<Map<String, dynamic>> filtered = _todayEntries;
-                        if (showOnlyNew) {
-                          filtered = _todayEntries.where((e) {
-                            try {
-                              final s = e['createdAt'] as String?;
-                              if (s == null) return false;
-                              final d = DateTime.parse(s);
-                              return DateTime.now().difference(d) <= hl;
-                            } catch (_) {
-                              return false;
-                            }
-                          }).toList();
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                TextButton(
-                                  onPressed: () async {
-                                    await _clearNewHighlightsForSelectedDay();
-                                    setStateFilter(() {});
-                                  },
-                                  child: const Text('Limpar destaques'),
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      'Somente novos',
-                                      style: AppTheme
-                                          .darkTheme.textTheme.bodySmall
-                                          ?.copyWith(
-                                              color: AppTheme.textSecondary),
-                                    ),
-                                    SizedBox(width: 2.w),
-                                    Switch(
-                                      value: showOnlyNew,
-                                      onChanged: (v) {
-                                        showOnlyNew = v;
-                                        setStateFilter(() {});
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            LoggedMealsListWidget(
-                              entries: filtered,
-                              onRemove: (entry) async {
-                                await NutritionStorage.removeEntryById(
-                                    _selectedDate, entry['id']);
-                                _loadToday();
-                              },
-                              onEdit: (entry) => _editEntry(entry),
-                              highlightDuration: hl,
-                              mealTotalsByKey: _mealTotals,
-                              mealKcalGoals: {
-                                'breakfast': _mealGoals['breakfast']?.kcal ?? 0,
-                                'lunch': _mealGoals['lunch']?.kcal ?? 0,
-                                'dinner': _mealGoals['dinner']?.kcal ?? 0,
-                                'snack': _mealGoals['snack']?.kcal ?? 0,
-                              },
-                              mealMacroGoalsByKey: {
-                                'breakfast': {
-                                  'carbs': _mealGoals['breakfast']?.carbs ?? 0,
-                                  'proteins':
-                                      _mealGoals['breakfast']?.proteins ?? 0,
-                                  'fats': _mealGoals['breakfast']?.fats ?? 0,
-                                },
-                                'lunch': {
-                                  'carbs': _mealGoals['lunch']?.carbs ?? 0,
-                                  'proteins':
-                                      _mealGoals['lunch']?.proteins ?? 0,
-                                  'fats': _mealGoals['lunch']?.fats ?? 0,
-                                },
-                                'dinner': {
-                                  'carbs': _mealGoals['dinner']?.carbs ?? 0,
-                                  'proteins':
-                                      _mealGoals['dinner']?.proteins ?? 0,
-                                  'fats': _mealGoals['dinner']?.fats ?? 0,
-                                },
-                                'snack': {
-                                  'carbs': _mealGoals['snack']?.carbs ?? 0,
-                                  'proteins':
-                                      _mealGoals['snack']?.proteins ?? 0,
-                                  'fats': _mealGoals['snack']?.fats ?? 0,
-                                },
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-
-                SizedBox(height: 2.h),
+                // YAZIO-like: omit weekly progress and floating actions from top area
+                SizedBox(height: 0.6.h),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddSheet,
-        backgroundColor: AppTheme.activeBlue,
-        child: CustomIconWidget(
-          iconName: 'add',
-          color: AppTheme.textPrimary,
-          size: 28,
-        ),
-      ),
+      // FAB removido para layout mais próximo ao YAZIO
+      floatingActionButton: null,
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
   Widget _buildBottomNavigationBar() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.shadowDark,
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3))),
       ),
       child: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: AppTheme.secondaryBackgroundDark,
+        backgroundColor: cs.surface,
         selectedItemColor: AppTheme.activeBlue,
         unselectedItemColor: AppTheme.textSecondary,
+        showUnselectedLabels: true,
+        selectedLabelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+        unselectedLabelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w500,
+          fontSize: 11,
+        ),
         currentIndex: 0,
         onTap: (idx) {
           switch (idx) {
             case 0:
               break; // Diário
             case 1:
-              Navigator.pushNamed(context, AppRoutes.foodLogging);
+              Navigator.pushNamed(context, AppRoutes.intermittentFastingTracker);
               break;
             case 2:
-              Navigator.pushNamed(context, AppRoutes.profile);
+              Navigator.pushNamed(context, AppRoutes.recipeBrowser);
               break;
             case 3:
-              Navigator.pushNamed(context, AppRoutes.progressOverview);
+              Navigator.pushNamed(context, AppRoutes.profile);
               break;
           }
         },
@@ -1125,33 +2339,30 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           ),
           BottomNavigationBarItem(
             icon: CustomIconWidget(
-              iconName: 'search',
+              iconName: 'schedule',
               color: AppTheme.textSecondary,
               size: 24,
             ),
-            label: 'Buscar',
+            label: 'Jejum',
           ),
           BottomNavigationBarItem(
             icon: CustomIconWidget(
-              iconName: 'flag',
+              iconName: 'restaurant_menu',
               color: AppTheme.textSecondary,
               size: 24,
             ),
-            label: 'Metas',
+            label: 'Receitas',
           ),
           BottomNavigationBarItem(
-            icon: CustomIconWidget(
-              iconName: 'insights',
-              color: AppTheme.textSecondary,
-              size: 24,
-            ),
-            label: 'Analytics',
+            icon: Icon(Icons.person_outline, color: AppTheme.textSecondary, size: 24),
+            label: 'Perfil',
           ),
         ],
       ),
     );
   }
 
+  // ignore: unused_element
   void _onWeekChanged(int newWeek) {
     setState(() {
       _currentWeek = newWeek;
@@ -1315,6 +2526,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
+  // ignore: unused_element
   void _showAchievementDetails(Map<String, dynamic> achievement) {
     showDialog(
       context: context,
@@ -1409,6 +2621,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     } catch (_) {}
   }
 
+  // ignore: unused_element
   void _openAddSheet() {
     showModalBottomSheet(
       context: context,
@@ -1564,6 +2777,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       setState(() {
         _weeklyCalories = week;
         _weeklyWater = List<int>.from(_weeklyWater);
+        _currentWeek = _computeIsoWeekNumber(_selectedDate);
       });
     }
   }
@@ -1571,10 +2785,16 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   Future<void> _loadExercise() async {
     final kcal = await NutritionStorage.getExerciseCalories(_selectedDate);
     if (!mounted) return;
+    final meta = await NutritionStorage.getExerciseMeta(_selectedDate);
+    final logs = await NutritionStorage.getExerciseLogs(_selectedDate);
+    if (!mounted) return;
     setState(() {
       _dailyData["spentCalories"] = kcal;
+      _lastExerciseMeta = meta;
+      _exerciseLogs = logs.reversed.toList();
     });
-    _updateHydrationAchievements();
+    await _updateHydrationAchievements();
+    await _updateExerciseStreak();
   }
 
   void _addWater() {
@@ -2030,25 +3250,66 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         added = true;
       }
     }
-    if (added && mounted) {
-      setState(() {});
+    if (mounted) {
+      setState(() {
+        _hydrationStreak = streak;
+      });
     }
   }
 
-  void _addExercise() async {
-    final next = await NutritionStorage.addExerciseCalories(_selectedDate, 100);
+  Future<void> _updateExerciseStreak() async {
+    final goal = await UserPreferences.getExerciseGoal();
+    int streak = 0;
+    for (int i = 0; i < 30; i++) {
+      final d = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)
+          .subtract(Duration(days: i));
+      final ex = await NutritionStorage.getExerciseCalories(d);
+      if (goal > 0 && ex >= goal) {
+        streak += 1;
+      } else {
+        break;
+      }
+    }
     if (!mounted) return;
-    setState(() {
-      _dailyData["spentCalories"] = next;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Exercício registrado: +100 kcal'),
-        backgroundColor: AppTheme.successGreen,
+    setState(() => _exerciseStreak = streak);
+  }
+
+  void _addExercise() async {
+    await Navigator.pushNamed(context, AppRoutes.exerciseLogging,
+        arguments: {'date': _selectedDate.toIso8601String()});
+    if (!mounted) return;
+    await _loadExercise();
+  }
+
+  void _openEditExerciseGoalDialog(int current) {
+    final ctl = TextEditingController(text: current.toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Meta de exercício (kcal)'),
+        content: TextField(
+          controller: ctl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(hintText: 'Ex.: 300'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () async {
+              final v = int.tryParse(ctl.text.trim());
+              if (v != null) await UserPreferences.setExerciseGoal(v);
+              if (!mounted) return;
+              Navigator.pop(ctx);
+              setState(() {});
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
       ),
     );
   }
 
+  // ignore: unused_element
   void _onWeekDayTap(int index) async {
     final now = _selectedDate;
     final int weekday = now.weekday; // 1..7
@@ -2399,7 +3660,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   ),
                   SizedBox(height: 10),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedMeal,
+                    value: selectedMeal,
                     decoration: const InputDecoration(labelText: 'Período'),
                     items: mealOptions
                         .map((m) => DropdownMenuItem<String>(

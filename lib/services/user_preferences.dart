@@ -7,6 +7,7 @@ class UserPreferences {
   static const String _kProteins = 'user_goal_proteins';
   static const String _kFats = 'user_goal_fats';
   static const String _kWaterMl = 'user_goal_water_ml';
+  static const String _kExerciseKcal = 'user_goal_exercise_kcal';
   static const String _kHydrationEnabled = 'hydration_enabled';
   static const String _kHydrationIntervalMin = 'hydration_interval_min';
   // Per-meal goals (kcal/macros)
@@ -36,6 +37,11 @@ class UserPreferences {
       'ui_quick_portion_grams_dinner_v1';
   static const String _kQuickPortionGramsSnack =
       'ui_quick_portion_grams_snack_v1';
+  // Fasting eating window times
+  static const String _kStartEatHour = 'fast_start_eat_hour_v1';
+  static const String _kStartEatMinute = 'fast_start_eat_min_v1';
+  static const String _kStopEatHour = 'fast_stop_eat_hour_v1';
+  static const String _kStopEatMinute = 'fast_stop_eat_min_v1';
 
   static Future<void> setGoals({
     required int totalCalories,
@@ -57,18 +63,30 @@ class UserPreferences {
     final proteins = prefs.getInt(_kProteins) ?? 120;
     final fats = prefs.getInt(_kFats) ?? 80;
     final waterMl = prefs.getInt(_kWaterMl) ?? 2000;
+    final exerciseKcal = prefs.getInt(_kExerciseKcal) ?? 300;
     return UserGoals(
       totalCalories: total,
       carbs: carbs,
       proteins: proteins,
       fats: fats,
       waterGoalMl: waterMl,
+      exerciseGoalKcal: exerciseKcal,
     );
   }
 
   static Future<void> setWaterGoal(int waterMl) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kWaterMl, waterMl);
+  }
+
+  static Future<void> setExerciseGoal(int kcal) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kExerciseKcal, kcal < 0 ? 0 : kcal);
+  }
+
+  static Future<int> getExerciseGoal() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kExerciseKcal) ?? 300;
   }
 
   // Hydration reminders
@@ -165,9 +183,10 @@ class UserPreferences {
     final prefs = await SharedPreferences.getInstance();
     final current = await getSearchHistory(maxItems: maxItems);
     // put most recent first, unique
-    final list = [t, ...current.where((e) => e.toLowerCase() != t.toLowerCase())]
-        .take(maxItems)
-        .toList();
+    final list = [
+      t,
+      ...current.where((e) => e.toLowerCase() != t.toLowerCase())
+    ].take(maxItems).toList();
     await prefs.setString(_kSearchHistory, json.encode(list));
   }
 
@@ -195,6 +214,30 @@ class UserPreferences {
       if (v != null && v > 0) out.add(v);
     }
     return out.isEmpty ? [50, 100, 150, 200, 250] : out;
+  }
+
+  // Persist eating window times (for fasting reminders)
+  static Future<void> setEatingTimes({
+    int? startHour,
+    int? startMinute,
+    int? stopHour,
+    int? stopMinute,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (startHour != null) await prefs.setInt(_kStartEatHour, startHour);
+    if (startMinute != null) await prefs.setInt(_kStartEatMinute, startMinute);
+    if (stopHour != null) await prefs.setInt(_kStopEatHour, stopHour);
+    if (stopMinute != null) await prefs.setInt(_kStopEatMinute, stopMinute);
+  }
+
+  static Future<({int? startHour, int? startMinute, int? stopHour, int? stopMinute})>
+      getEatingTimes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final sh = prefs.getInt(_kStartEatHour);
+    final sm = prefs.getInt(_kStartEatMinute);
+    final eh = prefs.getInt(_kStopEatHour);
+    final em = prefs.getInt(_kStopEatMinute);
+    return (startHour: sh, startMinute: sm, stopHour: eh, stopMinute: em);
   }
 
   // Per-meal quick portions (fallback to global if empty)
@@ -329,6 +372,7 @@ class UserGoals {
   final int proteins;
   final int fats;
   final int waterGoalMl;
+  final int exerciseGoalKcal;
 
   const UserGoals({
     required this.totalCalories,
@@ -336,6 +380,7 @@ class UserGoals {
     required this.proteins,
     required this.fats,
     this.waterGoalMl = 2000,
+    this.exerciseGoalKcal = 300,
   });
 }
 

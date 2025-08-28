@@ -6,6 +6,7 @@ class NutritionStorage {
   static const String _keyPrefix = 'logged_meals_';
   static const String _exercisePrefix = 'exercise_kcal_';
   static const String _waterPrefix = 'water_ml_';
+  static const String _exerciseMetaPrefix = 'exercise_meta_';
   static const String _templatesKey = 'meal_templates_v1';
   static const String _dayTemplatesKey = 'day_templates_v1';
   static const String _weekTemplatesKey = 'week_templates_v1';
@@ -106,6 +107,51 @@ class NutritionStorage {
     final next = current + delta;
     await setWaterMl(date, next < 0 ? 0 : next);
     return await getWaterMl(date);
+  }
+
+  // Exercise meta per day (e.g., last activity details)
+  static Future<void> setExerciseMeta(DateTime date, Map<String, dynamic> meta) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '$_exerciseMetaPrefix${_dateKey(date)}';
+    await prefs.setString(key, jsonEncode(meta));
+  }
+
+  static Future<Map<String, dynamic>> getExerciseMeta(DateTime date) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '$_exerciseMetaPrefix${_dateKey(date)}';
+    final raw = prefs.getString(key);
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final obj = jsonDecode(raw);
+      if (obj is Map<String, dynamic>) return obj;
+    } catch (_) {}
+    return {};
+  }
+
+  // Exercise logs (list of meta items) per day
+  static const String _exerciseLogPrefix = 'exercise_log_v1_';
+
+  static Future<List<Map<String, dynamic>>> getExerciseLogs(DateTime date) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '$_exerciseLogPrefix${_dateKey(date)}';
+    final raw = prefs.getString(key);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
+      return list.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> addExerciseLog(DateTime date, Map<String, dynamic> meta) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '$_exerciseLogPrefix${_dateKey(date)}';
+    final current = await getExerciseLogs(date);
+    final item = Map<String, dynamic>.from(meta);
+    item['savedAt'] = item['savedAt'] ?? DateTime.now().toIso8601String();
+    current.add(item);
+    await prefs.setString(key, jsonEncode(current));
   }
 
   // Export / Import diary

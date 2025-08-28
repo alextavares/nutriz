@@ -20,13 +20,14 @@ class GeminiClient {
     final imageBytes = await image.readAsBytes();
     final base64Image = base64Encode(imageBytes);
 
-    final candidates = modelCandidates ?? <String>[
-      model,
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash-8b',
-      'gemini-1.0-pro-vision',
-      'gemini-pro-vision',
-    ];
+    final candidates = modelCandidates ??
+        <String>[
+          model,
+          'gemini-1.5-flash-latest',
+          'gemini-1.5-flash-8b',
+          'gemini-1.0-pro-vision',
+          'gemini-pro-vision',
+        ];
 
     DioException? lastDioError;
     GeminiException? lastGeminiError;
@@ -76,11 +77,14 @@ class GeminiClient {
           final code = e.response?.statusCode ?? 0;
           final gcode = e.response?.data?['error']?['status'] ?? '';
 
-          final transient =
-              code == 429 || code == 503 || gcode == 'RESOURCE_EXHAUSTED' || gcode == 'UNAVAILABLE';
+          final transient = code == 429 ||
+              code == 503 ||
+              gcode == 'RESOURCE_EXHAUSTED' ||
+              gcode == 'UNAVAILABLE';
 
           if (attempt < maxRetriesPerModel && transient) {
-            final backoffMs = pow(2, attempt).toInt() * 500 + Random().nextInt(400);
+            final backoffMs =
+                pow(2, attempt).toInt() * 500 + Random().nextInt(400);
             await Future.delayed(Duration(milliseconds: backoffMs));
             continue;
           }
@@ -97,10 +101,13 @@ class GeminiClient {
     if (lastDioError != null) {
       throw GeminiException(
         statusCode: lastDioError.response?.statusCode ?? 500,
-        message: lastDioError.response?.data?['error']?['message'] ?? lastDioError.message ?? 'Request failed',
+        message: lastDioError.response?.data?['error']?['message'] ??
+            lastDioError.message ??
+            'Request failed',
       );
     }
-    throw GeminiException(statusCode: 503, message: 'All model attempts failed');
+    throw GeminiException(
+        statusCode: 503, message: 'All model attempts failed');
   }
 
   Future<FoodNutritionData> analyzeFoodImage(File imageFile) async {

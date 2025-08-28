@@ -48,7 +48,7 @@ class SearchBarWidget extends StatelessWidget {
         onSubmitted: onSubmitted,
         style: AppTheme.darkTheme.textTheme.bodyLarge,
         decoration: InputDecoration(
-          hintText: 'Buscar alimentos... (nome ou marca)',
+          hintText: 'Buscar por nome, marca ou código de barras',
           hintStyle: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(
             color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
           ),
@@ -60,68 +60,98 @@ class SearchBarWidget extends StatelessWidget {
               size: 5.w,
             ),
           ),
-          suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+          suffixIconConstraints:
+              const BoxConstraints(minWidth: 0, minHeight: 0),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (controller.text.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.all(2.w),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 18,
-                      color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+                Tooltip(
+                  message: 'Limpar busca',
+                  child: Semantics(
+                    button: true,
+                    label: 'Limpar busca',
+                    child: GestureDetector(
+                      onTap: () {
+                        controller.clear();
+                        onChanged('');
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(2.w),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color:
+                              AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               if (onOpenFilters != null)
-                GestureDetector(
-                  onTap: onOpenFilters,
-                  child: Container(
-                    margin: EdgeInsets.all(2.w),
-                    padding: EdgeInsets.all(2.w),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkTheme.colorScheme.outline,
-                      borderRadius: BorderRadius.circular(8),
+                Tooltip(
+                  message: 'Abrir filtros',
+                  child: Semantics(
+                    button: true,
+                    label: 'Abrir filtros',
+                    child: GestureDetector(
+                      onTap: onOpenFilters,
+                      child: Container(
+                        margin: EdgeInsets.all(2.w),
+                        padding: EdgeInsets.all(2.w),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkTheme.colorScheme.outline,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.tune, color: Colors.white),
+                      ),
                     ),
-                    child: const Icon(Icons.tune, color: Colors.white),
                   ),
                 ),
               if (onDuplicateLastMeal != null)
-                GestureDetector(
-                  onTap: onDuplicateLastMeal,
-                  child: Container(
-                    margin: EdgeInsets.all(2.w),
-                    padding: EdgeInsets.all(2.w),
-                    decoration: BoxDecoration(
-                      color: AppTheme.successGreen,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: CustomIconWidget(
-                      iconName: 'content_copy',
-                      color: AppTheme.textPrimary,
-                      size: 5.w,
+                Tooltip(
+                  message: 'Duplicar última refeição',
+                  child: Semantics(
+                    button: true,
+                    label: 'Duplicar última refeição',
+                    child: GestureDetector(
+                      onTap: onDuplicateLastMeal,
+                      child: Container(
+                        margin: EdgeInsets.all(2.w),
+                        padding: EdgeInsets.all(2.w),
+                        decoration: BoxDecoration(
+                          color: AppTheme.successGreen,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: CustomIconWidget(
+                          iconName: 'content_copy',
+                          color: AppTheme.textPrimary,
+                          size: 5.w,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              GestureDetector(
-                onTap: onBarcodePressed,
-                child: Container(
-                  margin: EdgeInsets.all(2.w),
-                  padding: EdgeInsets.all(2.w),
-                  decoration: BoxDecoration(
-                    color: AppTheme.activeBlue,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: CustomIconWidget(
-                    iconName: 'qr_code_scanner',
-                    color: AppTheme.textPrimary,
-                    size: 5.w,
+              Tooltip(
+                message: 'Abrir scanner de código de barras',
+                child: Semantics(
+                  button: true,
+                  label: 'Abrir scanner de código de barras',
+                  child: GestureDetector(
+                    onTap: onBarcodePressed,
+                    child: Container(
+                      margin: EdgeInsets.all(2.w),
+                      padding: EdgeInsets.all(2.w),
+                      decoration: BoxDecoration(
+                        color: AppTheme.activeBlue,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: CustomIconWidget(
+                        iconName: 'qr_code_scanner',
+                        color: AppTheme.textPrimary,
+                        size: 5.w,
+                      ),
+                    ),
                   ),
                 ),
               ),

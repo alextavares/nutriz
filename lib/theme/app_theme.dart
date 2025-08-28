@@ -7,15 +7,16 @@ class AppTheme {
   AppTheme._();
 
   // Design System Colors - Focused Dark Spectrum
-  static const Color primaryBackgroundDark = Color(0xFF0F1113);
-  static const Color secondaryBackgroundDark = Color(0xFF14171A);
+  // Tuned to YAZIO-like light surfaces for current redesign
+  static const Color primaryBackgroundDark = Color(0xFFFFFFFF);
+  static const Color secondaryBackgroundDark = Color(0xFFF9FAFB);
   static const Color activeBlue = Color(0xFF3D91DA); // tokens.light.primary
   static const Color successGreen = Color(0xFF2E7D32); // tokens.light.success
   static const Color warningAmber = Color(0xFFF57C00); // tokens.light.warning
   static const Color premiumGold = Color(0xFFFFD60A);
-  static const Color textPrimary = Color(0xFFF5F6F8);
-  static const Color textSecondary = Color(0xFFA1A1A6);
-  static const Color dividerGray = Color(0xFF2C2C2E);
+  static const Color textPrimary = Color(0xFF111827);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color dividerGray = Color(0xFFE5E7EB);
   static const Color errorRed = Color(0xFFD32F2F); // tokens.light.error
 
   // Light theme colors (minimal usage for system compatibility)
@@ -26,13 +27,13 @@ class AppTheme {
   static const Color dividerLight = Color(0xFFE0E0E0);
 
   // Shadow colors optimized for dark theme
-  static const Color shadowDark = Color(0x33000000);
+  static const Color shadowDark = Color(0x1A000000);
   static const Color shadowLight = Color(0x1A000000);
 
   /// Dark theme - Primary theme for health and nutrition tracking
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
-    fontFamily: GoogleFonts.notoSans().fontFamily,
+    fontFamily: GoogleFonts.inter().fontFamily,
     fontFamilyFallback: [
       // Symbols, Emoji and CJK fallbacks
       GoogleFonts.notoSansSymbols().fontFamily!,
@@ -213,7 +214,8 @@ class AppTheme {
         fontWeight: FontWeight.w700,
       ),
       brightness: Brightness.dark,
-      shape: StadiumBorder(side: BorderSide(color: dividerGray.withValues(alpha: 0.6))),
+      shape: StadiumBorder(
+          side: BorderSide(color: dividerGray.withValues(alpha: 0.6))),
       side: BorderSide(color: dividerGray.withValues(alpha: 0.6)),
     ),
 
@@ -420,7 +422,7 @@ class AppTheme {
   /// Light theme - Minimal implementation for system compatibility
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
-    fontFamily: GoogleFonts.notoSans().fontFamily,
+    fontFamily: GoogleFonts.inter().fontFamily,
     fontFamilyFallback: [
       GoogleFonts.notoSansSymbols().fontFamily!,
       GoogleFonts.notoColorEmoji().fontFamily!,

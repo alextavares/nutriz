@@ -75,15 +75,33 @@ class _GoalsWizardScreenState extends State<GoalsWizardScreen> {
     );
     // Opcional: preencher metas por refeição dividindo igualmente (pode ajustar depois)
     final perMeal = {
-      'breakfast': MealGoals(kcal: (total * 0.25).round(), carbs: (carb * 0.25).round(), proteins: (prot * 0.25).round(), fats: (fat * 0.25).round()),
-      'lunch': MealGoals(kcal: (total * 0.35).round(), carbs: (carb * 0.35).round(), proteins: (prot * 0.35).round(), fats: (fat * 0.35).round()),
-      'dinner': MealGoals(kcal: (total * 0.30).round(), carbs: (carb * 0.30).round(), proteins: (prot * 0.30).round(), fats: (fat * 0.30).round()),
-      'snack': MealGoals(kcal: (total * 0.10).round(), carbs: (carb * 0.10).round(), proteins: (prot * 0.10).round(), fats: (fat * 0.10).round()),
+      'breakfast': MealGoals(
+          kcal: (total * 0.25).round(),
+          carbs: (carb * 0.25).round(),
+          proteins: (prot * 0.25).round(),
+          fats: (fat * 0.25).round()),
+      'lunch': MealGoals(
+          kcal: (total * 0.35).round(),
+          carbs: (carb * 0.35).round(),
+          proteins: (prot * 0.35).round(),
+          fats: (fat * 0.35).round()),
+      'dinner': MealGoals(
+          kcal: (total * 0.30).round(),
+          carbs: (carb * 0.30).round(),
+          proteins: (prot * 0.30).round(),
+          fats: (fat * 0.30).round()),
+      'snack': MealGoals(
+          kcal: (total * 0.10).round(),
+          carbs: (carb * 0.10).round(),
+          proteins: (prot * 0.10).round(),
+          fats: (fat * 0.10).round()),
     };
     await UserPreferences.setMealGoals(perMeal);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: const Text('Metas salvas'), backgroundColor: AppTheme.successGreen),
+      SnackBar(
+          content: const Text('Metas salvas'),
+          backgroundColor: AppTheme.successGreen),
     );
     Navigator.pop(context, true);
   }
@@ -155,7 +173,8 @@ class _GoalsWizardScreenState extends State<GoalsWizardScreen> {
                 controller: _carbController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(labelText: 'Carboidratos (g)'),
+                decoration:
+                    const InputDecoration(labelText: 'Carboidratos (g)'),
               ),
               SizedBox(height: 1.2.h),
               TextField(
@@ -202,7 +221,9 @@ class _GoalsWizardScreenState extends State<GoalsWizardScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(a, style: AppTheme.darkTheme.textTheme.bodyLarge),
-          Text(b, style: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+          Text(b,
+              style: AppTheme.darkTheme.textTheme.bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -224,8 +245,10 @@ class _Header extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 14,
-                backgroundColor: active ? AppTheme.activeBlue : AppTheme.dividerGray,
-                child: Text('${i + 1}', style: TextStyle(color: AppTheme.textPrimary)),
+                backgroundColor:
+                    active ? AppTheme.activeBlue : AppTheme.dividerGray,
+                child: Text('${i + 1}',
+                    style: TextStyle(color: AppTheme.textPrimary)),
               ),
               SizedBox(height: 0.6.h),
               Text(labels[i], style: AppTheme.darkTheme.textTheme.bodySmall),

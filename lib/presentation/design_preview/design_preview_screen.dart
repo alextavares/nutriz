@@ -52,7 +52,8 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _currentScreen,
-              onChanged: (v) => setState(() => _currentScreen = v ?? 'Dashboard'),
+              onChanged: (v) =>
+                  setState(() => _currentScreen = v ?? 'Dashboard'),
               items: _screens.keys
                   .map((k) => DropdownMenuItem(value: k, child: Text(k)))
                   .toList(),

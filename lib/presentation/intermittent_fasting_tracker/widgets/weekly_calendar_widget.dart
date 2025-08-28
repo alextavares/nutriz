@@ -46,32 +46,39 @@ class WeeklyCalendarWidget extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
-                decoration: BoxDecoration(
-                  color: AppTheme.warningAmber.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CustomIconWidget(
-                      iconName: 'local_fire_department',
-                      color: AppTheme.warningAmber,
-                      size: 16,
-                    ),
-                    SizedBox(width: 1.w),
-                    Text(
-                      '$currentStreak dias',
-                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+              Builder(builder: (context) {
+                final w = MediaQuery.of(context).size.width;
+                final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                final double iSize = w < 360 ? 14 : 16;
+                final double padH = w < 360 ? 8 : 10;
+                final double padV = w < 360 ? 6 : 8;
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                  decoration: BoxDecoration(
+                    color: AppTheme.warningAmber.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomIconWidget(
+                        iconName: 'local_fire_department',
                         color: AppTheme.warningAmber,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
+                        size: iSize,
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                      SizedBox(width: 1.w),
+                      Text(
+                        '$currentStreak dias',
+                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                          color: AppTheme.warningAmber,
+                          fontSize: fs,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
           SizedBox(height: 3.h),
@@ -89,13 +96,18 @@ class WeeklyCalendarWidget extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () => onDayTap(day),
-                child: Column(
+                child: LayoutBuilder(builder: (context, constraints) {
+                  final w = MediaQuery.of(context).size.width;
+                  final double nameFs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                  final double dayFs = w < 340 ? 11.sp : (w < 380 ? 12.sp : 13.sp);
+                  final double iconSize = w < 360 ? 18 : 20;
+                  return Column(
                   children: [
                     Text(
                       _getDayName(day.weekday),
                       style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
                         color: AppTheme.textSecondary,
-                        fontSize: 10.sp,
+                        fontSize: nameFs,
                       ),
                     ),
                     SizedBox(height: 1.h),
@@ -123,7 +135,7 @@ class WeeklyCalendarWidget extends StatelessWidget {
                             ? CustomIconWidget(
                                 iconName: 'local_fire_department',
                                 color: AppTheme.warningAmber,
-                                size: 20,
+                                size: iconSize,
                               )
                             : Text(
                                 '${day.day}',
@@ -132,13 +144,13 @@ class WeeklyCalendarWidget extends StatelessWidget {
                                   color: isToday
                                       ? AppTheme.activeBlue
                                       : AppTheme.textPrimary,
-                                  fontSize: 12.sp,
+                                  fontSize: dayFs,
                                   fontWeight: isToday
                                       ? FontWeight.w600
                                       : FontWeight.w400,
                                 ),
                               ),
-                      ),
+                    ),
                     ),
                     if (isCompleted && duration > 0) ...[
                       SizedBox(height: 0.5.h),
@@ -152,7 +164,8 @@ class WeeklyCalendarWidget extends StatelessWidget {
                       ),
                     ],
                   ],
-                ),
+                  );
+                }),
               );
             }).toList(),
           ),

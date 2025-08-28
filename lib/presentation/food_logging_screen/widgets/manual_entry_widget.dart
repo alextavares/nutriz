@@ -222,17 +222,17 @@ class _ManualEntryWidgetState extends State<ManualEntryWidget> {
                   widget.onServingSizeChanged(s);
                 },
                 labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                  color: selected ? AppTheme.activeBlue : AppTheme.textSecondary,
+                  color:
+                      selected ? AppTheme.activeBlue : AppTheme.textSecondary,
                   fontWeight: FontWeight.w700,
                 ),
                 backgroundColor: AppTheme.secondaryBackgroundDark,
                 selectedColor: AppTheme.activeBlue.withValues(alpha: 0.12),
                 shape: StadiumBorder(
                   side: BorderSide(
-                    color: (selected
-                            ? AppTheme.activeBlue
-                            : AppTheme.dividerGray)
-                        .withValues(alpha: 0.6),
+                    color:
+                        (selected ? AppTheme.activeBlue : AppTheme.dividerGray)
+                            .withValues(alpha: 0.6),
                   ),
                 ),
               );
@@ -246,12 +246,14 @@ class _ManualEntryWidgetState extends State<ManualEntryWidget> {
             decoration: BoxDecoration(
               color: AppTheme.secondaryBackgroundDark,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+              border: Border.all(
+                  color: AppTheme.dividerGray.withValues(alpha: 0.6)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.save_outlined, size: 16, color: AppTheme.textSecondary),
+                const Icon(Icons.save_outlined,
+                    size: 16, color: AppTheme.textSecondary),
                 SizedBox(width: 1.w),
                 Text('Salvar como padrão',
                     style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(

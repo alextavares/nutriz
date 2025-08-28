@@ -3,6 +3,9 @@ import '../presentation/splash_screen/splash_screen.dart';
 import '../presentation/food_logging_screen/food_logging_screen.dart';
 import '../presentation/login_screen/login_screen.dart';
 import '../presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart';
+import '../presentation/enhanced_dashboard_screen/enhanced_dashboard_screen.dart';
+import '../presentation/body_metrics_screen/body_metrics_screen.dart';
+import '../presentation/notes_screen/notes_screen.dart';
 import '../presentation/recipe_browser/recipe_browser.dart';
 import '../presentation/intermittent_fasting_tracker/intermittent_fasting_tracker.dart';
 import '../presentation/detailed_meal_tracking_screen/detailed_meal_tracking_screen.dart';
@@ -12,6 +15,7 @@ import '../presentation/weekly_progress_screen/weekly_progress_screen.dart';
 import '../presentation/design_preview/design_preview_screen.dart';
 import '../presentation/progress_overview/progress_overview.dart';
 import '../presentation/goals_wizard/goals_wizard.dart';
+import '../presentation/exercise_logging_screen/exercise_logging_screen.dart';
 
 class AppRoutes {
   // TODO: Add your routes here
@@ -20,6 +24,7 @@ class AppRoutes {
   static const String foodLogging = '/food-logging-screen';
   static const String login = '/login-screen';
   static const String dailyTrackingDashboard = '/daily-tracking-dashboard';
+  static const String enhancedDashboard = '/enhanced-dashboard';
   static const String recipeBrowser = '/recipe-browser';
   static const String intermittentFastingTracker =
       '/intermittent-fasting-tracker';
@@ -31,6 +36,9 @@ class AppRoutes {
   static const String designPreview = '/design-preview';
   static const String progressOverview = '/progress-overview';
   static const String goalsWizard = '/goals-wizard';
+  static const String exerciseLogging = '/exercise-logging';
+  static const String bodyMetrics = '/body-metrics';
+  static const String notes = '/notes';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
@@ -38,6 +46,7 @@ class AppRoutes {
     foodLogging: (context) => const FoodLoggingScreen(),
     login: (context) => const LoginScreen(),
     dailyTrackingDashboard: (context) => const DailyTrackingDashboard(),
+    enhancedDashboard: (context) => const EnhancedDashboardScreen(),
     recipeBrowser: (context) => const RecipeBrowser(),
     intermittentFastingTracker: (context) => const IntermittentFastingTracker(),
     detailedMealTrackingScreen: (context) => const DetailedMealTrackingScreen(),
@@ -47,6 +56,9 @@ class AppRoutes {
     designPreview: (context) => const DesignPreviewScreen(),
     progressOverview: (context) => const ProgressOverviewScreen(),
     goalsWizard: (context) => const GoalsWizardScreen(),
+    exerciseLogging: (context) => const ExerciseLoggingScreen(),
+    bodyMetrics: (context) => const BodyMetricsScreen(),
+    notes: (context) => const NotesScreen(),
     // TODO: Add your other routes here
   };
 }

@@ -36,7 +36,8 @@ class GeminiService {
 
   void _initializeService() {
     if (apiKey.isEmpty) {
-      throw Exception('Missing GEMINI_API_KEY. Provide via --dart-define or assets/env.json');
+      throw Exception(
+          'Missing GEMINI_API_KEY. Provide via --dart-define or assets/env.json');
     }
 
     _dio = Dio(

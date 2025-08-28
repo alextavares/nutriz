@@ -76,5 +76,3 @@ class FavoritesStorage {
     await setMyFoods(list);
   }
 }
-
-
