@@ -22,7 +22,7 @@ pubspec.lock
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
-#.vscode/
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -51,3 +51,14 @@ env.json
 assets/env.json
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+
+# Local envs, coverage, logs and captures
+coverage/
+.venv/
+.venv_cv/
+logs/
+pr_captures/
+
+# Windows reserved filenames accidentally created
+CON
+NUL
