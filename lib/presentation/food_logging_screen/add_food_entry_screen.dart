@@ -125,12 +125,18 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                         children: [
                           Text(
                             'Adicionar alimento',
-                            style: theme.textTheme.titleLarge,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              fontSize: 14.sp,
+                            ),
                           ),
                           Text(
                             'para ${_mealLabel()}',
-                            style: theme.textTheme.bodySmall?.copyWith(
+                            style: theme.textTheme.bodyMedium?.copyWith(
                               color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 10.sp,
                             ),
                           ),
                         ],
@@ -152,7 +158,8 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                 child: Text(
                   'Como deseja registrar?',
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.sp,
                   ),
                 ),
               ),
@@ -268,16 +275,16 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
         child: Row(
           children: [
             Container(
-              width: 12.w,
-              height: 12.w,
+              width: 14.w,
+              height: 14.w,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: CustomIconWidget(
                 iconName: icon,
                 color: color,
-                size: 6.w,
+                size: 7.w,
               ),
             ),
             SizedBox(width: 3.w),
@@ -288,7 +295,9 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                   Text(
                     title,
                     style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11.sp,
+                      letterSpacing: -0.1,
                     ),
                   ),
                   SizedBox(height: 0.6.h),
@@ -296,6 +305,7 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                     subtitle,
                     style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
                       color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+                      fontSize: 9.sp,
                     ),
                   ),
                 ],
@@ -304,7 +314,7 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
             CustomIconWidget(
               iconName: 'chevron_right',
               color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
-              size: 5.w,
+              size: 6.w,
             ),
           ],
         ),
