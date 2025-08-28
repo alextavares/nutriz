@@ -1568,13 +1568,17 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Registrar Alimento',
-                              style: theme.textTheme.titleLarge,
+                              'Adicionar alimento',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                              ),
                             ),
                             Text(
-                              'Adicione alimentos à sua refeição',
+                              'para ${_currentMealLabel()}',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -1678,6 +1682,54 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+
+              // Meal Timing Selector always visible (like Yazio)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: FutureBuilder<MealSummary>(
+                  future: MealSummaryService.compute(
+                    date: _targetDate ?? DateTime.now(),
+                    mealKey: _selectedMealTime,
+                  ),
+                  builder: (context, snap) {
+                    final s = snap.data;
+                    Widget summary = const SizedBox.shrink();
+                    if (s != null) {
+                      final int diffK = s.goalKcal - s.usedKcal;
+                      final int diffC = s.goalCarb - s.usedCarb;
+                      final int diffP = s.goalProt - s.usedProt;
+                      final int diffF = s.goalFat - s.usedFat;
+                      final int remK = diffK < 0 ? 0 : diffK;
+                      final int remC = diffC < 0 ? 0 : diffC;
+                      final int remP = diffP < 0 ? 0 : diffP;
+                      final int remF = diffF < 0 ? 0 : diffF;
+                      summary = Row(
+                        children: [
+                          _chip('kcal', remK, AppTheme.warningAmber,
+                              exceeded: diffK < 0),
+                          SizedBox(width: 2.w),
+                          _chip('C', remC, AppTheme.successGreen,
+                              exceeded: diffC < 0),
+                          SizedBox(width: 2.w),
+                          _chip('P', remP, AppTheme.activeBlue,
+                              exceeded: diffP < 0),
+                          SizedBox(width: 2.w),
+                          _chip('G', remF, AppTheme.errorRed,
+                              exceeded: diffF < 0),
+                        ],
+                      );
+                    }
+                    return MealTimingSelectorWidget(
+                      selectedMealTime: _selectedMealTime,
+                      onMealTimeChanged: (m) {
+                        _onMealTimeChanged(m);
+                        setState(() {});
+                      },
+                      trailing: summary,
+                    );
+                  },
                 ),
               ),
 
@@ -2407,51 +2459,7 @@ class _FoodLoggingScreenState extends State<FoodLoggingScreen> {
                         onServingSizeChanged: _onServingSizeChanged,
                       ),
 
-                      // Meal Timing Selector
-                      if (_selectedFood != null)
-                        FutureBuilder<MealSummary>(
-                          future: MealSummaryService.compute(
-                            date: _targetDate ?? DateTime.now(),
-                            mealKey: _selectedMealTime,
-                          ),
-                          builder: (context, snap) {
-                            final s = snap.data;
-                            Widget summary = const SizedBox.shrink();
-                            if (s != null) {
-                              final int diffK = s.goalKcal - s.usedKcal;
-                              final int diffC = s.goalCarb - s.usedCarb;
-                              final int diffP = s.goalProt - s.usedProt;
-                              final int diffF = s.goalFat - s.usedFat;
-                              final int remK = diffK < 0 ? 0 : diffK;
-                              final int remC = diffC < 0 ? 0 : diffC;
-                              final int remP = diffP < 0 ? 0 : diffP;
-                              final int remF = diffF < 0 ? 0 : diffF;
-                              summary = Row(
-                                children: [
-                                  _chip('kcal', remK, AppTheme.warningAmber,
-                                      exceeded: diffK < 0),
-                                  SizedBox(width: 2.w),
-                                  _chip('C', remC, AppTheme.successGreen,
-                                      exceeded: diffC < 0),
-                                  SizedBox(width: 2.w),
-                                  _chip('P', remP, AppTheme.activeBlue,
-                                      exceeded: diffP < 0),
-                                  SizedBox(width: 2.w),
-                                  _chip('G', remF, AppTheme.errorRed,
-                                      exceeded: diffF < 0),
-                                ],
-                              );
-                            }
-                            return MealTimingSelectorWidget(
-                              selectedMealTime: _selectedMealTime,
-                              onMealTimeChanged: (m) {
-                                _onMealTimeChanged(m);
-                                setState(() {});
-                              },
-                              trailing: summary,
-                            );
-                          },
-                        ),
+                      // Meal Timing Selector moved to top
 
                       // Bottom padding for save button
                       SizedBox(height: 12.h),
