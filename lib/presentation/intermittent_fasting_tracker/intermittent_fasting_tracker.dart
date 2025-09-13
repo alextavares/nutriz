@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../common/celebration_overlay.dart';
+import '../../services/gamification_engine.dart';
+import '../../services/streak_service.dart';
 
 import '../../core/app_export.dart';
 import './widgets/achievements_widget.dart';
@@ -43,6 +46,8 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
   int _currentStreak = 7;
   int _totalFastingDays = 45;
   int _longestStreak = 12;
+  int _fastingStreak = 0;
+  bool _showNextMilestoneCaptions = true;
 
   // Weekly fasting summary (loaded from storage)
   List<Map<String, dynamic>> _weeklyData = [
@@ -130,18 +135,30 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 5, vsync: this, initialIndex: 1);
     _initializeFastingData();
+    _loadUiPrefs();
+    UserPreferences.changes.addListener(_onUiPrefsChanged);
     // Ask permission early if notifications are enabled
     if (_notificationsEnabled) {
       NotificationsService.requestPermissionsIfNeeded();
     }
     _initTimezoneName();
     _initMuteUntil();
+    _refreshFastingStreak();
+  }
+
+  Future<void> _loadUiPrefs() async {
+    final show = await UserPreferences.getShowNextMilestoneCaptions();
+    if (!mounted) return;
+    setState(() => _showNextMilestoneCaptions = show);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    try {
+      UserPreferences.changes.removeListener(_onUiPrefsChanged);
+    } catch (_) {}
     super.dispose();
   }
 
@@ -189,6 +206,10 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
       _updateDailyFastingReminders();
     }
     _initTimezoneName();
+  }
+
+  void _onUiPrefsChanged() {
+    _loadUiPrefs();
   }
 
   Future<void> _initTimezoneName() async {
@@ -328,6 +349,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
         _remainingTime = Duration.zero;
       });
       await _loadWeekAndStats();
+      await _refreshFastingStreak();
+      // Gamification: celebrate once per day
+      final celebrate = await GamificationEngine.I.fire(
+        GamificationEvent(type: GamificationEventType.goalCompleted, metaKey: 'fasting', value: fd.inSeconds),
+      );
+      if (celebrate && mounted) await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.goal);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
               'Jejum finalizado! Duração: ${hours}h ${fd.inMinutes.remainder(60)}min',
@@ -342,12 +369,18 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
 
   void _onTimerComplete() {
     NotificationsService.cancelFastingEnd();
-    FastingStorage.stopNow();
+    FastingStorage.stopNow().then((d) async {
+    final celebrate = await GamificationEngine.I.fire(
+      GamificationEvent(type: GamificationEventType.goalCompleted, metaKey: 'fasting', value: (d ?? Duration.zero).inSeconds),
+    );
+    if (celebrate && mounted) await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.goal);
+    });
     setState(() {
       _isFasting = false;
       _remainingTime = Duration.zero;
     });
     _loadWeekAndStats();
+    _refreshFastingStreak();
 
     // Show completion celebration
     showDialog(
@@ -382,6 +415,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                             fontSize: 14.sp, fontWeight: FontWeight.w500))),
               ]);
         });
+  }
+
+  Future<void> _refreshFastingStreak() async {
+    final v = await StreakService.currentStreak('fasting');
+    if (!mounted) return;
+    setState(() => _fastingStreak = v);
   }
 
   void _onMethodSelected(String method) {
@@ -680,6 +719,52 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 ),
               );
             }),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningAmber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.35)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.local_fire_department, color: Colors.amber, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      _fastingStreak > 0 ? '${_fastingStreak}d jejum' : 'Sem streak jejum',
+                      style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    if (const {3, 5, 7, 14, 30}.contains(_fastingStreak)) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.star, color: Colors.amber, size: 14),
+                    ],
+                    if (_showNextMilestoneCaptions) ...(() {
+                      final thresholds = [3, 5, 7, 14, 30];
+                      int? next;
+                      for (final t in thresholds) {
+                        if (_fastingStreak < t) { next = t; break; }
+                      }
+                      if (next == null) return <Widget>[];
+                      return [
+                        const SizedBox(width: 6),
+                        Text('• próx: ${next}d',
+                            style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                      ];
+                    })(),
+                  ],
+                ),
+              ),
+            ),
           ],
 
           SizedBox(height: 4.h),

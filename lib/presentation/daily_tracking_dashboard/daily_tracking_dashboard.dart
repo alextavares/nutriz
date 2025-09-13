@@ -15,12 +15,19 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import '../../services/notes_storage.dart';
 import '../../services/body_metrics_storage.dart';
 import '../../services/fasting_storage.dart';
+import '../../services/streak_service.dart';
+import '../../services/achievement_service.dart';
+import './widgets/achievement_badges_widget.dart';
 import '../../services/notifications_service.dart';
+import '../../services/weekly_goal_service.dart';
+import '../../services/daily_goal_service.dart';
+import '../common/celebration_overlay.dart';
 import 'package:nutritracker/util/download_stub.dart'
     if (dart.library.html) 'package:nutritracker/util/download_web.dart';
 import 'package:nutritracker/util/upload_stub.dart'
     if (dart.library.html) 'package:nutritracker/util/upload_web.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 
 class DailyTrackingDashboard extends StatefulWidget {
   const DailyTrackingDashboard({super.key});
@@ -31,6 +38,7 @@ class DailyTrackingDashboard extends StatefulWidget {
 
 class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   DateTime _selectedDate = DateTime.now();
+  bool _initArgsHandled = false;
   int _currentWeek = 32;
   // Removed old day/week toggle state — we follow YAZIO-like date nav
   final Set<String> _expandedMealKeys = <String>{};
@@ -38,6 +46,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   List<int> _weeklyCalories = List.filled(7, 0);
   List<int> _weeklyWater = List.filled(7, 0);
   Map<String, dynamic> _lastExerciseMeta = const {};
+  
+  String _fmtInt(int v) {
+    final locale = Localizations.localeOf(context).toString();
+    return NumberFormat.decimalPattern(locale).format(v);
+  }
   // Exercise UI state
   int _exerciseStreak = 0;
   bool _exerciseExpanded = false;
@@ -56,7 +69,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   final Set<String> _exceededMeals = {};
   // removed unused: _exceededMacroKeys
   int _hydrationStreak = 0;
+  int _fastingStreak = 0;
+  int _caloriesStreak = 0;
+  int _proteinStreak = 0;
+  List<Map<String, dynamic>> _achievements = const [];
   List<Map<String, dynamic>> _exerciseLogs = const [];
+  bool _showNextMilestoneCaptions = true;
   // Fasting mute banner state
   bool _fastingActiveMuted = false;
   DateTime? _fastMuteUntil;
@@ -105,6 +123,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     return week;
   }
 
+  int? _nextMilestoneFor(int current, List<int> thresholds) {
+    for (final t in thresholds) {
+      if (current < t) return t;
+    }
+    return null;
+  }
+
   Widget _quickActivityChip(String label, VoidCallback onTap) {
     final w = MediaQuery.of(context).size.width;
     final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
@@ -129,33 +154,259 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
-  List<Map<String, dynamic>> _achievements = [
-    {
-      "id": 1,
-      "type": "flame",
-      "title": "Sequência de 7 dias",
-      "description": "Você manteve sua meta por 7 dias consecutivos!",
-      "earnedDate": "2025-08-10",
-    },
-    {
-      "id": 2,
-      "type": "diamond",
-      "title": "Meta Proteína",
-      "description": "Atingiu sua meta de proteína por 5 dias seguidos.",
-      "earnedDate": "2025-08-09",
-    },
-    {
-      "id": 3,
-      "type": "success",
-      "title": "Hidratação",
-      "description": "Bebeu 2L de água por 3 dias consecutivos.",
-      "earnedDate": "2025-08-08",
-    },
-  ];
+  // Achievements are loaded dynamically from AchievementService
 
   String _localizedTodayLabel(BuildContext context) {
     final lang = Localizations.localeOf(context).languageCode.toLowerCase();
     return lang == 'pt' ? 'Hoje' : 'Today';
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // One-time read of route arguments for deep-link date navigation
+    if (!_initArgsHandled) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map) {
+        final s = args['date']?.toString();
+        if (s != null && s.isNotEmpty) {
+          try {
+            final d = DateTime.parse(s);
+            _selectedDate = DateTime(d.year, d.month, d.day);
+            _loadToday();
+            _loadWeek();
+          } catch (_) {}
+        }
+      }
+      _initArgsHandled = true;
+    }
+    _refreshGamificationRow();
+  }
+
+  Future<void> _refreshGamificationRow() async {
+    final streak = await StreakService.currentStreak('water');
+    final fast = await StreakService.currentStreak('fasting');
+    final cal = await StreakService.currentStreak('calories_ok_day');
+    final prot = await StreakService.currentStreak('protein');
+    final ach = await AchievementService.listAll();
+    if (!mounted) return;
+    setState(() {
+      _hydrationStreak = streak;
+      _fastingStreak = fast;
+      _caloriesStreak = cal;
+      _proteinStreak = prot;
+      ach.sort((a, b) => (b['dateIso'] as String?)?.compareTo(a['dateIso'] as String? ?? '') ?? 0);
+      _achievements = ach.take(6).toList();
+    });
+
+    // Celebrate newly added achievements (optional)
+    final lastAdded = await AchievementService.getLastAddedTs();
+    final lastSeen = await AchievementService.getLastSeenTs();
+    if (lastAdded > 0 && lastAdded > lastSeen) {
+      // Use overlay only; respect reduce animations handled inside
+      await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.achievement);
+      await AchievementService.setLastSeenTs(lastAdded);
+    }
+  }
+
+  Widget _waterStreakChip() {
+    final milestones = const [3, 5, 7, 14, 30];
+    final isMilestone = milestones.toSet().contains(_hydrationStreak);
+    final next = _nextMilestoneFor(_hydrationStreak, milestones);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.warningAmber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.local_fire_department, color: Colors.amber, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            _hydrationStreak > 0 ? '${_hydrationStreak}d água' : 'Sem streak',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          if (isMilestone) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.star, color: Colors.amber, size: 14),
+          ],
+          if (_showNextMilestoneCaptions && next != null) ...[
+            const SizedBox(width: 6),
+            Text('• próx: ${next}d',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _fastingStreakChip() {
+    final milestones = const [3, 5, 7, 14, 30];
+    final isMilestone = milestones.toSet().contains(_fastingStreak);
+    final next = _nextMilestoneFor(_fastingStreak, milestones);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.warningAmber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.local_fire_department, color: Colors.amber, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            _fastingStreak > 0 ? '${_fastingStreak}d jejum' : 'Sem streak jejum',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          if (isMilestone) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.star, color: Colors.amber, size: 14),
+          ],
+          if (_showNextMilestoneCaptions && next != null) ...[
+            const SizedBox(width: 6),
+            Text('• próx: ${next}d',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _caloriesStreakChip() {
+    final milestones = const [3, 5, 7, 14, 30];
+    final isMilestone = milestones.toSet().contains(_caloriesStreak);
+    final next = _nextMilestoneFor(_caloriesStreak, milestones);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.successGreen.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.successGreen.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.check_circle, color: Colors.lightGreen, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            _caloriesStreak > 0 ? '${_caloriesStreak}d calorias ok' : 'Sem streak calorias',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          if (isMilestone) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.star, color: Colors.lightGreen, size: 14),
+          ],
+          if (_showNextMilestoneCaptions && next != null) ...[
+            const SizedBox(width: 6),
+            Text('• próx: ${next}d',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _proteinStreakChip() {
+    final milestones = const [5, 7, 14, 30];
+    final isMilestone = milestones.toSet().contains(_proteinStreak);
+    final next = _nextMilestoneFor(_proteinStreak, milestones);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.activeBlue.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.activeBlue.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.set_meal, color: Colors.lightBlue, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            _proteinStreak > 0 ? '${_proteinStreak}d proteína ok' : 'Sem streak proteína',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          if (isMilestone) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.star, color: Colors.lightBlue, size: 14),
+          ],
+          if (_showNextMilestoneCaptions && next != null) ...[
+            const SizedBox(width: 6),
+            Text('• próx: ${next}d',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showBadgeDetails(Map<String, dynamic> a) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.secondaryBackgroundDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        final when = (a['dateIso'] as String?) ?? '';
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                CustomIconWidget(iconName: 'emoji_events', color: AppTheme.premiumGold, size: 22),
+                const SizedBox(width: 8),
+                Text('Conquista', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppTheme.textPrimary)),
+              ]),
+              const SizedBox(height: 8),
+              Text(a['title'] as String? ?? 'Conquista', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text('Obtida em: $when', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary)),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen, foregroundColor: AppTheme.textPrimary),
+                  child: const Text('Fechar'),
+                ),
+              )
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // Small debug banner with build info (debug-only)
@@ -249,11 +500,16 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   Widget _topActionsRow(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final iconColor = cs.onSurfaceVariant;
+    final w = MediaQuery.of(context).size.width;
+    final bool compact = w < 380; // telas estreitas: mover ações para menu
+    final bool ultraCompact = w < 350; // ainda mais estreito: simplificar ainda mais
+    const double _iconSize = 20; // YAZIO-like compact size
+    const BoxConstraints _iconConstraints = BoxConstraints(minWidth: 36, minHeight: 36);
     Widget action(IconData icon, String tip, VoidCallback onTap) => IconButton(
           tooltip: tip,
-          icon: Icon(icon, size: 22, color: iconColor),
+          icon: Icon(icon, size: _iconSize, color: iconColor),
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          constraints: _iconConstraints,
           onPressed: onTap,
         );
 
@@ -288,35 +544,55 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           // Date navigation moved to the top actions row
           IconButton(
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_left, color: cs.onSurfaceVariant),
+            icon: Icon(Icons.chevron_left, size: _iconSize, color: cs.onSurfaceVariant),
             onPressed: () async {
               setState(() => _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
               await _loadToday();
               await _loadWeek();
             },
           ),
-          GestureDetector(
-            onTap: _pickDate,
-            child: Builder(builder: (context) {
+          Flexible(
+            child: GestureDetector(
+              onTap: _pickDate,
+              child: Builder(builder: (context) {
               final DateTime t = DateTime.now();
               final today = DateTime(t.year, t.month, t.day);
               final sel = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
               final isToday = sel == today;
-              final label = isToday
-                  ? _localizedTodayLabel(context)
-                  : '${sel.day.toString().padLeft(2, '0')}/${sel.month.toString().padLeft(2, '0')}/${sel.year}';
-              return Text(
-                label,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
-              );
-            }),
+              // Formatação adaptativa para garantir legibilidade
+              // Requisito: mostrar dia+semana, sem ano
+              String label;
+              if (isToday) {
+                label = _localizedTodayLabel(context);
+              } else {
+                final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+                final wdPt = const ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+                final wdEn = const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                final wd = (lang == 'pt' ? wdPt : wdEn)[sel.weekday - 1];
+                final dd = sel.day.toString().padLeft(2, '0');
+                final mm = sel.month.toString().padLeft(2, '0');
+                label = ultraCompact ? '$dd/$mm' : '$wd $dd/$mm';
+              }
+                return FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                );
+              }),
+            ),
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+            icon: Icon(Icons.chevron_right, size: _iconSize, color: cs.onSurfaceVariant),
             onPressed: () async {
               setState(() => _selectedDate = _selectedDate.add(const Duration(days: 1)));
               await _loadToday();
@@ -324,18 +600,64 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             },
           ),
           const Spacer(),
-          action(Icons.query_stats_outlined, 'Estatísticas', () {
-            Navigator.pushNamed(context, AppRoutes.progressOverview);
-          }),
+          // Ações principais (estatísticas pode ocultar em telas muito estreitas)
+          if (!ultraCompact)
+            action(Icons.query_stats_outlined, 'Estatísticas', () {
+              Navigator.pushNamed(context, AppRoutes.progressOverview);
+            }),
           action(Icons.calendar_today_outlined, 'Calendário', _pickDate),
-          action(Icons.accessibility_new_outlined, 'Valores corporais', () {
-            Navigator.pushNamed(context, AppRoutes.bodyMetrics);
+          action(Icons.smart_toy_outlined, 'Coach de IA', () {
+            Navigator.pushNamed(context, AppRoutes.aiCoachChat);
           }),
-          action(Icons.sticky_note_2_outlined, 'Anotações', () {
-            Navigator.pushNamed(context, AppRoutes.notes, arguments: {
-              'date': _selectedDate.toIso8601String(),
-            });
+          // Ações do dia (abre bottom sheet com duplicar, templates e visão de streaks)
+          action(Icons.local_fire_department, 'Ações do dia', _openDayActionsMenu),
+          action(Icons.emoji_events_outlined, 'Conquistas', () {
+            Navigator.pushNamed(context, AppRoutes.achievements);
           }),
+          if (!compact) ...[
+            action(Icons.accessibility_new_outlined, 'Valores corporais', () {
+              Navigator.pushNamed(context, AppRoutes.bodyMetrics);
+            }),
+            action(Icons.sticky_note_2_outlined, 'Anotações', () {
+              Navigator.pushNamed(context, AppRoutes.notes, arguments: {
+                'date': _selectedDate.toIso8601String(),
+              });
+            }),
+          ] else ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: PopupMenuButton<String>(
+                tooltip: 'Mais ações',
+                position: PopupMenuPosition.under,
+                itemBuilder: (context) => [
+                  const PopupMenuItem<String>(value: 'metrics', child: Text('Valores corporais')),
+                  const PopupMenuItem<String>(value: 'notes', child: Text('Anotações')),
+                  if (ultraCompact)
+                    const PopupMenuItem<String>(value: 'stats', child: Text('Estatísticas')),
+                  const PopupMenuItem<String>(value: 'coach', child: Text('Coach de IA')),
+                ],
+                onSelected: (v) {
+                  switch (v) {
+                    case 'metrics':
+                      Navigator.pushNamed(context, AppRoutes.bodyMetrics);
+                      break;
+                    case 'notes':
+                      Navigator.pushNamed(context, AppRoutes.notes, arguments: {
+                        'date': _selectedDate.toIso8601String(),
+                      });
+                      break;
+                    case 'stats':
+                      Navigator.pushNamed(context, AppRoutes.progressOverview);
+                      break;
+                    case 'coach':
+                      Navigator.pushNamed(context, AppRoutes.aiCoachChat);
+                      break;
+                  }
+                },
+                icon: Icon(Icons.more_vert, size: _iconSize, color: iconColor),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -450,15 +772,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
         boxShadow: const [],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Remaining big
-          Text('$display kcal', style: numStyle),
-          const SizedBox(height: 4),
-          Text(exceeded ? 'Excedeu' : 'Restante', style: label),
-          const SizedBox(height: 8),
+          // Removed duplicated remaining label under the ring (YAZIO does not show it here)
+          // Keep only the compact equation row below for clarity
           // Equation row
           RichText(
             textAlign: TextAlign.center,
@@ -467,21 +786,21 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               children: [
                 const TextSpan(text: 'Objetivo '),
                 TextSpan(
-                    text: '$goal',
+                    text: _fmtInt(goal),
                     style: eqStyle.copyWith(
                         color: cs.onSurface,
                         fontWeight: FontWeight.w600)),
                 TextSpan(text: ' − ', style: opStyle),
                 const TextSpan(text: 'Alimentação '),
                 TextSpan(
-                    text: '$food',
+                    text: _fmtInt(food),
                     style: eqStyle.copyWith(
                         color: AppTheme.warningAmber,
                         fontWeight: FontWeight.w700)),
                 TextSpan(text: ' + ', style: opStyle),
                 const TextSpan(text: 'Exercício '),
                 TextSpan(
-                    text: '$exercise',
+                    text: _fmtInt(exercise),
                     style: eqStyle.copyWith(
                         color: AppTheme.successGreen,
                         fontWeight: FontWeight.w700)),
@@ -498,6 +817,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   @override
   void initState() {
     super.initState();
+    _loadUiPrefs();
     _ensureAuthenticated();
     _loadToday();
     _loadGoals();
@@ -508,6 +828,42 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     _refreshFastingBanner();
     _loadBannerPrefs();
     _loadEatingTimes();
+    // Gamification evals
+    _refreshGamificationRow();
+    WeeklyGoalService.evaluatePerfectCaloriesWeek().then((created) {
+      if (created && mounted) _refreshGamificationRow();
+    });
+    DailyGoalService.evaluateProteinOkToday().then((_) => _refreshGamificationRow());
+    DailyGoalService.evaluateCaloriesOkToday().then((_) => _refreshGamificationRow());
+    // Refresh whenever NutritionStorage mutates
+    NutritionStorage.changes.addListener(_onStorageChanged);
+    // Listen to UI preference changes
+    UserPreferences.changes.addListener(_onUiPrefsChanged);
+  }
+
+  Future<void> _loadUiPrefs() async {
+    final show = await UserPreferences.getShowNextMilestoneCaptions();
+    if (!mounted) return;
+    setState(() => _showNextMilestoneCaptions = show);
+  }
+
+  void _onUiPrefsChanged() {
+    _loadUiPrefs();
+  }
+
+  void _onStorageChanged() {
+    if (!mounted) return;
+    _loadToday();
+    _loadWeek();
+    _loadGoals(); // reload global goals
+    _loadMealGoals(); // reload per-meal goals
+  }
+
+  @override
+  void dispose() {
+    NutritionStorage.changes.removeListener(_onStorageChanged);
+    UserPreferences.changes.removeListener(_onUiPrefsChanged);
+    super.dispose();
   }
 
   // Removed unused highlight clearer
@@ -552,16 +908,69 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: vspace),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: ratio,
-              minHeight: barH,
-              backgroundColor:
-                  Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
-              color: color,
-            ),
-          ),
+          // Custom mini progress bar with a dot (YAZIO-like),
+          // always visible even at 0%.
+          LayoutBuilder(builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final dotSize = (barH + 3).clamp(4, 8).toDouble();
+            final trackColor = Theme.of(context)
+                .colorScheme
+                .outlineVariant
+                .withValues(alpha: 0.35);
+            final progressW = (width * ratio).clamp(0.0, width);
+            final dotX = (width * ratio).clamp(0.0, width - dotSize);
+            return SizedBox(
+              height: barH + 6,
+              child: Stack(
+                children: [
+                  // Track
+                  Positioned.fill(
+                    top: 3,
+                    bottom: 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: trackColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  // Fill
+                  Positioned(
+                    left: 0,
+                    top: 3,
+                    bottom: 3,
+                    child: Container(
+                      width: progressW,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  // Dot indicator (always visible)
+                  Positioned(
+                    left: dotX,
+                    top: (barH + 6 - dotSize) / 2,
+                    child: Container(
+                      width: dotSize,
+                      height: dotSize,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.35),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
           SizedBox(height: vspace),
           Text(
             '${consumed}/${total} g',
@@ -1205,7 +1614,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           child: Icon(
             isFilled ? Icons.water_drop : Icons.water_drop_outlined,
             size: 18,
-            color: isFilled ? cs.primary : cs.onSurfaceVariant,
+            color: isFilled
+                ? cs.primary.withValues(alpha: 0.92)
+                : cs.onSurfaceVariant.withValues(alpha: 0.65),
           ),
         ),
       ));
@@ -1360,23 +1771,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         waterMl: _dailyData["waterMl"] as int,
                       ),
 
-                      // YAZIO-like: show equation card under ring (Objetivo − Alimentação + Exercício)
+                      // Removed equation card under ring to match YAZIO (no text under the ring)
                       SizedBox(height: 0.8.h),
-                      Builder(builder: (context) {
-                        final int goal = (_dailyData["totalCalories"] as int? ?? 0);
-                        final int food = (_dailyData["consumedCalories"] as int? ?? 0);
-                        final int exercise = (_dailyData["spentCalories"] as int? ?? 0);
-                        final int remaining = goal - food + exercise;
-                        return _calorieBudgetCard(
-                          context,
-                          goal: goal,
-                          food: food,
-                          exercise: exercise,
-                          remaining: remaining,
-                        );
-                      }),
-                      SizedBox(height: 1.0.h),
-                      SizedBox(height: 0.6.h),
                       _overallMacrosRow(context),
                     ],
                   ),
@@ -1539,8 +1935,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   final eased = _kAnimCurve.transform(p);
                                   return LinearProgressIndicator(
                                     value: eased * ratio,
-                                    minHeight: 6,
-                                    backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
+                                    minHeight: 4,
+                                    backgroundColor: cs.outlineVariant.withValues(alpha: 0.20),
                                     color: cs.primary,
                                   );
                                 },
@@ -1978,7 +2374,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                                 builder: (context, v, _) {
                                                   if (spent <= 0) {
                                                     return Text(
-                                                      '0/$goal kcal',
+                                                      '${_fmtInt(0)}/${_fmtInt(goal)} kcal',
                                                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                                             color: AppTheme.successGreen,
                                                             fontWeight: FontWeight.w700,
@@ -1990,7 +2386,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                                   final eased = _kAnimCurve.transform(delayed);
                                                   final shown = (spent * eased).toInt();
                                                   return Text(
-                                                    '$shown/$goal kcal',
+                                                    '${_fmtInt(shown)}/${_fmtInt(goal)} kcal',
                                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                                           color: AppTheme.successGreen,
                                                           fontWeight: FontWeight.w700,
@@ -2012,7 +2408,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                                         : (p - _kDelayCenter) / (1.0 - _kDelayCenter);
                                                     final eased = _kAnimCurve.transform(delayed);
                                                     final shown = (remain * eased).toInt();
-                                                    return Text('Faltam $shown kcal',
+                                                    return Text('Faltam ${_fmtInt(shown)} kcal',
                                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                                               color: cs.onSurfaceVariant,
                                                               fontWeight: FontWeight.w600,
@@ -2326,6 +2722,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             case 3:
               Navigator.pushNamed(context, AppRoutes.profile);
               break;
+            case 4:
+              Navigator.pushNamed(context, AppRoutes.aiCoachChat);
+              break;
           }
         },
         items: [
@@ -2356,6 +2755,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline, color: AppTheme.textSecondary, size: 24),
             label: 'Perfil',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.smart_toy_outlined, color: AppTheme.textSecondary, size: 24),
+            label: 'Coach',
           ),
         ],
       ),
@@ -2455,7 +2858,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             ),
           ),
           Text(
-            '$value kcal',
+            '${_fmtInt(value)} kcal',
             style: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(
               color: color,
               fontWeight: FontWeight.w600,
@@ -3801,10 +4204,42 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   ),
                 ),
                 SizedBox(height: 2.h),
+                // Streak chips + badges row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _waterStreakChip(),
+                    const SizedBox(width: 8),
+                    _fastingStreakChip(),
+                    const SizedBox(width: 8),
+                    _caloriesStreakChip(),
+                    const SizedBox(width: 8),
+                    _proteinStreakChip(),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: AchievementBadgesWidget(
+                        achievements: _achievements,
+                        onBadgeTap: (a) => _showBadgeDetails(a),
+                      ),
+                    ),
+                  ],
+                ),
                 Text('Ações do dia',
                     style: AppTheme.darkTheme.textTheme.titleLarge
                         ?.copyWith(color: AppTheme.textPrimary)),
                 SizedBox(height: 1.5.h),
+                ListTile(
+                  leading: const Icon(Icons.local_fire_department,
+                      color: AppTheme.warningAmber),
+                  title: Text('Visão geral da sequência',
+                      style: AppTheme.darkTheme.textTheme.bodyMedium
+                          ?.copyWith(color: AppTheme.textPrimary)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, AppRoutes.streakOverview);
+                  },
+                ),
+                const Divider(height: 1),
                 ListTile(
                   leading:
                       Icon(Icons.bookmark_border, color: AppTheme.textPrimary),

@@ -286,15 +286,28 @@ class _NotificationSettingsWidgetState
                 ),
                 SizedBox(width: 1.w),
                 Expanded(
-                  child: Text(
-                    title,
-                    style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontSize: 10.sp,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: LayoutBuilder(builder: (context, c) {
+                    final w = c.maxWidth;
+                    // Em telas muito estreitas, use rótulos compactos para evitar truncar
+                    String compact(String t) {
+                      final lower = t.toLowerCase();
+                      if (w < 120) {
+                        if (lower.startsWith('início')) return 'Início';
+                        if (lower.startsWith('fim')) return 'Fim';
+                      }
+                      return t;
+                    }
+                    return Text(
+                      compact(title),
+                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontSize: 10.sp,
+                      ),
+                      maxLines: w < 140 ? 1 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
+                    );
+                  }),
                 ),
               ],
             ),

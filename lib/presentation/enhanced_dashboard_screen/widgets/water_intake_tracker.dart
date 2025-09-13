@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 
 import '../../../core/app_export.dart';
+import '../../../services/nutrition_storage.dart';
+import '../../../services/user_preferences.dart';
+import '../../../services/gamification_engine.dart';
+import '../../common/celebration_overlay.dart';
 
-class WaterIntakeTracker extends StatelessWidget {
+class WaterIntakeTracker extends StatefulWidget {
   final int consumed;
   final int total;
 
@@ -13,10 +19,39 @@ class WaterIntakeTracker extends StatelessWidget {
     required this.total,
   });
 
-  double get progress => total > 0 ? (consumed / total).clamp(0.0, 1.0) : 0.0;
-  int get remaining => total - consumed;
-  double get consumedLiters => consumed / 1000;
-  double get totalLiters => total / 1000;
+  @override
+  State<WaterIntakeTracker> createState() => _WaterIntakeTrackerState();
+}
+
+class _WaterIntakeTrackerState extends State<WaterIntakeTracker> {
+  Timer? _repeatTimer;
+  bool _repeating = false;
+
+  double get progress => widget.total > 0 ? (widget.consumed / widget.total).clamp(0.0, 1.0) : 0.0;
+  int get remaining => widget.total - widget.consumed;
+  double get consumedLiters => widget.consumed / 1000;
+  double get totalLiters => widget.total / 1000;
+
+  void _startRepeat(int amount) {
+    _repeating = true;
+    _repeatTimer?.cancel();
+    _repeatTimer = Timer.periodic(const Duration(milliseconds: 150), (_) {
+      if (!_repeating) return;
+      _handleQuickAdd(context, amount);
+    });
+  }
+
+  void _stopRepeat() {
+    _repeating = false;
+    _repeatTimer?.cancel();
+    _repeatTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _repeatTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,35 +209,85 @@ class WaterIntakeTracker extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
 
-    return ElevatedButton(
-      onPressed: () {
-        // TODO: Implement water intake addition
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('+$amount ml de água adicionados!'),
-            backgroundColor: AppTheme.successGreen,
-            duration: const Duration(seconds: 2),
+    return Semantics(
+      label: 'Adicionar $label de água',
+      button: true,
+      child: GestureDetector(
+        onLongPressStart: (_) => _startRepeat(amount),
+        onLongPressEnd: (_) => _stopRepeat(),
+        child: ElevatedButton(
+          onPressed: () async {
+            await _handleQuickAdd(context, amount);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.1),
+            foregroundColor: AppTheme.activeBlue,
+            elevation: 0,
+            padding: EdgeInsets.symmetric(vertical: 1.5.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: AppTheme.activeBlue.withValues(alpha: 0.3),
+              ),
+            ),
           ),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.1),
-        foregroundColor: AppTheme.activeBlue,
-        elevation: 0,
-        padding: EdgeInsets.symmetric(vertical: 1.5.h),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: AppTheme.activeBlue.withValues(alpha: 0.3),
+          child: Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
+  }
+
+  Future<void> _handleQuickAdd(BuildContext context, int amount) async {
+    try {
+      final now = DateTime.now();
+      // Increment water total
+      final totalNow = await NutritionStorage.addWaterMl(now, amount);
+      // ligeiro haptic para reforço tátil
+      try { HapticFeedback.selectionClick(); } catch (_) {}
+      // Load water goal
+      final goals = await UserPreferences.getGoals();
+      final goal = goals.waterGoalMl <= 0 ? 2000 : goals.waterGoalMl;
+      final reached = totalNow >= goal;
+
+      // Fire gamification event (only celebrate once per day; engine ensures idempotency)
+      if (reached) {
+        final celebrate = await GamificationEngine.I.fire(
+          GamificationEvent(type: GamificationEventType.goalCompleted, metaKey: 'water', value: totalNow),
+        );
+        if (celebrate) {
+          try { HapticFeedback.mediumImpact(); } catch (_) {}
+          await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.goal);
+        }
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('+$amount ml de água adicionados! (Total: $totalNow ml)'),
+          backgroundColor: reached ? AppTheme.successGreen : AppTheme.activeBlue,
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'Desfazer',
+            textColor: AppTheme.textPrimary,
+            onPressed: () async {
+              await NutritionStorage.addWaterMl(now, -amount);
+              if (!mounted) return;
+              setState(() {});
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha ao adicionar água: $e'),
+          backgroundColor: AppTheme.warningAmber,
+        ),
+      );
+    }
   }
 }
