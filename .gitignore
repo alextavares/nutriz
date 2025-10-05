@@ -59,6 +59,16 @@ coverage/
 logs/
 pr_captures/
 
+# Node server env (keep secrets local)
+server/express/.env
+**/.env
+
+# Local tooling SDK/NDK and heavy caches (não versionar)
+.tooling/
+
+# Backups gerados pelos scripts
+backups/
+
 # Windows reserved filenames accidentally created
 CON
 NUL

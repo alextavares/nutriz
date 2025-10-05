@@ -5,10 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/app_export.dart';
-import './widgets/action_button_widget.dart';
+import '../../theme/design_tokens.dart';
 import './widgets/circular_progress_chart_widget.dart';
 import './widgets/macronutrient_progress_widget.dart';
-import './widgets/weekly_progress_widget.dart';
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -46,11 +45,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   List<int> _weeklyCalories = List.filled(7, 0);
   List<int> _weeklyWater = List.filled(7, 0);
   Map<String, dynamic> _lastExerciseMeta = const {};
-  
+
   String _fmtInt(int v) {
     final locale = Localizations.localeOf(context).toString();
     return NumberFormat.decimalPattern(locale).format(v);
   }
+
   // Exercise UI state
   int _exerciseStreak = 0;
   bool _exerciseExpanded = false;
@@ -92,9 +92,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   // Global animation constants for dashboard sections
   static const Duration _kAnimDuration = Duration(milliseconds: 900);
   static const Curve _kAnimCurve = Curves.easeOut;
-  static const double _kDelayLeft = 0.03;   // ~27ms
+  static const double _kDelayLeft = 0.03; // ~27ms
   static const double _kDelayCenter = 0.06; // ~54ms
-  static const double _kDelayRight = 0.09;  // ~81ms
+  static const double _kDelayRight = 0.09; // ~81ms
 
   // Mock data for daily tracking
   final Map<String, dynamic> _dailyData = {
@@ -116,8 +116,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     // Thursday in current week determines the year.
     final thursday = d.add(Duration(days: 3 - ((d.weekday + 6) % 7)));
     final firstThursday = DateTime(thursday.year, 1, 4);
-    final firstThursdayAdj = firstThursday.add(
-        Duration(days: -((firstThursday.weekday + 6) % 7)));
+    final firstThursdayAdj =
+        firstThursday.add(Duration(days: -((firstThursday.weekday + 6) % 7)));
     final week =
         1 + ((thursday.difference(firstThursdayAdj).inDays) / 7).floor();
     return week;
@@ -130,25 +130,74 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     return null;
   }
 
+  Widget _buildStreakChip({
+    required IconData icon,
+    required Color baseColor,
+    required String label,
+    required bool highlightStar,
+    required int? next,
+  }) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: baseColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: baseColor.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: baseColor, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: textTheme.labelSmall?.copyWith(
+              color: colors.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (highlightStar) ...[
+            const SizedBox(width: 6),
+            Icon(Icons.star, color: baseColor, size: 14),
+          ],
+          if (_showNextMilestoneCaptions && next != null) ...[
+            const SizedBox(width: 6),
+            Text(
+              'próx: ${next}d',
+              style: textTheme.labelSmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _quickActivityChip(String label, VoidCallback onTap) {
     final w = MediaQuery.of(context).size.width;
     final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
     final double padH = w < 360 ? 8 : 10;
     final double padV = w < 360 ? 4 : 6;
+    final semantic = context.semanticColors;
+    final colors = context.colors;
     return ActionChip(
       label: Text(label),
       onPressed: onTap,
       visualDensity: VisualDensity.compact,
-      backgroundColor: AppTheme.successGreen.withValues(alpha: 0.10),
+      backgroundColor: semantic.success.withValues(alpha: 0.10),
       labelPadding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
       labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
+            color: colors.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: fs,
           ),
       shape: StadiumBorder(
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+          color: colors.outlineVariant.withValues(alpha: 0.4),
         ),
       ),
     );
@@ -195,7 +244,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       _fastingStreak = fast;
       _caloriesStreak = cal;
       _proteinStreak = prot;
-      ach.sort((a, b) => (b['dateIso'] as String?)?.compareTo(a['dateIso'] as String? ?? '') ?? 0);
+      ach.sort((a, b) =>
+          (b['dateIso'] as String?)?.compareTo(a['dateIso'] as String? ?? '') ??
+          0);
       _achievements = ach.take(6).toList();
     });
 
@@ -204,7 +255,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final lastSeen = await AchievementService.getLastSeenTs();
     if (lastAdded > 0 && lastAdded > lastSeen) {
       // Use overlay only; respect reduce animations handled inside
-      await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.achievement);
+      await CelebrationOverlay.maybeShow(context,
+          variant: CelebrationVariant.achievement);
       await AchievementService.setLastSeenTs(lastAdded);
     }
   }
@@ -213,39 +265,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final milestones = const [3, 5, 7, 14, 30];
     final isMilestone = milestones.toSet().contains(_hydrationStreak);
     final next = _nextMilestoneFor(_hydrationStreak, milestones);
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.warningAmber.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.local_fire_department, color: Colors.amber, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            _hydrationStreak > 0 ? '${_hydrationStreak}d água' : 'Sem streak',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          if (isMilestone) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.star, color: Colors.amber, size: 14),
-          ],
-          if (_showNextMilestoneCaptions && next != null) ...[
-            const SizedBox(width: 6),
-            Text('• próx: ${next}d',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    )),
-          ],
-        ],
-      ),
+    final label =
+        _hydrationStreak > 0 ? '${_hydrationStreak}d água' : 'Sem streak';
+    return _buildStreakChip(
+      icon: Icons.local_fire_department,
+      baseColor: context.semanticColors.warning,
+      label: label,
+      highlightStar: isMilestone,
+      next: next,
     );
   }
 
@@ -253,39 +280,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final milestones = const [3, 5, 7, 14, 30];
     final isMilestone = milestones.toSet().contains(_fastingStreak);
     final next = _nextMilestoneFor(_fastingStreak, milestones);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.warningAmber.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.local_fire_department, color: Colors.amber, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            _fastingStreak > 0 ? '${_fastingStreak}d jejum' : 'Sem streak jejum',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          if (isMilestone) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.star, color: Colors.amber, size: 14),
-          ],
-          if (_showNextMilestoneCaptions && next != null) ...[
-            const SizedBox(width: 6),
-            Text('• próx: ${next}d',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    )),
-          ],
-        ],
-      ),
+    final label =
+        _fastingStreak > 0 ? '${_fastingStreak}d jejum' : 'Sem streak jejum';
+    return _buildStreakChip(
+      icon: Icons.local_fire_department,
+      baseColor: context.semanticColors.warning,
+      label: label,
+      highlightStar: isMilestone,
+      next: next,
     );
   }
 
@@ -293,39 +295,15 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final milestones = const [3, 5, 7, 14, 30];
     final isMilestone = milestones.toSet().contains(_caloriesStreak);
     final next = _nextMilestoneFor(_caloriesStreak, milestones);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.successGreen.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.successGreen.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.check_circle, color: Colors.lightGreen, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            _caloriesStreak > 0 ? '${_caloriesStreak}d calorias ok' : 'Sem streak calorias',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          if (isMilestone) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.star, color: Colors.lightGreen, size: 14),
-          ],
-          if (_showNextMilestoneCaptions && next != null) ...[
-            const SizedBox(width: 6),
-            Text('• próx: ${next}d',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    )),
-          ],
-        ],
-      ),
+    final label = _caloriesStreak > 0
+        ? '${_caloriesStreak}d calorias ok'
+        : 'Sem streak calorias';
+    return _buildStreakChip(
+      icon: Icons.check_circle,
+      baseColor: context.semanticColors.success,
+      label: label,
+      highlightStar: isMilestone,
+      next: next,
     );
   }
 
@@ -333,39 +311,15 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final milestones = const [5, 7, 14, 30];
     final isMilestone = milestones.toSet().contains(_proteinStreak);
     final next = _nextMilestoneFor(_proteinStreak, milestones);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.activeBlue.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.activeBlue.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.set_meal, color: Colors.lightBlue, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            _proteinStreak > 0 ? '${_proteinStreak}d proteína ok' : 'Sem streak proteína',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          if (isMilestone) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.star, color: Colors.lightBlue, size: 14),
-          ],
-          if (_showNextMilestoneCaptions && next != null) ...[
-            const SizedBox(width: 6),
-            Text('• próx: ${next}d',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    )),
-          ],
-        ],
-      ),
+    final label = _proteinStreak > 0
+        ? '${_proteinStreak}d proteína ok'
+        : 'Sem streak proteína';
+    return _buildStreakChip(
+      icon: Icons.set_meal,
+      baseColor: context.colors.primary,
+      label: label,
+      highlightStar: isMilestone,
+      next: next,
     );
   }
 
@@ -385,20 +339,36 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(children: [
-                CustomIconWidget(iconName: 'emoji_events', color: AppTheme.premiumGold, size: 22),
+                CustomIconWidget(
+                    iconName: 'emoji_events',
+                    color: AppTheme.premiumGold,
+                    size: 22),
                 const SizedBox(width: 8),
-                Text('Conquista', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppTheme.textPrimary)),
+                Text('Conquista',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(color: AppTheme.textPrimary)),
               ]),
               const SizedBox(height: 8),
-              Text(a['title'] as String? ?? 'Conquista', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+              Text(a['title'] as String? ?? 'Conquista',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('Obtida em: $when', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary)),
+              Text('Obtida em: $when',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: AppTheme.textSecondary)),
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen, foregroundColor: AppTheme.textPrimary),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.successGreen,
+                      foregroundColor: AppTheme.textPrimary),
                   child: const Text('Fechar'),
                 ),
               )
@@ -412,11 +382,16 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   // Small debug banner with build info (debug-only)
   Widget _debugBuildInfo(BuildContext context) {
     if (!kDebugMode) return const SizedBox.shrink();
-    const String buildHash = String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
-    const String buildTime = String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
-    const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
-    const String buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
-    final String idOrHash = (buildHash.toLowerCase() != 'unknown' && buildHash.toLowerCase() != 'n/a')
+    const String buildHash =
+        String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
+    const String buildTime =
+        String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
+    const String appVersion =
+        String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
+    const String buildId =
+        String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
+    final String idOrHash = (buildHash.toLowerCase() != 'unknown' &&
+            buildHash.toLowerCase() != 'n/a')
         ? buildHash
         : buildId;
     final cs = Theme.of(context).colorScheme;
@@ -456,11 +431,16 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     // Show in debug, or when a UI_TAG is explicitly provided via --dart-define
     const String uiTag = String.fromEnvironment('UI_TAG', defaultValue: '');
     if (!kDebugMode && uiTag.isEmpty) return const SizedBox.shrink();
-    const String buildHash = String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
-    const String buildTime = String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
-    const String appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
-    const String buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
-    final String idOrHash = (buildHash.toLowerCase() != 'unknown' && buildHash.toLowerCase() != 'n/a')
+    const String buildHash =
+        String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
+    const String buildTime =
+        String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
+    const String appVersion =
+        String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
+    const String buildId =
+        String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
+    final String idOrHash = (buildHash.toLowerCase() != 'unknown' &&
+            buildHash.toLowerCase() != 'n/a')
         ? buildHash
         : buildId;
     String hhmmZ = '';
@@ -481,20 +461,21 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.45)),
       ),
-       child: Text(
+      child: Text(
         (() {
           final tag = uiTag.isNotEmpty ? uiTag : 'debug';
-          if (hhmmZ.isNotEmpty) return '$tag • v$appVersion • $idOrHash • $hhmmZ';
+          if (hhmmZ.isNotEmpty)
+            return '$tag • v$appVersion • $idOrHash • $hhmmZ';
           return '$tag • v$appVersion • $idOrHash';
         })(),
-         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-               color: cs.onSurfaceVariant,
-               fontWeight: FontWeight.w900,
-             ),
-         maxLines: 1,
-         overflow: TextOverflow.ellipsis,
-       ),
-     );
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w900,
+            ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
   }
 
   Widget _topActionsRow(BuildContext context) {
@@ -502,9 +483,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final iconColor = cs.onSurfaceVariant;
     final w = MediaQuery.of(context).size.width;
     final bool compact = w < 380; // telas estreitas: mover ações para menu
-    final bool ultraCompact = w < 350; // ainda mais estreito: simplificar ainda mais
+    final bool ultraCompact =
+        w < 350; // ainda mais estreito: simplificar ainda mais
     const double _iconSize = 20; // YAZIO-like compact size
-    const BoxConstraints _iconConstraints = BoxConstraints(minWidth: 36, minHeight: 36);
+    const BoxConstraints _iconConstraints =
+        BoxConstraints(minWidth: 36, minHeight: 36);
     Widget action(IconData icon, String tip, VoidCallback onTap) => IconButton(
           tooltip: tip,
           icon: Icon(icon, size: _iconSize, color: iconColor),
@@ -523,15 +506,17 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         builder: (context, child) {
           return Theme(
             data: Theme.of(context).copyWith(
-              colorScheme:
-                  Theme.of(context).colorScheme.copyWith(primary: AppTheme.activeBlue),
+              colorScheme: Theme.of(context)
+                  .colorScheme
+                  .copyWith(primary: AppTheme.activeBlue),
             ),
             child: child!,
           );
         },
       );
       if (picked != null && mounted) {
-        setState(() => _selectedDate = DateTime(picked.year, picked.month, picked.day));
+        setState(() =>
+            _selectedDate = DateTime(picked.year, picked.month, picked.day));
         await _loadToday();
         await _loadWeek();
       }
@@ -544,9 +529,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           // Date navigation moved to the top actions row
           IconButton(
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_left, size: _iconSize, color: cs.onSurfaceVariant),
+            icon: Icon(Icons.chevron_left,
+                size: _iconSize, color: cs.onSurfaceVariant),
             onPressed: () async {
-              setState(() => _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
+              setState(() => _selectedDate =
+                  _selectedDate.subtract(const Duration(days: 1)));
               await _loadToday();
               await _loadWeek();
             },
@@ -555,24 +542,43 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             child: GestureDetector(
               onTap: _pickDate,
               child: Builder(builder: (context) {
-              final DateTime t = DateTime.now();
-              final today = DateTime(t.year, t.month, t.day);
-              final sel = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
-              final isToday = sel == today;
-              // Formatação adaptativa para garantir legibilidade
-              // Requisito: mostrar dia+semana, sem ano
-              String label;
-              if (isToday) {
-                label = _localizedTodayLabel(context);
-              } else {
-                final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-                final wdPt = const ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-                final wdEn = const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                final wd = (lang == 'pt' ? wdPt : wdEn)[sel.weekday - 1];
-                final dd = sel.day.toString().padLeft(2, '0');
-                final mm = sel.month.toString().padLeft(2, '0');
-                label = ultraCompact ? '$dd/$mm' : '$wd $dd/$mm';
-              }
+                final DateTime t = DateTime.now();
+                final today = DateTime(t.year, t.month, t.day);
+                final sel = DateTime(
+                    _selectedDate.year, _selectedDate.month, _selectedDate.day);
+                final isToday = sel == today;
+                // Formatação adaptativa para garantir legibilidade
+                // Requisito: mostrar dia+semana, sem ano
+                String label;
+                if (isToday) {
+                  label = _localizedTodayLabel(context);
+                } else {
+                  final lang = Localizations.localeOf(context)
+                      .languageCode
+                      .toLowerCase();
+                  final wdPt = const [
+                    'Seg',
+                    'Ter',
+                    'Qua',
+                    'Qui',
+                    'Sex',
+                    'Sáb',
+                    'Dom'
+                  ];
+                  final wdEn = const [
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat',
+                    'Sun'
+                  ];
+                  final wd = (lang == 'pt' ? wdPt : wdEn)[sel.weekday - 1];
+                  final dd = sel.day.toString().padLeft(2, '0');
+                  final mm = sel.month.toString().padLeft(2, '0');
+                  label = ultraCompact ? '$dd/$mm' : '$wd $dd/$mm';
+                }
                 return FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
@@ -592,9 +598,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_right, size: _iconSize, color: cs.onSurfaceVariant),
+            icon: Icon(Icons.chevron_right,
+                size: _iconSize, color: cs.onSurfaceVariant),
             onPressed: () async {
-              setState(() => _selectedDate = _selectedDate.add(const Duration(days: 1)));
+              setState(() =>
+                  _selectedDate = _selectedDate.add(const Duration(days: 1)));
               await _loadToday();
               await _loadWeek();
             },
@@ -610,7 +618,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             Navigator.pushNamed(context, AppRoutes.aiCoachChat);
           }),
           // Ações do dia (abre bottom sheet com duplicar, templates e visão de streaks)
-          action(Icons.local_fire_department, 'Ações do dia', _openDayActionsMenu),
+          action(
+              Icons.local_fire_department, 'Ações do dia', _openDayActionsMenu),
           action(Icons.emoji_events_outlined, 'Conquistas', () {
             Navigator.pushNamed(context, AppRoutes.achievements);
           }),
@@ -630,11 +639,15 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 tooltip: 'Mais ações',
                 position: PopupMenuPosition.under,
                 itemBuilder: (context) => [
-                  const PopupMenuItem<String>(value: 'metrics', child: Text('Valores corporais')),
-                  const PopupMenuItem<String>(value: 'notes', child: Text('Anotações')),
+                  const PopupMenuItem<String>(
+                      value: 'metrics', child: Text('Valores corporais')),
+                  const PopupMenuItem<String>(
+                      value: 'notes', child: Text('Anotações')),
                   if (ultraCompact)
-                    const PopupMenuItem<String>(value: 'stats', child: Text('Estatísticas')),
-                  const PopupMenuItem<String>(value: 'coach', child: Text('Coach de IA')),
+                    const PopupMenuItem<String>(
+                        value: 'stats', child: Text('Estatísticas')),
+                  const PopupMenuItem<String>(
+                      value: 'coach', child: Text('Coach de IA')),
                 ],
                 onSelected: (v) {
                   switch (v) {
@@ -678,8 +691,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final dayLabels = lang == 'pt' ? labelsPt : labelsEn;
     for (int i = 0; i < 7; i++) {
       final d = monday.add(Duration(days: i));
-      final bool isSelected = d.year == selected.year && d.month == selected.month && d.day == selected.day;
-      final bool isToday = d.year == today.year && d.month == today.month && d.day == today.day;
+      final bool isSelected = d.year == selected.year &&
+          d.month == selected.month &&
+          d.day == selected.day;
+      final bool isToday =
+          d.year == today.year && d.month == today.month && d.day == today.day;
       items.add(
         Expanded(
           child: InkWell(
@@ -702,7 +718,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       border: Border.all(
                         color: isSelected
                             ? cs.primary
-                            : (isToday ? cs.primary : cs.outlineVariant.withValues(alpha: 0.6)),
+                            : (isToday
+                                ? cs.primary
+                                : cs.outlineVariant.withValues(alpha: 0.6)),
                         width: isToday && !isSelected ? 1.5 : 1.0,
                       ),
                       shape: BoxShape.circle,
@@ -736,7 +754,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
-  Widget _calorieBudgetCard(BuildContext context, {
+  Widget _calorieBudgetCard(
+    BuildContext context, {
     required int goal,
     required int food,
     required int exercise,
@@ -746,8 +765,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final cs = theme.colorScheme;
     final bool exceeded = remaining < 0;
     final int display = exceeded ? -remaining : remaining;
-    final TextStyle label = theme.textTheme.bodySmall!
-        .copyWith(color: cs.onSurfaceVariant);
+    final TextStyle label =
+        theme.textTheme.bodySmall!.copyWith(color: cs.onSurfaceVariant);
     final TextStyle numStyle = theme.textTheme.titleLarge!.copyWith(
       color: exceeded ? AppTheme.errorRed : cs.primary,
       fontWeight: FontWeight.w700,
@@ -788,8 +807,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 TextSpan(
                     text: _fmtInt(goal),
                     style: eqStyle.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w600)),
+                        color: cs.onSurface, fontWeight: FontWeight.w600)),
                 TextSpan(text: ' − ', style: opStyle),
                 const TextSpan(text: 'Alimentação '),
                 TextSpan(
@@ -833,8 +851,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     WeeklyGoalService.evaluatePerfectCaloriesWeek().then((created) {
       if (created && mounted) _refreshGamificationRow();
     });
-    DailyGoalService.evaluateProteinOkToday().then((_) => _refreshGamificationRow());
-    DailyGoalService.evaluateCaloriesOkToday().then((_) => _refreshGamificationRow());
+    DailyGoalService.evaluateProteinOkToday()
+        .then((_) => _refreshGamificationRow());
+    DailyGoalService.evaluateCaloriesOkToday()
+        .then((_) => _refreshGamificationRow());
     // Refresh whenever NutritionStorage mutates
     NutritionStorage.changes.addListener(_onStorageChanged);
     // Listen to UI preference changes
@@ -882,6 +902,58 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     if (l.contains('prot')) return AppTheme.successGreen;
     if (l.contains('gord') || l.contains('fat')) return AppTheme.activeBlue;
     return AppTheme.textSecondary;
+  }
+
+  // Reusable compact section header (icon + title + right actions)
+  Widget _sectionHeader({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    List<Widget> actions = const [],
+    Color? avatarBackground,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor:
+              (avatarBackground ?? iconColor.withValues(alpha: 0.12)),
+          child: Icon(icon, color: iconColor, size: 18),
+        ),
+        SizedBox(width: 3.w),
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+        if (actions.isNotEmpty) Row(children: actions),
+      ],
+    );
+  }
+
+  Widget _circleActionBtn({
+    required Color bg,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Material(
+        color: bg,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Icon(icon, size: 18, color: Colors.white),
+        ),
+      ),
+    );
   }
 
   Widget _overallMacrosRow(BuildContext context) {
@@ -988,18 +1060,25 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       );
     }
 
-    final carbsC = (_dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ?? 0);
-    final carbsT = (_dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 0);
-    final protC = (_dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0);
-    final protT = (_dailyData["macronutrients"]["proteins"]["total"] as int? ?? 0);
-    final fatC = (_dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0);
+    final carbsC =
+        (_dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ??
+            0);
+    final carbsT =
+        (_dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 0);
+    final protC =
+        (_dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0);
+    final protT =
+        (_dailyData["macronutrients"]["proteins"]["total"] as int? ?? 0);
+    final fatC =
+        (_dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0);
     final fatT = (_dailyData["macronutrients"]["fats"]["total"] as int? ?? 0);
 
     final double hgap = w < 360 ? 8 : 12;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: cell('Carboidratos', carbsC, carbsT, AppTheme.warningAmber)),
+        Expanded(
+            child: cell('Carboidratos', carbsC, carbsT, AppTheme.warningAmber)),
         SizedBox(width: hgap),
         Expanded(child: cell('Proteína', protC, protT, AppTheme.successGreen)),
         SizedBox(width: hgap),
@@ -1050,7 +1129,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     if (!_fastingActiveMuted) return const SizedBox.shrink();
     // Dismissal for today
     String two(int v) => v.toString().padLeft(2, '0');
-    final todayKey = '${DateTime.now().year}-${two(DateTime.now().month)}-${two(DateTime.now().day)}';
+    final todayKey =
+        '${DateTime.now().year}-${two(DateTime.now().month)}-${two(DateTime.now().day)}';
     if (_bannerDismissedOn == todayKey) return const SizedBox.shrink();
     final until = _fastMuteUntil;
     final untilLabel = (until != null)
@@ -1063,20 +1143,27 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       final datePrefix = (endAt.day != now.day || endAt.month != now.month)
           ? '${two(endAt.day)}/${two(endAt.month)} '
           : '';
-      endLabel = ' • Término: ${datePrefix}${two(endAt.hour)}:${two(endAt.minute)}';
+      endLabel =
+          ' • Término: ${datePrefix}${two(endAt.hour)}:${two(endAt.minute)}';
     }
     String schLabel = '';
-    if (_eatStartH != null && _eatStartM != null && _eatStopH != null && _eatStopM != null) {
-      schLabel = ' • Romper: ${two(_eatStartH!)}:${two(_eatStartM!)} • Iniciar: ${two(_eatStopH!)}:${two(_eatStopM!)}';
+    if (_eatStartH != null &&
+        _eatStartM != null &&
+        _eatStopH != null &&
+        _eatStopM != null) {
+      schLabel =
+          ' • Romper: ${two(_eatStartH!)}:${two(_eatStartM!)} • Iniciar: ${two(_eatStopH!)}:${two(_eatStopM!)}';
     }
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: _bannerCollapsed ? 8 : 10),
+        padding: EdgeInsets.symmetric(
+            horizontal: 12, vertical: _bannerCollapsed ? 8 : 10),
         decoration: BoxDecoration(
           color: AppTheme.warningAmber.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.4)),
+          border:
+              Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.4)),
         ),
         constraints: BoxConstraints(
           // Ensure a tidy, consistent height when collapsed
@@ -1087,191 +1174,225 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            Row(
-              children: [
-                Icon(Icons.notifications_off_outlined,
-                    size: 18,
-                    color: (Color.lerp(AppTheme.warningAmber, Colors.white, 0.2) ?? AppTheme.warningAmber)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Builder(builder: (context) {
-                    final w = MediaQuery.of(context).size.width;
-                    double? fs;
-                    if (_bannerCollapsed) {
-                      fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
-                    }
-                    return Text(
-                      until != null
-                          ? 'Jejum em andamento — silenciado até $untilLabel — término sem notificação$endLabel$schLabel'
-                          : 'Jejum em andamento — silenciado — término sem notificação$endLabel$schLabel',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.w700,
-                            fontSize: fs,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    );
-                  }),
-                ),
-                IconButton(
-                  tooltip: _bannerCollapsed ? 'Expandir' : 'Recolher',
-                  onPressed: () => setState(() => _bannerCollapsed = !_bannerCollapsed),
-                  icon: Icon(_bannerCollapsed ? Icons.expand_more : Icons.expand_less,
-                      size: 20, color: Theme.of(context).colorScheme.onSurface),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    // Dismiss for today
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setString('fasting_banner_dismissed_on', todayKey);
-                    if (!mounted) return;
-                    setState(() => _bannerDismissedOn = todayKey);
-                  },
-                  child: const Text('Dispensar hoje'),
-                ),
-              ],
-            ),
-            if (!_bannerCollapsed) const SizedBox(height: 8),
-            if (!_bannerCollapsed)
-              Builder(builder: (context) {
-                final w = MediaQuery.of(context).size.width;
-                final space = w < 360 ? 6.0 : 8.0;
-                final rspace = w < 360 ? 4.0 : 6.0;
-                final padH = w < 360 ? 8.0 : 10.0;
-                final padV = w < 360 ? 4.0 : 6.0;
-                return Wrap(
-                  spacing: space,
-                  runSpacing: rspace,
-                  children: [
-                    // Reativar inline
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        await NotificationsService.setFastingMuteUntil(null);
-                        if (!mounted) return;
-                        setState(() => _fastMuteUntil = null);
-                        // Reschedule daily reminders
-                        final t = await UserPreferences.getEatingTimes();
-                        if (t.startHour != null && t.startMinute != null && t.stopHour != null && t.stopMinute != null) {
-                          await NotificationsService.scheduleDailyFastingReminders(
-                            startEatingHour: t.startHour!,
-                            startEatingMinute: t.startMinute!,
-                            stopEatingHour: t.stopHour!,
-                            stopEatingMinute: t.stopMinute!,
-                          );
-                        }
-                        // Also schedule end-of-fast if still active
-                        if (_fastEndAt != null) {
-                          NotificationsService.scheduleFastingEnd(endAt: _fastEndAt!, method: _fastMethod);
-                        }
-                        _refreshFastingBanner();
-                      },
-                      icon: const Icon(Icons.notifications_active_outlined, size: 16),
-                      label: const Text('Reativar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.successGreen,
-                        foregroundColor: Colors.white,
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                      ),
-                    ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        final until = DateTime.now().add(const Duration(hours: 1));
-                        await NotificationsService.setFastingMuteUntil(until);
-                        await NotificationsService.cancelDailyFastingReminders();
-                        await NotificationsService.cancelFastingEnd();
-                        _refreshFastingBanner();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                      ),
-                      child: const Text('1h'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        final until = DateTime.now().add(const Duration(hours: 4));
-                        await NotificationsService.setFastingMuteUntil(until);
-                        await NotificationsService.cancelDailyFastingReminders();
-                        await NotificationsService.cancelFastingEnd();
-                        _refreshFastingBanner();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                      ),
-                      child: const Text('4h'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        final until = DateTime.now().add(const Duration(hours: 24));
-                        await NotificationsService.setFastingMuteUntil(until);
-                        await NotificationsService.cancelDailyFastingReminders();
-                        await NotificationsService.cancelFastingEnd();
-                        _refreshFastingBanner();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                      ),
-                      child: const Text('24h'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        final now = DateTime.now();
-                        final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-                        final until = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 8, 0);
-                        await NotificationsService.setFastingMuteUntil(until);
-                        await NotificationsService.cancelDailyFastingReminders();
-                        await NotificationsService.cancelFastingEnd();
-                        _refreshFastingBanner();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                      ),
-                      child: const Text('Amanhã 08:00'),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        await Navigator.pushNamed(context, AppRoutes.intermittentFastingTracker);
-                        if (!mounted) return;
-                        _refreshFastingBanner();
-                      },
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                      ),
-                      child: const Text('Gerenciar'),
-                    ),
-                  ],
-                );
-              }),
-            if (!_bannerCollapsed) const SizedBox(height: 6),
-            if (!_bannerCollapsed)
               Row(
                 children: [
-                  Switch(
-                    value: _bannerAlwaysCollapsed,
-                    onChanged: (v) async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('fasting_banner_always_collapsed', v);
-                      if (!mounted) return;
-                      setState(() {
-                        _bannerAlwaysCollapsed = v;
-                        _bannerCollapsed = v ? true : _bannerCollapsed;
-                      });
-                    },
-                    activeColor: AppTheme.activeBlue,
+                  Icon(Icons.notifications_off_outlined,
+                      size: 18,
+                      color: (Color.lerp(
+                              AppTheme.warningAmber, Colors.white, 0.2) ??
+                          AppTheme.warningAmber)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Builder(builder: (context) {
+                      final w = MediaQuery.of(context).size.width;
+                      double? fs;
+                      if (_bannerCollapsed) {
+                        fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                      }
+                      return Text(
+                        until != null
+                            ? 'Jejum em andamento — silenciado até $untilLabel — término sem notificação$endLabel$schLabel'
+                            : 'Jejum em andamento — silenciado — término sem notificação$endLabel$schLabel',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w700,
+                              fontSize: fs,
+                            ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    }),
                   ),
-                  Text('Sempre recolher',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          )),
+                  IconButton(
+                    tooltip: _bannerCollapsed ? 'Expandir' : 'Recolher',
+                    onPressed: () =>
+                        setState(() => _bannerCollapsed = !_bannerCollapsed),
+                    icon: Icon(
+                        _bannerCollapsed
+                            ? Icons.expand_more
+                            : Icons.expand_less,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      // Dismiss for today
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString(
+                          'fasting_banner_dismissed_on', todayKey);
+                      if (!mounted) return;
+                      setState(() => _bannerDismissedOn = todayKey);
+                    },
+                    child: const Text('Dispensar hoje'),
+                  ),
                 ],
               ),
+              if (!_bannerCollapsed) const SizedBox(height: 8),
+              if (!_bannerCollapsed)
+                Builder(builder: (context) {
+                  final w = MediaQuery.of(context).size.width;
+                  final space = w < 360 ? 6.0 : 8.0;
+                  final rspace = w < 360 ? 4.0 : 6.0;
+                  final padH = w < 360 ? 8.0 : 10.0;
+                  final padV = w < 360 ? 4.0 : 6.0;
+                  return Wrap(
+                    spacing: space,
+                    runSpacing: rspace,
+                    children: [
+                      // Reativar inline
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          await NotificationsService.setFastingMuteUntil(null);
+                          if (!mounted) return;
+                          setState(() => _fastMuteUntil = null);
+                          // Reschedule daily reminders
+                          final t = await UserPreferences.getEatingTimes();
+                          if (t.startHour != null &&
+                              t.startMinute != null &&
+                              t.stopHour != null &&
+                              t.stopMinute != null) {
+                            await NotificationsService
+                                .scheduleDailyFastingReminders(
+                              startEatingHour: t.startHour!,
+                              startEatingMinute: t.startMinute!,
+                              stopEatingHour: t.stopHour!,
+                              stopEatingMinute: t.stopMinute!,
+                            );
+                          }
+                          // Also schedule end-of-fast if still active
+                          if (_fastEndAt != null) {
+                            NotificationsService.scheduleFastingEnd(
+                                endAt: _fastEndAt!, method: _fastMethod);
+                          }
+                          _refreshFastingBanner();
+                        },
+                        icon: const Icon(Icons.notifications_active_outlined,
+                            size: 16),
+                        label: const Text('Reativar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.successGreen,
+                          foregroundColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
+                        ),
+                      ),
+                      OutlinedButton(
+                        onPressed: () async {
+                          final until =
+                              DateTime.now().add(const Duration(hours: 1));
+                          await NotificationsService.setFastingMuteUntil(until);
+                          await NotificationsService
+                              .cancelDailyFastingReminders();
+                          await NotificationsService.cancelFastingEnd();
+                          _refreshFastingBanner();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
+                        ),
+                        child: const Text('1h'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () async {
+                          final until =
+                              DateTime.now().add(const Duration(hours: 4));
+                          await NotificationsService.setFastingMuteUntil(until);
+                          await NotificationsService
+                              .cancelDailyFastingReminders();
+                          await NotificationsService.cancelFastingEnd();
+                          _refreshFastingBanner();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
+                        ),
+                        child: const Text('4h'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () async {
+                          final until =
+                              DateTime.now().add(const Duration(hours: 24));
+                          await NotificationsService.setFastingMuteUntil(until);
+                          await NotificationsService
+                              .cancelDailyFastingReminders();
+                          await NotificationsService.cancelFastingEnd();
+                          _refreshFastingBanner();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
+                        ),
+                        child: const Text('24h'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () async {
+                          final now = DateTime.now();
+                          final tomorrow =
+                              DateTime(now.year, now.month, now.day)
+                                  .add(const Duration(days: 1));
+                          final until = DateTime(tomorrow.year, tomorrow.month,
+                              tomorrow.day, 8, 0);
+                          await NotificationsService.setFastingMuteUntil(until);
+                          await NotificationsService
+                              .cancelDailyFastingReminders();
+                          await NotificationsService.cancelFastingEnd();
+                          _refreshFastingBanner();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
+                        ),
+                        child: const Text('Amanhã 08:00'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          await Navigator.pushNamed(
+                              context, AppRoutes.intermittentFastingTracker);
+                          if (!mounted) return;
+                          _refreshFastingBanner();
+                        },
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
+                        ),
+                        child: const Text('Gerenciar'),
+                      ),
+                    ],
+                  );
+                }),
+              if (!_bannerCollapsed) const SizedBox(height: 6),
+              if (!_bannerCollapsed)
+                Row(
+                  children: [
+                    Switch(
+                      value: _bannerAlwaysCollapsed,
+                      onChanged: (v) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool(
+                            'fasting_banner_always_collapsed', v);
+                        if (!mounted) return;
+                        setState(() {
+                          _bannerAlwaysCollapsed = v;
+                          _bannerCollapsed = v ? true : _bannerCollapsed;
+                        });
+                      },
+                      activeColor: AppTheme.activeBlue,
+                    ),
+                    Text('Sempre recolher',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            )),
+                  ],
+                ),
             ],
           ),
         ),
@@ -1287,6 +1408,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       if (lc.startsWith('gord') || lc.startsWith('fat')) return 'G';
       return l.characters.first;
     }
+
     final color = _macroColorFor(label);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -1324,13 +1446,16 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
   Widget _buildPerMealProgressSection() {
     List<Map<String, dynamic>> _mealPreview(String mealKey, int maxItems) {
-      final entries = _todayEntries.where((e) => (e['mealTime'] as String?) == mealKey).toList();
+      final entries = _todayEntries
+          .where((e) => (e['mealTime'] as String?) == mealKey)
+          .toList();
       // Most recent first by createdAt, fallback as is
       entries.sort((a, b) => ((b['createdAt'] as String?) ?? '')
           .compareTo((a['createdAt'] as String?) ?? ''));
       if (entries.length > maxItems) return entries.sublist(0, maxItems);
       return entries;
     }
+
     Color barColorFor(String meal) {
       switch (meal) {
         case 'breakfast':
@@ -1378,145 +1503,153 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       final ratio = goal <= 0 ? 0.0 : (value / goal).clamp(0.0, 1.0);
       final color = barColorFor(mealKey);
       void _openMealDetails() {
-        Navigator.pushNamed(context, AppRoutes.detailedMealTrackingScreen, arguments: {
-          'mealKey': mealKey,
-          'date': _selectedDate.toIso8601String(),
-        });
+        Navigator.pushNamed(context, AppRoutes.detailedMealTrackingScreen,
+            arguments: {
+              'mealKey': mealKey,
+              'date': _selectedDate.toIso8601String(),
+            });
       }
+
       return Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: _openMealDetails,
           child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Builder(builder: (context) {
-                final ic = barColorFor(mealKey);
-                return CircleAvatar(
-                  radius: 16,
-                  backgroundColor: ic.withValues(alpha: 0.12),
-                  child: Icon(
-                    mealIconFor(mealKey),
-                    color: ic,
-                    size: 18,
-                  ),
-                );
-              }),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Builder(
-                builder: (context) {
-                  final bool over = goal > 0 && value > goal;
-                  final Color kcalColor = over
-                      ? AppTheme.errorRed
-                      : Theme.of(context).colorScheme.onSurfaceVariant;
-                  return Text(
-                    '$value/$goal kcal',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: kcalColor,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
+              Row(
+                children: [
+                  Builder(builder: (context) {
+                    final ic = barColorFor(mealKey);
+                    return CircleAvatar(
+                      radius: 16,
+                      backgroundColor: ic.withValues(alpha: 0.12),
+                      child: Icon(
+                        mealIconFor(mealKey),
+                        color: ic,
+                        size: 18,
+                      ),
+                    );
+                  }),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(width: 6),
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: Material(
-                  color: AppTheme.activeBlue,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () => _goToLoggingForMeal(mealKey),
-                    child: const Icon(Icons.add, size: 18, color: Colors.white),
                   ),
-                ),
-              ),
-              // Removed trailing chevron to match YAZIO-like layout
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: ratio,
-              minHeight: 3,
-              backgroundColor: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Compact preview of items for this meal (tap to editar)
-          ...(() {
-            final all = _todayEntries
-                .where((e) => (e['mealTime'] as String?) == mealKey)
-                .toList()
-              ..sort((a, b) => ((b['createdAt'] as String?) ?? '')
-                  .compareTo((a['createdAt'] as String?) ?? ''));
-            final bool expanded = _expandedMealKeys.contains(mealKey);
-            final list = expanded ? all : _mealPreview(mealKey, 2);
-            if (list.isEmpty) return <Widget>[];
-            return [
-              ...list.map((e) => InkWell(
-                    onTap: () => _editEntry(e),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              (e['name'] as String?) ?? '-',
-                              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textSecondary,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                  Builder(
+                    builder: (context) {
+                      final bool over = goal > 0 && value > goal;
+                      final Color kcalColor = over
+                          ? AppTheme.errorRed
+                          : Theme.of(context).colorScheme.onSurfaceVariant;
+                      return Text(
+                        '$value/$goal kcal',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: kcalColor,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
                             ),
-                          ),
-                          Text(
-                            '${(e['calories'] as num?)?.toInt() ?? 0} kcal',
-                            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 6),
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Material(
+                      color: AppTheme.activeBlue,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () => _goToLoggingForMeal(mealKey),
+                        child: const Icon(Icons.add,
+                            size: 18, color: Colors.white),
                       ),
                     ),
-                  )),
-              if (all.length > 2)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        if (expanded) {
-                          _expandedMealKeys.remove(mealKey);
-                        } else {
-                          _expandedMealKeys.add(mealKey);
-                        }
-                      });
-                    },
-                    child: Text(expanded ? 'Mostrar menos' : 'Ver todos'),
                   ),
+                  // Removed trailing chevron to match YAZIO-like layout
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: ratio,
+                  minHeight: 3,
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .outlineVariant
+                      .withValues(alpha: 0.35),
+                  color: color,
                 ),
-              SizedBox(height: 0.8.h),
-            ];
-          }()),
-        ],
+              ),
+              const SizedBox(height: 6),
+              // Compact preview of items for this meal (tap to editar)
+              ...(() {
+                final all = _todayEntries
+                    .where((e) => (e['mealTime'] as String?) == mealKey)
+                    .toList()
+                  ..sort((a, b) => ((b['createdAt'] as String?) ?? '')
+                      .compareTo((a['createdAt'] as String?) ?? ''));
+                final bool expanded = _expandedMealKeys.contains(mealKey);
+                final list = expanded ? all : _mealPreview(mealKey, 2);
+                if (list.isEmpty) return <Widget>[];
+                return [
+                  ...list.map((e) => InkWell(
+                        onTap: () => _editEntry(e),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  (e['name'] as String?) ?? '-',
+                                  style: AppTheme.darkTheme.textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: AppTheme.textSecondary,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                '${(e['calories'] as num?)?.toInt() ?? 0} kcal',
+                                style: AppTheme.darkTheme.textTheme.bodySmall
+                                    ?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )),
+                  if (all.length > 2)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            if (expanded) {
+                              _expandedMealKeys.remove(mealKey);
+                            } else {
+                              _expandedMealKeys.add(mealKey);
+                            }
+                          });
+                        },
+                        child: Text(expanded ? 'Mostrar menos' : 'Ver todos'),
+                      ),
+                    ),
+                  SizedBox(height: 0.8.h),
+                ];
+              }()),
+            ],
           ),
         ),
       );
@@ -1709,13 +1842,15 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     }
 
     void _prevDay() {
-      setState(() => _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
+      setState(() =>
+          _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
       _loadToday();
       _loadWeek();
     }
 
     void _nextDay() {
-      setState(() => _selectedDate = _selectedDate.add(const Duration(days: 1)));
+      setState(
+          () => _selectedDate = _selectedDate.add(const Duration(days: 1)));
       _loadToday();
       _loadWeek();
     }
@@ -1745,38 +1880,40 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
                   return Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  padding:
-                      EdgeInsets.symmetric(vertical: 1.0.h, horizontal: 4.w),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-                    boxShadow: const [],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Date navigation moved to top actions row
-                      const SizedBox.shrink(),
-                      // Chip "Semana N" removido (YAZIO-like)
-                      SizedBox(height: 0.2.h),
-                      CircularProgressChartWidget(
-                        consumedCalories: _dailyData["consumedCalories"],
-                        remainingCalories: remainingCalories + ((_dailyData["spentCalories"] as int?) ?? 0),
-                        spentCalories: _dailyData["spentCalories"],
-                        totalCalories: _dailyData["totalCalories"],
-                        onTap: _showCalorieBreakdown,
-                        waterMl: _dailyData["waterMl"] as int,
-                      ),
+                    width: double.infinity,
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 1.0.h, horizontal: 4.w),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.2)),
+                      boxShadow: const [],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Date navigation moved to top actions row
+                        const SizedBox.shrink(),
+                        // Chip "Semana N" removido (YAZIO-like)
+                        SizedBox(height: 0.2.h),
+                        CircularProgressChartWidget(
+                          consumedCalories: _dailyData["consumedCalories"],
+                          remainingCalories: remainingCalories +
+                              ((_dailyData["spentCalories"] as int?) ?? 0),
+                          spentCalories: _dailyData["spentCalories"],
+                          totalCalories: _dailyData["totalCalories"],
+                          onTap: _showCalorieBreakdown,
+                          waterMl: _dailyData["waterMl"] as int,
+                        ),
 
-                      // Removed equation card under ring to match YAZIO (no text under the ring)
-                      SizedBox(height: 0.8.h),
-                      _overallMacrosRow(context),
-                    ],
-                  ),
-                );
+                        // Removed equation card under ring to match YAZIO (no text under the ring)
+                        SizedBox(height: 0.8.h),
+                        _overallMacrosRow(context),
+                      ],
+                    ),
+                  );
                 }),
                 // Botão de ações removido para interface mais limpa/semelhante ao YAZIO
 
@@ -1810,196 +1947,266 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
                   return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-                    boxShadow: const [],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.water_drop_outlined,
-                                  color: cs.primary, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Água',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                  color: cs.onSurface,
-                                  fontWeight: FontWeight.w600,
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 3.2.w, vertical: 1.4.w),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.2)),
+                      boxShadow: const [],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.water_drop_outlined,
+                                    color: cs.primary, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Água',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        color: cs.onSurface,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              if (_hydrationStreak > 0)
-                                Builder(builder: (context) {
-                                  final w = MediaQuery.of(context).size.width;
-                                  final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
-                                  final double padH = w < 360 ? 6 : 8;
-                                  final double padV = w < 360 ? 2 : 3;
-                                  return Chip(
-                                    label: Text('Streak: ${_hydrationStreak}d'),
-                                    visualDensity: VisualDensity.compact,
-                                    backgroundColor: cs.primary.withValues(alpha: 0.12),
-                                    side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
-                                    labelPadding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                                    labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                          color: cs.primary,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: fs,
-                                        ),
-                                  );
-                                }),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              TweenAnimationBuilder<double>(
-                                key: ValueKey(_dailyData["waterMl"] as int?),
-                                tween: Tween<double>(
-                                  begin: 0,
-                                  end: (_dailyData["waterMl"] as int).toDouble(),
-                                ),
-                                duration: _kAnimDuration,
-                                curve: Curves.linear,
-                                builder: (context, v, _) {
-                                  final int current = _dailyData["waterMl"] as int;
-                                  final int goal = _dailyData["waterGoalMl"] as int;
-                                  if (current <= 0) {
+                                const SizedBox(width: 10),
+                                if (_hydrationStreak > 0)
+                                  Builder(builder: (context) {
+                                    final w = MediaQuery.of(context).size.width;
+                                    final double fs = w < 340
+                                        ? 9.sp
+                                        : (w < 380 ? 10.sp : 11.sp);
+                                    final double padH = w < 360 ? 6 : 8;
+                                    final double padV = w < 360 ? 2 : 3;
+                                    return Chip(
+                                      label:
+                                          Text('Streak: ${_hydrationStreak}d'),
+                                      visualDensity: VisualDensity.compact,
+                                      backgroundColor:
+                                          cs.primary.withValues(alpha: 0.12),
+                                      side: BorderSide(
+                                          color: cs.primary
+                                              .withValues(alpha: 0.3)),
+                                      labelPadding: EdgeInsets.symmetric(
+                                          horizontal: padH, vertical: padV),
+                                      labelStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: fs,
+                                          ),
+                                    );
+                                  }),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                TweenAnimationBuilder<double>(
+                                  key: ValueKey(_dailyData["waterMl"] as int?),
+                                  tween: Tween<double>(
+                                    begin: 0,
+                                    end: (_dailyData["waterMl"] as int)
+                                        .toDouble(),
+                                  ),
+                                  duration: _kAnimDuration,
+                                  curve: Curves.linear,
+                                  builder: (context, v, _) {
+                                    final int current =
+                                        _dailyData["waterMl"] as int;
+                                    final int goal =
+                                        _dailyData["waterGoalMl"] as int;
+                                    if (current <= 0) {
+                                      return Text(
+                                        '0/$goal ml',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: cs.primary,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      );
+                                    }
+                                    final p = (v / current).clamp(0.0, 1.0);
+                                    final delayed = p <= _kDelayRight
+                                        ? 0.0
+                                        : (p - _kDelayRight) /
+                                            (1.0 - _kDelayRight);
+                                    final eased =
+                                        _kAnimCurve.transform(delayed);
+                                    final shown = (current * eased).toInt();
                                     return Text(
-                                      '0/$goal ml',
-                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      '$shown/$goal ml',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
                                             color: cs.primary,
                                             fontWeight: FontWeight.w700,
                                           ),
                                     );
-                                  }
-                                  final p = (v / current).clamp(0.0, 1.0);
-                                  final delayed = p <= _kDelayRight ? 0.0 : (p - _kDelayRight) / (1.0 - _kDelayRight);
-                                  final eased = _kAnimCurve.transform(delayed);
-                                  final shown = (current * eased).toInt();
-                                  return Text(
-                                    '$shown/$goal ml',
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                          color: cs.primary,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                  );
-                                },
-                              ),
-                              SizedBox(width: 1.2.w),
-                              IconButton(
-                                tooltip: 'Editar meta',
-                                icon: Icon(Icons.edit_outlined,
-                                    color: cs.onSurfaceVariant, size: 18),
-                                onPressed: _openEditWaterGoalDialog,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      // Emphasize hydration: progress + remaining hint
-                      const SizedBox(height: 8),
-                      Builder(builder: (context) {
-                        final int goal = (_dailyData["waterGoalMl"] as int);
-                        final int current = (_dailyData["waterMl"] as int);
-                        final double ratio = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
-                        final int remain = (goal - current).clamp(0, goal);
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: TweenAnimationBuilder<double>(
-                                key: ValueKey(ratio),
-                                tween: Tween<double>(begin: 0, end: ratio),
-                                duration: _kAnimDuration,
-                                curve: Curves.linear,
-                                builder: (context, val, _) {
-                                  if (ratio <= 0) {
-                                    return LinearProgressIndicator(
-                                      value: 0,
-                                      minHeight: 6,
-                                      backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
-                                      color: cs.primary,
-                                    );
-                                  }
-                                  final p = (val / ratio).clamp(0.0, 1.0);
-                                  final eased = _kAnimCurve.transform(p);
-                                  return LinearProgressIndicator(
-                                    value: eased * ratio,
-                                    minHeight: 4,
-                                    backgroundColor: cs.outlineVariant.withValues(alpha: 0.20),
-                                    color: cs.primary,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: remain > 0
-                                      ? TweenAnimationBuilder<double>(
-                                          key: ValueKey(remain),
-                                          tween: Tween<double>(begin: 0, end: remain.toDouble()),
-                                          duration: _kAnimDuration,
-                                          curve: Curves.linear,
-                                          builder: (context, v, _) {
-                                            final p = (v / remain).clamp(0.0, 1.0);
-                                            final delayed = p <= _kDelayCenter
-                                                ? 0.0
-                                                : (p - _kDelayCenter) / (1.0 - _kDelayCenter);
-                                            final eased = _kAnimCurve.transform(delayed);
-                                            final shown = (remain * eased).toInt();
-                                            return Text(
-                                              'Faltam ${shown} ml para a meta',
-                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                    color: cs.primary,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            );
-                                          },
-                                        )
-                                      : Text(
-                                          'Meta de água alcançada! 🎉',
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                color: cs.primary,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
+                                  },
                                 ),
                                 const SizedBox(width: 8),
-                                OutlinedButton(
+                                OutlinedButton.icon(
                                   onPressed: _addWater,
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('+250 ml'),
                                   style: OutlinedButton.styleFrom(
                                     visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    side: BorderSide(color: cs.primary.withValues(alpha: 0.6)),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    minimumSize: const Size(0, 0),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    shape: const StadiumBorder(),
+                                    side: BorderSide(
+                                        color: cs.primary.withValues(alpha: 0.5)),
                                     foregroundColor: cs.primary,
+                                    textStyle: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
-                                  child: const Text('+250 ml'),
+                                ),
+                                SizedBox(width: 1.2.w),
+                                IconButton(
+                                  tooltip: 'Editar meta',
+                                  icon: Icon(Icons.edit_outlined,
+                                      color: cs.onSurfaceVariant, size: 18),
+                                  onPressed: _openEditWaterGoalDialog,
                                 ),
                               ],
                             ),
                           ],
-                        );
-                      }),
-                      const SizedBox(height: 8),
-                      _waterCupsRow(context),
-                    ],
-                  ),
+                        ),
+                        // Emphasize hydration: progress + remaining hint
+                        const SizedBox(height: 8),
+                        Builder(builder: (context) {
+                          final int goal = (_dailyData["waterGoalMl"] as int);
+                          final int current = (_dailyData["waterMl"] as int);
+                          final double ratio =
+                              goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+                          final int remain = (goal - current).clamp(0, goal);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: TweenAnimationBuilder<double>(
+                                  key: ValueKey(ratio),
+                                  tween: Tween<double>(begin: 0, end: ratio),
+                                  duration: _kAnimDuration,
+                                  curve: Curves.linear,
+                                  builder: (context, val, _) {
+                                    if (ratio <= 0) {
+                                      return LinearProgressIndicator(
+                                        value: 0,
+                                        minHeight: 6,
+                                        backgroundColor: cs.outlineVariant
+                                            .withValues(alpha: 0.25),
+                                        color: cs.primary,
+                                      );
+                                    }
+                                    final p = (val / ratio).clamp(0.0, 1.0);
+                                    final eased = _kAnimCurve.transform(p);
+                                    return LinearProgressIndicator(
+                                      value: eased * ratio,
+                                      minHeight: 4,
+                                      backgroundColor: cs.outlineVariant
+                                          .withValues(alpha: 0.20),
+                                      color: cs.primary,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: remain > 0
+                                        ? TweenAnimationBuilder<double>(
+                                            key: ValueKey(remain),
+                                            tween: Tween<double>(
+                                                begin: 0,
+                                                end: remain.toDouble()),
+                                            duration: _kAnimDuration,
+                                            curve: Curves.linear,
+                                            builder: (context, v, _) {
+                                              final p =
+                                                  (v / remain).clamp(0.0, 1.0);
+                                              final delayed = p <= _kDelayCenter
+                                                  ? 0.0
+                                                  : (p - _kDelayCenter) /
+                                                      (1.0 - _kDelayCenter);
+                                              final eased = _kAnimCurve
+                                                  .transform(delayed);
+                                              final shown =
+                                                  (remain * eased).toInt();
+                                              return Text(
+                                                'Faltam ${shown} ml para a meta',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: cs.primary,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              );
+                                            },
+                                          )
+                                        : Text(
+                                            'Meta de água alcançada! 🎉',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: cs.primary,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton(
+                                    onPressed: _addWater,
+                                    style: OutlinedButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      side: BorderSide(
+                                          color: cs.primary
+                                              .withValues(alpha: 0.6)),
+                                      foregroundColor: cs.primary,
+                                    ),
+                                    child: const Text('+250 ml'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        }),
+                        const SizedBox(height: 8),
+                        _waterCupsRow(context),
+                      ],
+                    ),
                   );
                 }),
 
@@ -2023,32 +2230,50 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   final cs = Theme.of(context).colorScheme;
                   return Container(
                     margin: EdgeInsets.symmetric(horizontal: 4.w),
-                    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 3.2.w, vertical: 1.4.w),
                     decoration: BoxDecoration(
                       color: cs.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.2)),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.12),
-                          child: const Icon(Icons.sticky_note_2_outlined, color: AppTheme.activeBlue, size: 18),
+                        _sectionHeader(
+                          icon: Icons.sticky_note_2_outlined,
+                          iconColor: cs.primary,
+                          title: 'Anotações',
+                          actions: [
+                            _circleActionBtn(
+                              bg: AppTheme.activeBlue,
+                              icon: Icons.open_in_new,
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.notes,
+                                    arguments: {
+                                      'date': _selectedDate.toIso8601String(),
+                                    });
+                              },
+                            ),
+                            const SizedBox(width: 6),
+                            _circleActionBtn(
+                              bg: AppTheme.successGreen,
+                              icon: Icons.add,
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.notes,
+                                    arguments: {
+                                      'date': _selectedDate.toIso8601String(),
+                                      'openEditor': true,
+                                    });
+                              },
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 3.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Anotações',
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      color: cs.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              const SizedBox(height: 2),
                               FutureBuilder<List<Map<String, dynamic>>>(
                                 future: NotesStorage.getAll(),
                                 builder: (context, snap) {
@@ -2056,27 +2281,41 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   // count notes for selected date
                                   int countToday = 0;
                                   final d = _selectedDate;
-                                  final today = DateTime(d.year, d.month, d.day);
+                                  final today =
+                                      DateTime(d.year, d.month, d.day);
                                   Map<String, dynamic>? last;
                                   for (final n in list) {
-                                    final u = DateTime.tryParse((n['updatedAt'] ?? n['createdAt']) as String? ?? '') ?? DateTime(1970);
+                                    final u = DateTime.tryParse(
+                                            (n['updatedAt'] ?? n['createdAt'])
+                                                    as String? ??
+                                                '') ??
+                                        DateTime(1970);
                                     final dd = DateTime(u.year, u.month, u.day);
                                     if (dd == today) {
                                       countToday++;
                                       if (last == null) {
                                         last = n;
                                       } else {
-                                        final lu = DateTime.tryParse((last!['updatedAt'] ?? last!['createdAt']) as String? ?? '') ?? DateTime(1970);
+                                        final lu = DateTime.tryParse(
+                                                (last['updatedAt'] ??
+                                                            last['createdAt'])
+                                                        as String? ??
+                                                    '') ??
+                                            DateTime(1970);
                                         if (u.isAfter(lu)) last = n;
                                       }
                                     }
                                   }
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Hoje: $countToday anotação(ões)',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
                                               color: cs.onSurfaceVariant,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -2084,12 +2323,20 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                       if (last != null) ...[
                                         const SizedBox(height: 2),
                                         Text(
-                                          ((last!['title'] as String?)?.trim().isNotEmpty == true)
-                                              ? (last!['title'] as String)
-                                              : ((last!['content'] as String?)?.trim() ?? ''),
+                                          ((last['title'] as String?)
+                                                      ?.trim()
+                                                      .isNotEmpty ==
+                                                  true)
+                                              ? (last['title'] as String)
+                                              : ((last['content'] as String?)
+                                                      ?.trim() ??
+                                                  ''),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.copyWith(
                                                 color: cs.onSurfaceVariant,
                                               ),
                                         ),
@@ -2100,50 +2347,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               ),
                             ],
                           ),
-                        ),
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 36,
-                              height: 36,
-                              child: Material(
-                                color: AppTheme.activeBlue,
-                                shape: const CircleBorder(),
-                                child: InkWell(
-                                  customBorder: const CircleBorder(),
-                                  onTap: () {
-                                    Navigator.pushNamed(context, AppRoutes.notes, arguments: {
-                                      'date': _selectedDate.toIso8601String(),
-                                    });
-                                  },
-                                  child: const Icon(Icons.open_in_new, size: 18, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            SizedBox(
-                              width: 36,
-                              height: 36,
-                              child: Material(
-                                color: AppTheme.successGreen,
-                                shape: const CircleBorder(),
-                                child: InkWell(
-                                  customBorder: const CircleBorder(),
-                                  onTap: () {
-                                    Navigator.pushNamed(context, AppRoutes.notes, arguments: {
-                                      'date': _selectedDate.toIso8601String(),
-                                      'openEditor': true,
-                                    });
-                                  },
-                                  child: const Icon(Icons.add, size: 18, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
+                        ],
+                      ),
+                    );
                 }),
 
                 // Body Metrics card (Valores corporais) — make it discoverable like YAZIO
@@ -2157,6 +2363,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     final h = hCm / 100.0;
                     return w / (h * h);
                   }
+
                   return FutureBuilder<Map<String, dynamic>>(
                     future: BodyMetricsStorage.getForDate(_selectedDate),
                     builder: (context, snap) {
@@ -2168,43 +2375,69 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       final bmi = _bmi(m);
                       return Container(
                         margin: EdgeInsets.symmetric(horizontal: 4.w),
-                        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 3.2.w, vertical: 1.4.w),
                         decoration: BoxDecoration(
                           color: cs.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: cs.outlineVariant.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           children: [
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundColor: AppTheme.premiumGold.withValues(alpha: 0.12),
-                              child: const Icon(Icons.monitor_weight, color: AppTheme.premiumGold, size: 18),
-                            ),
-                            SizedBox(width: 3.w),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Valores corporais',
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                          color: cs.onSurface,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                  _sectionHeader(
+                                    icon: Icons.monitor_weight,
+                                    iconColor: context.semanticColors.premium,
+                                    title: 'Valores corporais',
+                                    actions: [
+                                      _circleActionBtn(
+                                        bg: AppTheme.activeBlue,
+                                        icon: Icons.open_in_new,
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                              context, AppRoutes.bodyMetrics,
+                                              arguments: {
+                                                'date': _selectedDate
+                                                    .toIso8601String(),
+                                              });
+                                        },
+                                      ),
+                                      const SizedBox(width: 6),
+                                      _circleActionBtn(
+                                        bg: AppTheme.successGreen,
+                                        icon: Icons.add,
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                              context, AppRoutes.bodyMetrics,
+                                              arguments: {
+                                                'date': _selectedDate
+                                                    .toIso8601String(),
+                                                'openEditor': true,
+                                              });
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 6),
                                   if (has)
                                     Text(
                                       [
                                         if (w != null) 'Peso: ${w} kg',
                                         if (h != null) 'Alt: ${h} cm',
-                                        if (bmi != null) 'IMC: ${bmi.toStringAsFixed(1)}',
+                                        if (bmi != null)
+                                          'IMC: ${bmi.toStringAsFixed(1)}',
                                         if (fat != null) 'Gord: ${fat}%'
                                       ].join('  •  '),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
                                             color: cs.onSurfaceVariant,
                                           ),
                                     )
@@ -2213,7 +2446,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                       'Sem registro hoje — toque para registrar',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
                                             color: AppTheme.activeBlue,
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -2221,46 +2457,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                 ],
                               ),
                             ),
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 36,
-                                  height: 36,
-                                  child: Material(
-                                    color: AppTheme.activeBlue,
-                                    shape: const CircleBorder(),
-                                    child: InkWell(
-                                      customBorder: const CircleBorder(),
-                                      onTap: () {
-                                        Navigator.pushNamed(context, AppRoutes.bodyMetrics, arguments: {
-                                          'date': _selectedDate.toIso8601String(),
-                                        });
-                                      },
-                                      child: const Icon(Icons.open_in_new, size: 18, color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                SizedBox(
-                                  width: 36,
-                                  height: 36,
-                                  child: Material(
-                                    color: AppTheme.successGreen,
-                                    shape: const CircleBorder(),
-                                    child: InkWell(
-                                      customBorder: const CircleBorder(),
-                                      onTap: () {
-                                        Navigator.pushNamed(context, AppRoutes.bodyMetrics, arguments: {
-                                          'date': _selectedDate.toIso8601String(),
-                                          'openEditor': true,
-                                        });
-                                      },
-                                      child: const Icon(Icons.add, size: 18, color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                            const SizedBox.shrink(),
                           ],
                         ),
                       );
@@ -2288,8 +2485,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   final cs = Theme.of(context).colorScheme;
                   final int spent = _dailyData["spentCalories"] as int? ?? 0;
                   return Container(
-                    margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
-                    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.6.w),
+                    margin:
+                        EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 3.2.w, vertical: 1.6.w),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -2300,7 +2499,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.25)),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.25)),
                     ),
                     child: Stack(
                       children: [
@@ -2308,16 +2508,25 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         Positioned(
                           right: 6,
                           top: 6,
-                          child: Icon(Icons.local_fire_department,
-                              size: 42, color: AppTheme.successGreen.withValues(alpha: 0.18)),
+                          child: Icon(
+                            Icons.local_fire_department,
+                            size: 42,
+                            color: context.semanticColors.success
+                                .withValues(alpha: 0.18),
+                          ),
                         ),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             CircleAvatar(
                               radius: 18,
-                              backgroundColor: AppTheme.successGreen.withValues(alpha: 0.15),
-                              child: const Icon(Icons.local_fire_department, color: AppTheme.successGreen, size: 20),
+                              backgroundColor: context.semanticColors.success
+                                  .withValues(alpha: 0.15),
+                              child: Icon(
+                                Icons.local_fire_department,
+                                color: context.semanticColors.success,
+                                size: 20,
+                              ),
                             ),
                             SizedBox(width: 3.w),
                             Expanded(
@@ -2328,25 +2537,44 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     children: [
                                       Expanded(
                                         child: Text('Atividades',
-                                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
                                                   color: cs.onSurface,
                                                   fontWeight: FontWeight.w700,
                                                 )),
                                       ),
                                       if (_exerciseStreak > 0)
                                         Builder(builder: (context) {
-                                          final w = MediaQuery.of(context).size.width;
-                                          final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                                          final w =
+                                              MediaQuery.of(context).size.width;
+                                          final double fs = w < 340
+                                              ? 9.sp
+                                              : (w < 380 ? 10.sp : 11.sp);
                                           final double padH = w < 360 ? 6 : 8;
                                           final double padV = w < 360 ? 2 : 3;
+                                          final successColor =
+                                              context.semanticColors.success;
                                           return Chip(
-                                            label: Text('Streak: ${_exerciseStreak}d'),
-                                            visualDensity: VisualDensity.compact,
-                                            backgroundColor: AppTheme.successGreen.withValues(alpha: 0.12),
-                                            side: BorderSide(color: AppTheme.successGreen.withValues(alpha: 0.3)),
-                                            labelPadding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-                                            labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                                  color: AppTheme.successGreen,
+                                            label: Text(
+                                                'Streak: ${_exerciseStreak}d'),
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            backgroundColor: successColor
+                                                .withValues(alpha: 0.12),
+                                            side: BorderSide(
+                                              color: successColor
+                                                  .withValues(alpha: 0.3),
+                                            ),
+                                            labelPadding: EdgeInsets.symmetric(
+                                                horizontal: padH,
+                                                vertical: padV),
+                                            labelStyle: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(
+                                                  color: successColor,
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: fs,
                                                 ),
@@ -2359,37 +2587,60 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     future: UserPreferences.getExerciseGoal(),
                                     builder: (context, snap) {
                                       final goal = snap.data ?? 300;
-                                      final ratio = goal > 0 ? (spent / goal).clamp(0.0, 1.0) : 0.0;
-                                      final remain = (goal - spent).clamp(0, goal);
+                                      final ratio = goal > 0
+                                          ? (spent / goal).clamp(0.0, 1.0)
+                                          : 0.0;
+                                      final remain =
+                                          (goal - spent).clamp(0, goal);
                                       return Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
                                               TweenAnimationBuilder<double>(
                                                 key: ValueKey(spent),
-                                                tween: Tween(begin: 0.0, end: spent.toDouble()),
+                                                tween: Tween(
+                                                    begin: 0.0,
+                                                    end: spent.toDouble()),
                                                 duration: _kAnimDuration,
                                                 curve: Curves.linear,
                                                 builder: (context, v, _) {
                                                   if (spent <= 0) {
                                                     return Text(
                                                       '${_fmtInt(0)}/${_fmtInt(goal)} kcal',
-                                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                            color: AppTheme.successGreen,
-                                                            fontWeight: FontWeight.w700,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium
+                                                          ?.copyWith(
+                                                            color: AppTheme
+                                                                .successGreen,
+                                                            fontWeight:
+                                                                FontWeight.w700,
                                                           ),
                                                     );
                                                   }
-                                                  final p = (v / spent).clamp(0.0, 1.0);
-                                                  final delayed = p <= _kDelayLeft ? 0.0 : (p - _kDelayLeft) / (1.0 - _kDelayLeft);
-                                                  final eased = _kAnimCurve.transform(delayed);
-                                                  final shown = (spent * eased).toInt();
+                                                  final p = (v / spent)
+                                                      .clamp(0.0, 1.0);
+                                                  final delayed = p <=
+                                                          _kDelayLeft
+                                                      ? 0.0
+                                                      : (p - _kDelayLeft) /
+                                                          (1.0 - _kDelayLeft);
+                                                  final eased = _kAnimCurve
+                                                      .transform(delayed);
+                                                  final shown =
+                                                      (spent * eased).toInt();
                                                   return Text(
                                                     '${_fmtInt(shown)}/${_fmtInt(goal)} kcal',
-                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                          color: AppTheme.successGreen,
-                                                          fontWeight: FontWeight.w700,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          color: AppTheme
+                                                              .successGreen,
+                                                          fontWeight:
+                                                              FontWeight.w700,
                                                         ),
                                                   );
                                                 },
@@ -2398,37 +2649,60 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                               if (remain > 0)
                                                 TweenAnimationBuilder<double>(
                                                   key: ValueKey(remain),
-                                                  tween: Tween(begin: 0.0, end: remain.toDouble()),
+                                                  tween: Tween(
+                                                      begin: 0.0,
+                                                      end: remain.toDouble()),
                                                   duration: _kAnimDuration,
                                                   curve: Curves.linear,
                                                   builder: (context, v, _) {
-                                                    final p = (v / remain).clamp(0.0, 1.0);
-                                                    final delayed = p <= _kDelayCenter
+                                                    final p = (v / remain)
+                                                        .clamp(0.0, 1.0);
+                                                    final delayed = p <=
+                                                            _kDelayCenter
                                                         ? 0.0
-                                                        : (p - _kDelayCenter) / (1.0 - _kDelayCenter);
-                                                    final eased = _kAnimCurve.transform(delayed);
-                                                    final shown = (remain * eased).toInt();
-                                                    return Text('Faltam ${_fmtInt(shown)} kcal',
-                                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                              color: cs.onSurfaceVariant,
-                                                              fontWeight: FontWeight.w600,
+                                                        : (p - _kDelayCenter) /
+                                                            (1.0 -
+                                                                _kDelayCenter);
+                                                    final eased = _kAnimCurve
+                                                        .transform(delayed);
+                                                    final shown =
+                                                        (remain * eased)
+                                                            .toInt();
+                                                    return Text(
+                                                        'Faltam ${_fmtInt(shown)} kcal',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              color: cs
+                                                                  .onSurfaceVariant,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
                                                             ));
                                                   },
                                                 ),
                                               const SizedBox(width: 6),
                                               IconButton(
                                                 tooltip: 'Editar meta',
-                                                icon: Icon(Icons.edit_outlined, size: 18, color: cs.onSurfaceVariant),
-                                                onPressed: () => _openEditExerciseGoalDialog(goal),
+                                                icon: Icon(Icons.edit_outlined,
+                                                    size: 18,
+                                                    color: cs.onSurfaceVariant),
+                                                onPressed: () =>
+                                                    _openEditExerciseGoalDialog(
+                                                        goal),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 6),
                                           ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: TweenAnimationBuilder<double>(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            child:
+                                                TweenAnimationBuilder<double>(
                                               key: ValueKey(ratio),
-                                              tween: Tween<double>(begin: 0, end: ratio),
+                                              tween: Tween<double>(
+                                                  begin: 0, end: ratio),
                                               duration: _kAnimDuration,
                                               curve: Curves.linear,
                                               builder: (context, val, _) {
@@ -2436,16 +2710,24 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                                   return LinearProgressIndicator(
                                                     value: 0,
                                                     minHeight: 6,
-                                                    backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
-                                                    color: AppTheme.successGreen,
+                                                    backgroundColor: cs
+                                                        .outlineVariant
+                                                        .withValues(
+                                                            alpha: 0.25),
+                                                    color:
+                                                        AppTheme.successGreen,
                                                   );
                                                 }
-                                                final p = (val / ratio).clamp(0.0, 1.0);
-                                                final eased = _kAnimCurve.transform(p);
+                                                final p = (val / ratio)
+                                                    .clamp(0.0, 1.0);
+                                                final eased =
+                                                    _kAnimCurve.transform(p);
                                                 return LinearProgressIndicator(
                                                   value: eased * ratio,
                                                   minHeight: 6,
-                                                  backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
+                                                  backgroundColor: cs
+                                                      .outlineVariant
+                                                      .withValues(alpha: 0.25),
                                                   color: AppTheme.successGreen,
                                                 );
                                               },
@@ -2455,29 +2737,69 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                           if (_lastExerciseMeta.isNotEmpty)
                                             Row(
                                               children: [
-                                                const Icon(Icons.fitness_center, size: 16, color: AppTheme.successGreen),
+                                                Icon(
+                                                  Icons.fitness_center,
+                                                  size: 16,
+                                                  color: context
+                                                      .semanticColors.success,
+                                                ),
                                                 const SizedBox(width: 6),
                                                 Expanded(
-                                                  child: Builder(builder: (context) {
-                                                    final dt = DateTime.tryParse(((_lastExerciseMeta['savedAt'] as String?) ?? '')) ?? DateTime.now();
-                                                    final hh = dt.hour.toString().padLeft(2, '0');
-                                                    final mm = dt.minute.toString().padLeft(2, '0');
+                                                  child: Builder(
+                                                      builder: (context) {
+                                                    final dt = DateTime.tryParse(
+                                                            ((_lastExerciseMeta[
+                                                                        'savedAt']
+                                                                    as String?) ??
+                                                                '')) ??
+                                                        DateTime.now();
+                                                    final hh = dt.hour
+                                                        .toString()
+                                                        .padLeft(2, '0');
+                                                    final mm = dt.minute
+                                                        .toString()
+                                                        .padLeft(2, '0');
                                                     return Text(
                                                       'Último: ' +
-                                                          ((_lastExerciseMeta['name'] as String?) ?? '-') +
+                                                          ((_lastExerciseMeta[
+                                                                      'name']
+                                                                  as String?) ??
+                                                              '-') +
                                                           ' · +' +
-                                                          (((_lastExerciseMeta['kcal'] as num?)?.toInt() ?? 0).toString()) +
+                                                          (((_lastExerciseMeta[
+                                                                              'kcal']
+                                                                          as num?)
+                                                                      ?.toInt() ??
+                                                                  0)
+                                                              .toString()) +
                                                           ' kcal' +
-                                                          ((_lastExerciseMeta['minutes'] != null)
-                                                              ? ' · ' + ((_lastExerciseMeta['minutes'] as num).toInt().toString()) + ' min'
+                                                          ((_lastExerciseMeta[
+                                                                      'minutes'] !=
+                                                                  null)
+                                                              ? ' · ' +
+                                                                  ((_lastExerciseMeta[
+                                                                              'minutes']
+                                                                          as num)
+                                                                      .toInt()
+                                                                      .toString()) +
+                                                                  ' min'
                                                               : '') +
-                                                          ' · ' + hh + ':' + mm,
-                                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                            color: cs.onSurfaceVariant,
-                                                            fontWeight: FontWeight.w600,
+                                                          ' · ' +
+                                                          hh +
+                                                          ':' +
+                                                          mm,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: cs
+                                                                .onSurfaceVariant,
+                                                            fontWeight:
+                                                                FontWeight.w600,
                                                           ),
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     );
                                                   }),
                                                 ),
@@ -2490,14 +2812,28 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                                 for (final log in _exerciseLogs)
                                                   Row(
                                                     children: [
-                                                      const Icon(Icons.watch_later_outlined, size: 14, color: AppTheme.successGreen),
+                                                      Icon(
+                                                        Icons
+                                                            .watch_later_outlined,
+                                                        size: 14,
+                                                        color: context
+                                                            .semanticColors
+                                                            .success,
+                                                      ),
                                                       const SizedBox(width: 6),
                                                       Expanded(
                                                         child: Text(
                                                           '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min',
-                                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                                                          style: Theme.of(
+                                                                  context)
+                                                              .textTheme
+                                                              .labelSmall
+                                                              ?.copyWith(
+                                                                  color: cs
+                                                                      .onSurfaceVariant),
                                                           maxLines: 1,
-                                                          overflow: TextOverflow.ellipsis,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
                                                         ),
                                                       ),
                                                     ],
@@ -2509,21 +2845,49 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                           if (_exerciseLogs.isNotEmpty) ...[
                                             Column(
                                               children: [
-                                                for (final log in (_exerciseExpanded ? _exerciseLogs : _exerciseLogs.take(2)))
+                                                for (final log
+                                                    in (_exerciseExpanded
+                                                        ? _exerciseLogs
+                                                        : _exerciseLogs
+                                                            .take(2)))
                                                   Row(
                                                     children: [
-                                                      const Icon(Icons.watch_later_outlined, size: 14, color: AppTheme.successGreen),
+                                                      Icon(
+                                                        Icons
+                                                            .watch_later_outlined,
+                                                        size: 14,
+                                                        color: context
+                                                            .semanticColors
+                                                            .success,
+                                                      ),
                                                       const SizedBox(width: 6),
                                                       Expanded(
-                                                        child: Builder(builder: (context) {
-                                                          final dt = DateTime.tryParse((log['savedAt'] as String?) ?? '') ?? DateTime.now();
-                                                          final hh = dt.hour.toString().padLeft(2, '0');
-                                                          final mm = dt.minute.toString().padLeft(2, '0');
+                                                        child: Builder(
+                                                            builder: (context) {
+                                                          final dt = DateTime.tryParse(
+                                                                  (log['savedAt']
+                                                                          as String?) ??
+                                                                      '') ??
+                                                              DateTime.now();
+                                                          final hh = dt.hour
+                                                              .toString()
+                                                              .padLeft(2, '0');
+                                                          final mm = dt.minute
+                                                              .toString()
+                                                              .padLeft(2, '0');
                                                           return Text(
                                                             '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min · $hh:$mm',
-                                                            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                                                            style: Theme.of(
+                                                                    context)
+                                                                .textTheme
+                                                                .labelSmall
+                                                                ?.copyWith(
+                                                                    color: cs
+                                                                        .onSurfaceVariant),
                                                             maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
                                                           );
                                                         }),
                                                       ),
@@ -2534,48 +2898,84 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                             Align(
                                               alignment: Alignment.centerRight,
                                               child: TextButton.icon(
-                                                onPressed: () => setState(() => _exerciseExpanded = !_exerciseExpanded),
-                                                icon: Icon(_exerciseExpanded ? Icons.expand_less : Icons.expand_more),
-                                                label: Builder(builder: (context) {
-                                                  final extra = (_exerciseLogs.length > 2) ? (_exerciseLogs.length - 2) : 0;
-                                                  return Text(_exerciseExpanded ? 'Mostrar menos' : (extra > 0 ? 'Ver todos (+$extra)' : 'Ver todos'));
+                                                onPressed: () => setState(() =>
+                                                    _exerciseExpanded =
+                                                        !_exerciseExpanded),
+                                                icon: Icon(_exerciseExpanded
+                                                    ? Icons.expand_less
+                                                    : Icons.expand_more),
+                                                label:
+                                                    Builder(builder: (context) {
+                                                  final extra =
+                                                      (_exerciseLogs.length > 2)
+                                                          ? (_exerciseLogs
+                                                                  .length -
+                                                              2)
+                                                          : 0;
+                                                  return Text(_exerciseExpanded
+                                                      ? 'Mostrar menos'
+                                                      : (extra > 0
+                                                          ? 'Ver todos (+$extra)'
+                                                          : 'Ver todos'));
                                                 }),
                                               ),
                                             ),
                                             const SizedBox(height: 8),
                                           ],
                                           Builder(builder: (context) {
-                                            final w = MediaQuery.of(context).size.width;
-                                            final double space = w < 360 ? 6.0 : 8.0;
-                                            final double rspace = w < 360 ? 4.0 : 6.0;
+                                            final w = MediaQuery.of(context)
+                                                .size
+                                                .width;
+                                            final double space =
+                                                w < 360 ? 6.0 : 8.0;
+                                            final double rspace =
+                                                w < 360 ? 4.0 : 6.0;
                                             return Wrap(
                                               spacing: space,
                                               runSpacing: rspace,
                                               children: [
-                                              _quickActivityChip('Caminhada 30m', () {
-                                                Navigator.pushNamed(context, AppRoutes.exerciseLogging, arguments: {
-                                                  'date': _selectedDate.toIso8601String(),
-                                                  'activityName': 'Caminhada',
-                                                  'minutes': 30,
-                                                  'intensity': 1,
-                                                }).then((_) => _loadExercise());
-                                              }),
-                                              _quickActivityChip('Corrida 20m', () {
-                                                Navigator.pushNamed(context, AppRoutes.exerciseLogging, arguments: {
-                                                  'date': _selectedDate.toIso8601String(),
-                                                  'activityName': 'Corrida',
-                                                  'minutes': 20,
-                                                  'intensity': 2,
-                                                }).then((_) => _loadExercise());
-                                              }),
-                                              _quickActivityChip('Bike 30m', () {
-                                                Navigator.pushNamed(context, AppRoutes.exerciseLogging, arguments: {
-                                                  'date': _selectedDate.toIso8601String(),
-                                                  'activityName': 'Ciclismo',
-                                                  'minutes': 30,
-                                                  'intensity': 1,
-                                                }).then((_) => _loadExercise());
-                                              }),
+                                                _quickActivityChip(
+                                                    'Caminhada 30m', () {
+                                                  Navigator.pushNamed(context,
+                                                      AppRoutes.exerciseLogging,
+                                                      arguments: {
+                                                        'date': _selectedDate
+                                                            .toIso8601String(),
+                                                        'activityName':
+                                                            'Caminhada',
+                                                        'minutes': 30,
+                                                        'intensity': 1,
+                                                      }).then(
+                                                      (_) => _loadExercise());
+                                                }),
+                                                _quickActivityChip(
+                                                    'Corrida 20m', () {
+                                                  Navigator.pushNamed(context,
+                                                      AppRoutes.exerciseLogging,
+                                                      arguments: {
+                                                        'date': _selectedDate
+                                                            .toIso8601String(),
+                                                        'activityName':
+                                                            'Corrida',
+                                                        'minutes': 20,
+                                                        'intensity': 2,
+                                                      }).then(
+                                                      (_) => _loadExercise());
+                                                }),
+                                                _quickActivityChip('Bike 30m',
+                                                    () {
+                                                  Navigator.pushNamed(context,
+                                                      AppRoutes.exerciseLogging,
+                                                      arguments: {
+                                                        'date': _selectedDate
+                                                            .toIso8601String(),
+                                                        'activityName':
+                                                            'Ciclismo',
+                                                        'minutes': 30,
+                                                        'intensity': 1,
+                                                      }).then(
+                                                      (_) => _loadExercise());
+                                                }),
                                               ],
                                             );
                                           }),
@@ -2586,92 +2986,98 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                 ],
                               ),
                             ),
-                        SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Material(
-                            color: AppTheme.activeBlue,
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: _addExercise,
-                              child: const Icon(Icons.add, size: 22, color: Colors.white),
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: Material(
+                                color: AppTheme.activeBlue,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: _addExercise,
+                                  child: const Icon(Icons.add,
+                                      size: 22, color: Colors.white),
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              );
+                  );
                 }),
 
                 // Macronutrient progress bars (compact)
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
                   return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 2.4.w),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
-                    boxShadow: const [],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Macronutrientes',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w600,
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 3.2.w, vertical: 2.4.w),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.3)),
+                      boxShadow: const [],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Macronutrientes',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    color: cs.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
-                          ),
-                          IconButton(
-                            tooltip: 'Editar metas de macros',
-                            onPressed: _openEditMacroGoalsDialog,
-                            icon: Icon(Icons.edit_outlined,
-                                color: cs.onSurfaceVariant, size: 18),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 1.2.h),
-                      MacronutrientProgressWidget(
-                        name: 'Carboidratos',
-                        consumed: (_dailyData["macronutrients"]["carbohydrates"]
-                            ["consumed"] as int),
-                        total: (_dailyData["macronutrients"]["carbohydrates"]
-                            ["total"] as int),
-                        color: AppTheme.warningAmber,
-                        onLongPress: () =>
-                            _showMacronutrientDetails('carbohydrates'),
-                      ),
-                      MacronutrientProgressWidget(
-                        name: 'Proteínas',
-                        consumed: (_dailyData["macronutrients"]["proteins"]
-                            ["consumed"] as int),
-                        total: (_dailyData["macronutrients"]["proteins"]
-                            ["total"] as int),
-                        color: AppTheme.successGreen,
-                        onLongPress: () =>
-                            _showMacronutrientDetails('proteins'),
-                      ),
-                      MacronutrientProgressWidget(
-                        name: 'Gorduras',
-                        consumed: (_dailyData["macronutrients"]["fats"]
-                            ["consumed"] as int),
-                        total: (_dailyData["macronutrients"]["fats"]["total"]
-                            as int),
-                        color: AppTheme.activeBlue,
-                        onLongPress: () => _showMacronutrientDetails('fats'),
-                      ),
-                    ],
-                  ),
-                );
+                            IconButton(
+                              tooltip: 'Editar metas de macros',
+                              onPressed: _openEditMacroGoalsDialog,
+                              icon: Icon(Icons.edit_outlined,
+                                  color: cs.onSurfaceVariant, size: 18),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 1.2.h),
+                        MacronutrientProgressWidget(
+                          name: 'Carboidratos',
+                          consumed: (_dailyData["macronutrients"]
+                              ["carbohydrates"]["consumed"] as int),
+                          total: (_dailyData["macronutrients"]["carbohydrates"]
+                              ["total"] as int),
+                          color: AppTheme.warningAmber,
+                          onLongPress: () =>
+                              _showMacronutrientDetails('carbohydrates'),
+                        ),
+                        MacronutrientProgressWidget(
+                          name: 'Proteínas',
+                          consumed: (_dailyData["macronutrients"]["proteins"]
+                              ["consumed"] as int),
+                          total: (_dailyData["macronutrients"]["proteins"]
+                              ["total"] as int),
+                          color: AppTheme.successGreen,
+                          onLongPress: () =>
+                              _showMacronutrientDetails('proteins'),
+                        ),
+                        MacronutrientProgressWidget(
+                          name: 'Gorduras',
+                          consumed: (_dailyData["macronutrients"]["fats"]
+                              ["consumed"] as int),
+                          total: (_dailyData["macronutrients"]["fats"]["total"]
+                              as int),
+                          color: AppTheme.activeBlue,
+                          onLongPress: () => _showMacronutrientDetails('fats'),
+                        ),
+                      ],
+                    ),
+                  );
                 }),
 
                 // YAZIO-like: omit weekly progress and floating actions from top area
@@ -2688,33 +3094,25 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   }
 
   Widget _buildBottomNavigationBar() {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final navBg = theme.bottomNavigationBarTheme.backgroundColor ?? cs.surface;
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3))),
+        color: navBg,
+        border: Border(
+          top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3)),
+        ),
       ),
       child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: cs.surface,
-        selectedItemColor: AppTheme.activeBlue,
-        unselectedItemColor: AppTheme.textSecondary,
-        showUnselectedLabels: true,
-        selectedLabelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
-        unselectedLabelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w500,
-          fontSize: 11,
-        ),
         currentIndex: 0,
         onTap: (idx) {
           switch (idx) {
             case 0:
               break; // Diário
             case 1:
-              Navigator.pushNamed(context, AppRoutes.intermittentFastingTracker);
+              Navigator.pushNamed(
+                  context, AppRoutes.intermittentFastingTracker);
               break;
             case 2:
               Navigator.pushNamed(context, AppRoutes.recipeBrowser);
@@ -2729,35 +3127,24 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         },
         items: [
           BottomNavigationBarItem(
-            icon: CustomIconWidget(
-              iconName: 'today',
-              color: AppTheme.activeBlue,
-              size: 24,
-            ),
+            icon: const CustomIconWidget(iconName: 'today', size: 24),
             label: 'Diário',
           ),
           BottomNavigationBarItem(
-            icon: CustomIconWidget(
-              iconName: 'schedule',
-              color: AppTheme.textSecondary,
-              size: 24,
-            ),
+            icon: const CustomIconWidget(iconName: 'schedule', size: 24),
             label: 'Jejum',
           ),
           BottomNavigationBarItem(
-            icon: CustomIconWidget(
-              iconName: 'restaurant_menu',
-              color: AppTheme.textSecondary,
-              size: 24,
-            ),
+            icon:
+                const CustomIconWidget(iconName: 'restaurant_menu', size: 24),
             label: 'Receitas',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline, color: AppTheme.textSecondary, size: 24),
+            icon: const Icon(Icons.person_outline, size: 24),
             label: 'Perfil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.smart_toy_outlined, color: AppTheme.textSecondary, size: 24),
+            icon: const Icon(Icons.smart_toy_outlined, size: 24),
             label: 'Coach',
           ),
         ],
@@ -3033,12 +3420,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (ctx) {
+        final sheetColors = Theme.of(ctx).colorScheme;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.search, color: AppTheme.textPrimary),
+                leading: Icon(Icons.search, color: sheetColors.onSurface),
                 title: const Text('Buscar alimento'),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -3046,7 +3434,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.star, color: AppTheme.textPrimary),
+                leading: Icon(Icons.star, color: sheetColors.onSurface),
                 title: const Text('Favoritos'),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -3055,8 +3443,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 },
               ),
               ListTile(
-                leading:
-                    const Icon(Icons.restaurant, color: AppTheme.textPrimary),
+                leading: Icon(Icons.restaurant, color: sheetColors.onSurface),
                 title: const Text('Meus Alimentos'),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -3067,7 +3454,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               const Divider(height: 1),
               ListTile(
                 leading:
-                    const Icon(Icons.playlist_add, color: AppTheme.textPrimary),
+                    Icon(Icons.playlist_add, color: sheetColors.onSurface),
                 title: const Text('Duplicar última refeição'),
                 onTap: () async {
                   Navigator.pop(ctx);
@@ -3664,8 +4051,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final goal = await UserPreferences.getExerciseGoal();
     int streak = 0;
     for (int i = 0; i < 30; i++) {
-      final d = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)
-          .subtract(Duration(days: i));
+      final d =
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)
+              .subtract(Duration(days: i));
       final ex = await NutritionStorage.getExerciseCalories(d);
       if (goal > 0 && ex >= goal) {
         streak += 1;
@@ -3696,7 +4084,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           decoration: const InputDecoration(hintText: 'Ex.: 300'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () async {
               final v = int.tryParse(ctl.text.trim());
@@ -4040,12 +4430,15 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            final colors = context.colors;
+            final textStyles = context.textStyles;
             return AlertDialog(
-              backgroundColor: AppTheme.secondaryBackgroundDark,
+              backgroundColor: colors.surfaceContainerHigh,
               title: Text(
                 'Editar item',
-                style: AppTheme.darkTheme.textTheme.titleLarge
-                    ?.copyWith(color: AppTheme.textPrimary),
+                style: textStyles.titleLarge?.copyWith(
+                  color: colors.onSurface,
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -4080,8 +4473,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancelar',
-                      style: TextStyle(color: AppTheme.textSecondary)),
+                  child: Text(
+                    'Cancelar',
+                    style: textStyles.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -4229,8 +4626,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         ?.copyWith(color: AppTheme.textPrimary)),
                 SizedBox(height: 1.5.h),
                 ListTile(
-                  leading: const Icon(Icons.local_fire_department,
-                      color: AppTheme.warningAmber),
+                  leading: Icon(Icons.local_fire_department,
+                      color: context.semanticColors.warning),
                   title: Text('Visão geral da sequência',
                       style: AppTheme.darkTheme.textTheme.bodyMedium
                           ?.copyWith(color: AppTheme.textPrimary)),
@@ -4242,7 +4639,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 const Divider(height: 1),
                 ListTile(
                   leading:
-                      Icon(Icons.bookmark_border, color: AppTheme.textPrimary),
+                      Icon(Icons.bookmark_border, color: Theme.of(context).colorScheme.onSurface),
                   title: Text('Salvar dia como template',
                       style: AppTheme.darkTheme.textTheme.bodyMedium
                           ?.copyWith(color: AppTheme.textPrimary)),
@@ -4864,3 +5261,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 }
+
+
+
