@@ -1671,14 +1671,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // YAZIO-like: no section header; list meals directly
+          _sectionHeader(
+            icon: Icons.restaurant_outlined,
+            iconColor: cs.primary,
+            title: 'Alimentação',
+          ),
           SizedBox(height: 0.6.h),
           row('Café da manhã', 'breakfast'),
           row('Almoço', 'lunch'),
-          row('Jantar', 'dinner'),
-          row('Lanches', 'snack'),
-        ],
-      ),
-    );
   }
 
   Widget _macroRow(String label, int value, int goal, Color baseColor) {
