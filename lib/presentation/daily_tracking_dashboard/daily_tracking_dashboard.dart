@@ -395,6 +395,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ? buildHash
         : buildId;
     final cs = Theme.of(context).colorScheme;
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: cs.onSurface,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.1,
+        );
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
       child: Container(
@@ -923,13 +928,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ),
         SizedBox(width: 3.w),
         Expanded(
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
+          child: Text(title, style: titleStyle),
         ),
         if (actions.isNotEmpty) Row(children: actions),
       ],
