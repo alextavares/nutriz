@@ -2148,31 +2148,45 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _sectionHeader(
+                        _sectionHeader(
                           icon: Icons.sticky_note_2_outlined,
                           iconColor: cs.primary,
                           title: 'Anotações',
                           actions: [
-                            _circleActionBtn(
-                              bg: AppTheme.activeBlue,
-                              icon: Icons.open_in_new,
-                              onTap: () {
-                                Navigator.pushNamed(context, AppRoutes.notes,
-                                    arguments: {
-                                      'date': _selectedDate.toIso8601String(),
-                                    });
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.notes,
+                                  arguments: {'date': _selectedDate.toIso8601String()},
+                                );
                               },
+                              icon: const Icon(Icons.open_in_new, size: 16),
+                              label: const Text('Abrir'),
+                              style: _pillActionStyle(cs),
                             ),
                             const SizedBox(width: 6),
-                            _circleActionBtn(
-                              bg: AppTheme.successGreen,
-                              icon: Icons.add,
-                              onTap: () {
-                                Navigator.pushNamed(context, AppRoutes.notes,
-                                    arguments: {
-                                      'date': _selectedDate.toIso8601String(),
-                                      'openEditor': true,
-                                    });
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.notes,
+                                  arguments: {
+                                    'date': _selectedDate.toIso8601String(),
+                                    'openEditor': true,
+                                  },
+                                );
                               },
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Adicionar'),
+                              style: _pillActionStyle(cs),
+                            ),
+                          ],
+                        ),
+                              },
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Adicionar'),
+                              style: _pillActionStyle(cs),
                             ),
                           ],
                         ),
