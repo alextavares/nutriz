@@ -2310,7 +2310,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Hoje: $countToday anotação(ões)',
+                                        'Hoje: $countToday anotações',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
@@ -5260,6 +5260,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 }
+
+
 
 
 
