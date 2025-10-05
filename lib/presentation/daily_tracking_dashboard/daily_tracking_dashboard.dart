@@ -1959,136 +1959,50 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.water_drop_outlined,
-                                    color: cs.primary, size: 18),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Água',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: cs.onSurface,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                                const SizedBox(width: 10),
-                                if (_hydrationStreak > 0)
-                                  Builder(builder: (context) {
-                                    final w = MediaQuery.of(context).size.width;
-                                    final double fs = w < 340
-                                        ? 9.sp
-                                        : (w < 380 ? 10.sp : 11.sp);
-                                    final double padH = w < 360 ? 6 : 8;
-                                    final double padV = w < 360 ? 2 : 3;
-                                    return Chip(
-                                      label:
-                                          Text('Streak: ${_hydrationStreak}d'),
-                                      visualDensity: VisualDensity.compact,
-                                      backgroundColor:
-                                          cs.primary.withValues(alpha: 0.12),
-                                      side: BorderSide(
-                                          color: cs.primary
-                                              .withValues(alpha: 0.3)),
-                                      labelPadding: EdgeInsets.symmetric(
-                                          horizontal: padH, vertical: padV),
-                                      labelStyle: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: cs.primary,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: fs,
-                                          ),
-                                    );
-                                  }),
-                              ],
+                        _sectionHeader(
+                          icon: Icons.water_drop_outlined,
+                          iconColor: cs.primary,
+                          title: 'Água',
+                          actions: [
+                            TweenAnimationBuilder<double>(
+                              key: ValueKey(_dailyData["waterMl"] as int?),
+                              tween: Tween<double>(begin: 0, end: (_dailyData["waterMl"] as int).toDouble()),
+                              duration: _kAnimDuration,
+                              curve: Curves.linear,
+                              builder: (context, v, _) {
+                                final int current = _dailyData["waterMl"] as int;
+                                final int goal = _dailyData["waterGoalMl"] as int;
+                                if (current <= 0) {
+                                  return Text('0/$goal ml', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w700));
+                                }
+                                final p = (v / current).clamp(0.0, 1.0);
+                                final delayed = p <= _kDelayRight ? 0.0 : (p - _kDelayRight) / (1.0 - _kDelayRight);
+                                final eased = _kAnimCurve.transform(delayed);
+                                final shown = (current * eased).toInt();
+                                return Text('$shown/$goal ml', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w700));
+                              },
                             ),
-                            Row(
-                              children: [
-                                TweenAnimationBuilder<double>(
-                                  key: ValueKey(_dailyData["waterMl"] as int?),
-                                  tween: Tween<double>(
-                                    begin: 0,
-                                    end: (_dailyData["waterMl"] as int)
-                                        .toDouble(),
-                                  ),
-                                  duration: _kAnimDuration,
-                                  curve: Curves.linear,
-                                  builder: (context, v, _) {
-                                    final int current =
-                                        _dailyData["waterMl"] as int;
-                                    final int goal =
-                                        _dailyData["waterGoalMl"] as int;
-                                    if (current <= 0) {
-                                      return Text(
-                                        '0/$goal ml',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color: cs.primary,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                      );
-                                    }
-                                    final p = (v / current).clamp(0.0, 1.0);
-                                    final delayed = p <= _kDelayRight
-                                        ? 0.0
-                                        : (p - _kDelayRight) /
-                                            (1.0 - _kDelayRight);
-                                    final eased =
-                                        _kAnimCurve.transform(delayed);
-                                    final shown = (current * eased).toInt();
-                                    return Text(
-                                      '$shown/$goal ml',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: cs.primary,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(width: 8),
-                                OutlinedButton.icon(
-                                  onPressed: _addWater,
-                                  icon: const Icon(Icons.add, size: 16),
-                                  label: const Text('+250 ml'),
-                                  style: OutlinedButton.styleFrom(
-                                    visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    minimumSize: const Size(0, 0),
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    shape: const StadiumBorder(),
-                                    side: BorderSide(
-                                        color: cs.primary.withValues(alpha: 0.5)),
-                                    foregroundColor: cs.primary,
-                                    textStyle: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                SizedBox(width: 1.2.w),
-                                IconButton(
-                                  tooltip: 'Editar meta',
-                                  icon: Icon(Icons.edit_outlined,
-                                      color: cs.onSurfaceVariant, size: 18),
-                                  onPressed: _openEditWaterGoalDialog,
-                                ),
-                              ],
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: _addWater,
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('+250 ml'),
+                              style: OutlinedButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                minimumSize: const Size(0, 0),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: const StadiumBorder(),
+                                side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
+                                foregroundColor: cs.primary,
+                                textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            SizedBox(width: 1.2.w),
+                            IconButton(
+                              tooltip: 'Editar meta',
+                              icon: Icon(Icons.edit_outlined, color: cs.onSurfaceVariant, size: 18),
+                              onPressed: _openEditWaterGoalDialog,
                             ),
                           ],
                         ),
