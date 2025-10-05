@@ -2297,7 +2297,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                 children: [
                                   _sectionHeader(
                                     icon: Icons.monitor_weight,
-                                    iconColor: context.semanticColors.premium,
+                                    iconColor: cs.primary,
                                     title: 'Valores Corporais',
                                     actions: [
                                       _circleActionBtn(
