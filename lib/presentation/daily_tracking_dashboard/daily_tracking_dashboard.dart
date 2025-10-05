@@ -1927,7 +1927,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 // Per-meal progress (kcal and macros) — aligns with YAZIO cards
                 SizedBox(height: 1.6.h),
                 _buildPerMealProgressSection(),
-                SizedBox(height: 1.2.h),
+                SizedBox(height: 1.0.h),
                 // Thin divider between meals and water
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.w),
@@ -1940,7 +1940,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         .withValues(alpha: 0.25),
                   ),
                 ),
-                SizedBox(height: 1.2.h),
+                SizedBox(height: 1.0.h),
 
                 // Water progress
                 Builder(builder: (context) {
@@ -2210,7 +2210,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 }),
 
                 // Thin divider between activities and notes
-                SizedBox(height: 1.2.h),
+                SizedBox(height: 1.0.h),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Divider(
@@ -2222,7 +2222,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         .withValues(alpha: 0.25),
                   ),
                 ),
-                SizedBox(height: 1.2.h),
+                SizedBox(height: 1.0.h),
 
                 // Notes card (link to Notes screen)
                 Builder(builder: (context) {
@@ -2352,7 +2352,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 }),
 
                 // Body Metrics card (Valores corporais) — make it discoverable like YAZIO
-                SizedBox(height: 1.2.h),
+                SizedBox(height: 1.0.h),
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
                   double? _bmi(Map<String, dynamic> m) {
@@ -2465,7 +2465,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 }),
 
                 // Thin divider between water and activities
-                SizedBox(height: 1.2.h),
+                SizedBox(height: 1.0.h),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Divider(
