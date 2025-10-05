@@ -1,0 +1,280 @@
+{
+  "version": "0.1.0",
+  "namespace": "nutritracker.tools",
+  "tools": [
+    {
+      "name": "calcular_metas",
+      "description": "Calcula BMR/TDEE e metas de calorias/macros",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "sexo": {"type": "string", "enum": ["f", "m", "outro"]},
+          "idade": {"type": "number", "minimum": 10},
+          "peso_kg": {"type": "number", "minimum": 20},
+          "altura_cm": {"type": "number", "minimum": 100},
+          "bf_percent": {"type": "number", "minimum": 0, "maximum": 70},
+          "nivel_atividade": {"type": "string", "enum": ["sedentario", "leve", "moderado", "alto", "atleta"]},
+          "objetivo": {"type": "string", "enum": ["perda", "manutencao", "ganho"]},
+          "ritmo_semana": {"type": "number", "description": "kg/semana desejados (opcional)"}
+        },
+        "required": ["sexo", "idade", "peso_kg", "altura_cm", "nivel_atividade", "objetivo"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "bmr": {"type": "number"},
+          "tdee": {"type": "number"},
+          "kcal_meta": {"type": "number"},
+          "macros_g": {
+            "type": "object",
+            "properties": {
+              "proteina": {"type": "number"},
+              "carbo": {"type": "number"},
+              "gordura": {"type": "number"}
+            },
+            "required": ["proteina", "carbo", "gordura"]
+          }
+        },
+        "required": ["bmr", "tdee", "kcal_meta", "macros_g"]
+      }
+    },
+    {
+      "name": "planejar_jejum",
+      "description": "Gera janelas de jejum e lembretes",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "protocolo": {"type": "string", "enum": ["12:12", "14:10", "16:8", "18:6", "20:4", "omad"]},
+          "inicio_preferido": {"type": "string", "description": "HH:MM"},
+          "fuso": {"type": "string"},
+          "dias": {"type": "number", "default": 7}
+        },
+        "required": ["protocolo"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "janelas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "inicio": {"type": "string"},
+                "fim": {"type": "string"}
+              },
+              "required": ["inicio", "fim"]
+            }
+          },
+          "lembretes": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["janelas"]
+      }
+    },
+    {
+      "name": "buscar_alimento",
+      "description": "Pesquisa alimentos por nome ou barcode (fonte: TACO/USDA/OFF/local)",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string"},
+          "fonte": {"type": "string", "enum": ["taco", "usda", "open_food_facts", "local"], "default": "local"},
+          "top_k": {"type": "number", "default": 10}
+        },
+        "required": ["query"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "nome": {"type": "string"},
+                "barcode": {"type": "string"},
+                "porcao_padrao": {"type": "string"},
+                "nutricao_por_100g": {
+                  "type": "object",
+                  "properties": {
+                    "kcal": {"type": "number"},
+                    "proteina": {"type": "number"},
+                    "carbo": {"type": "number"},
+                    "gordura": {"type": "number"}
+                  },
+                  "required": ["kcal"]
+                }
+              },
+              "required": ["id", "nome"]
+            }
+          }
+        },
+        "required": ["itens"]
+      }
+    },
+    {
+      "name": "analisar_barcode",
+      "description": "Resolve barcode para item normalizado",
+      "input_schema": {
+        "type": "object",
+        "properties": {"barcode": {"type": "string"}},
+        "required": ["barcode"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "string"},
+              "nome": {"type": "string"},
+              "nutricao_por_porcao": {"type": "object"}
+            },
+            "required": ["id", "nome"]
+          }
+        },
+        "required": ["item"]
+      }
+    },
+    {
+      "name": "analisar_foto",
+      "description": "Detecta alimentos e porções em uma imagem",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "image_url": {"type": "string"},
+          "image_base64": {"type": "string"},
+          "refeicao_tipo": {"type": "string", "enum": ["cafe", "almoco", "jantar", "lanche"]}
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "candidatos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nome": {"type": "string"},
+                "porcao": {"type": "string"},
+                "confianca": {"type": "number"}
+              },
+              "required": ["nome"]
+            }
+          }
+        },
+        "required": ["candidatos"]
+      }
+    },
+    {
+      "name": "log_refeicao",
+      "description": "Registra refeição com itens e porções",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "refeicao_tipo": {"type": "string", "enum": ["cafe", "almoco", "jantar", "lanche"]},
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "nome": {"type": "string"},
+                "quantidade": {"type": "number"},
+                "unidade": {"type": "string"}
+              },
+              "required": ["nome", "quantidade", "unidade"]
+            }
+          },
+          "origem": {"type": "string", "enum": ["foto", "voz", "texto", "barcode", "sugestao"]},
+          "hora": {"type": "string"}
+        },
+        "required": ["refeicao_tipo", "itens"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "object",
+            "properties": {
+              "kcal": {"type": "number"},
+              "proteina": {"type": "number"},
+              "carbo": {"type": "number"},
+              "gordura": {"type": "number"}
+            },
+            "required": ["kcal"]
+          },
+          "itens": {"type": "array"}
+        },
+        "required": ["total"]
+      }
+    },
+    {
+      "name": "sugerir_refeicao",
+      "description": "Sugere refeições/receitas alinhadas a macros restantes e preferências",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "macros_restantes": {"type": "object"},
+          "restricoes": {"type": "array", "items": {"type": "string"}},
+          "preferencias": {"type": "array", "items": {"type": "string"}},
+          "tempo_preparo_min": {"type": "number"},
+          "equipamentos": {"type": "array", "items": {"type": "string"}}
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "sugestoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nome": {"type": "string"},
+                "kcal": {"type": "number"},
+                "macros_g": {"type": "object"},
+                "passos": {"type": "array", "items": {"type": "string"}}
+              },
+              "required": ["nome"]
+            }
+          }
+        },
+        "required": ["sugestoes"]
+      }
+    },
+    {
+      "name": "registrar_checkin",
+      "description": "Salva check-in de humor/fome/energia/adesão",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "humor": {"type": "string"},
+          "fome": {"type": "number", "minimum": 0, "maximum": 10},
+          "energia": {"type": "number", "minimum": 0, "maximum": 10},
+          "jejum_status": {"type": "string", "enum": ["ativo", "encerrado", "planejado"]}
+        }
+      },
+      "output_schema": {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]}
+    },
+    {
+      "name": "obter_estatisticas_usuario",
+      "description": "Resumo: progresso semanal, peso, adesão ao jejum, macros restantes do dia",
+      "input_schema": {"type": "object", "properties": {}},
+      "output_schema": {"type": "object", "properties": {"resumo": {"type": "object"}}, "required": ["resumo"]}
+    },
+    {
+      "name": "atualizar_preferencias",
+      "description": "Atualiza alergias/restrições/preferências do usuário",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "alergias": {"type": "array", "items": {"type": "string"}},
+          "restricoes": {"type": "array", "items": {"type": "string"}},
+          "preferencias": {"type": "array", "items": {"type": "string"}}
+        }
+      },
+      "output_schema": {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]}
+    }
+  ]
+}
+

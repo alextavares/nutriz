@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
+import 'package:nutritracker/l10n/generated/app_localizations.dart';
 
 class QuickActionsBottomSheetWidget extends StatelessWidget {
   final Map<String, dynamic> recipe;
@@ -19,9 +21,11 @@ class QuickActionsBottomSheetWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: colors.surfaceContainerHigh,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -33,7 +37,7 @@ class QuickActionsBottomSheetWidget extends StatelessWidget {
             width: 12.w,
             height: 0.5.h,
             decoration: BoxDecoration(
-              color: AppTheme.dividerGray,
+              color: colors.outlineVariant,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -58,8 +62,7 @@ class QuickActionsBottomSheetWidget extends StatelessWidget {
                     children: [
                       Text(
                         recipe['name'] as String,
-                        style:
-                            AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                        style: textStyles.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 2,
@@ -68,8 +71,8 @@ class QuickActionsBottomSheetWidget extends StatelessWidget {
                       SizedBox(height: 0.5.h),
                       Text(
                         '${recipe['prepTime']}min • ${recipe['calories']}cal',
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                        style: textStyles.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -80,27 +83,36 @@ class QuickActionsBottomSheetWidget extends StatelessWidget {
           ),
           // Action Items
           _buildActionItem(
+            context: context,
             icon: 'calendar_today',
-            title: 'Adicionar ao Plano de Refeições',
-            subtitle: 'Agendar esta receita para uma refeição',
+            title: AppLocalizations.of(context)?.qaAddToMealPlan ??
+                'Add to Meal Plan',
+            subtitle: AppLocalizations.of(context)?.qaScheduleThisRecipe ??
+                'Schedule this recipe for a meal',
             onTap: () {
               Navigator.pop(context);
               onAddToMealPlan();
             },
           ),
           _buildActionItem(
+            context: context,
             icon: 'share',
-            title: 'Compartilhar Receita',
-            subtitle: 'Enviar para amigos e família',
+            title:
+                AppLocalizations.of(context)?.qaShareRecipe ?? 'Share Recipe',
+            subtitle: AppLocalizations.of(context)?.qaShareWithFriends ??
+                'Share with friends and family',
             onTap: () {
               Navigator.pop(context);
               onShareRecipe();
             },
           ),
           _buildActionItem(
+            context: context,
             icon: 'restaurant',
-            title: 'Receitas Similares',
-            subtitle: 'Encontrar receitas parecidas',
+            title: AppLocalizations.of(context)?.qaSimilarRecipes ??
+                'Similar Recipes',
+            subtitle: AppLocalizations.of(context)?.qaFindSimilar ??
+                'Find similar recipes',
             onTap: () {
               Navigator.pop(context);
               onSimilarRecipes();
@@ -113,40 +125,43 @@ class QuickActionsBottomSheetWidget extends StatelessWidget {
   }
 
   Widget _buildActionItem({
+    required BuildContext context,
     required String icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return ListTile(
       onTap: onTap,
       leading: Container(
         padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(
-          color: AppTheme.activeBlue.withValues(alpha: 0.2),
+          color: colors.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
         ),
         child: CustomIconWidget(
           iconName: icon,
-          color: AppTheme.activeBlue,
+          color: colors.primary,
           size: 6.w,
         ),
       ),
       title: Text(
         title,
-        style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
+        style: textStyles.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-          color: AppTheme.textSecondary,
+        style: textStyles.bodySmall?.copyWith(
+          color: colors.onSurfaceVariant,
         ),
       ),
       trailing: CustomIconWidget(
         iconName: 'chevron_right',
-        color: AppTheme.textSecondary,
+        color: colors.onSurfaceVariant,
         size: 5.w,
       ),
       contentPadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),

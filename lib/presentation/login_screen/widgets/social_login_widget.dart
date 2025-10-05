@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class SocialLoginWidget extends StatelessWidget {
   final Function(String provider) onSocialLogin;
@@ -15,54 +16,51 @@ class SocialLoginWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = Theme.of(context).textTheme;
+    final borderRadius = BorderRadius.circular(2.w);
+    final borderColor = colors.outlineVariant.withValues(alpha: 0.5);
+    ButtonStyle buttonStyle() => OutlinedButton.styleFrom(
+          backgroundColor: colors.surfaceContainerHigh,
+          foregroundColor: colors.onSurface,
+          side: BorderSide(color: borderColor, width: 1),
+          shape: RoundedRectangleBorder(borderRadius: borderRadius),
+        );
+
     return Column(
       children: [
-        // Divider with "ou" text
         Row(
           children: [
             Expanded(
               child: Container(
                 height: 1,
-                color: AppTheme.dividerGray,
+                color: borderColor,
               ),
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               child: Text(
                 'ou',
-                style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
+                style: textStyles.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
                 ),
               ),
             ),
             Expanded(
               child: Container(
                 height: 1,
-                color: AppTheme.dividerGray,
+                color: borderColor,
               ),
             ),
           ],
         ),
-
         SizedBox(height: 3.h),
-
-        // Google Login Button
         SizedBox(
           width: double.infinity,
           height: 6.h,
           child: OutlinedButton(
             onPressed: isLoading ? null : () => onSocialLogin('google'),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: AppTheme.secondaryBackgroundDark,
-              foregroundColor: AppTheme.textPrimary,
-              side: BorderSide(
-                color: AppTheme.dividerGray.withValues(alpha: 0.5),
-                width: 1,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(2.w),
-              ),
-            ),
+            style: buttonStyle(),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -76,49 +74,38 @@ class SocialLoginWidget extends StatelessWidget {
                 SizedBox(width: 3.w),
                 Text(
                   'Continuar com Google',
-                  style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
+                  style: textStyles.labelLarge?.copyWith(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
+                    color: colors.onSurface,
                   ),
                 ),
               ],
             ),
           ),
         ),
-
         SizedBox(height: 2.h),
-
-        // Apple Login Button (iOS style)
         SizedBox(
           width: double.infinity,
           height: 6.h,
           child: OutlinedButton(
             onPressed: isLoading ? null : () => onSocialLogin('apple'),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: AppTheme.secondaryBackgroundDark,
-              foregroundColor: AppTheme.textPrimary,
-              side: BorderSide(
-                color: AppTheme.dividerGray.withValues(alpha: 0.5),
-                width: 1,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(2.w),
-              ),
-            ),
+            style: buttonStyle(),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CustomIconWidget(
                   iconName: 'apple',
-                  color: AppTheme.textPrimary,
+                  color: colors.onSurface,
                   size: 5.w,
                 ),
                 SizedBox(width: 3.w),
                 Text(
                   'Continuar com Apple',
-                  style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
+                  style: textStyles.labelLarge?.copyWith(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
+                    color: colors.onSurface,
                   ),
                 ),
               ],
@@ -128,4 +115,5 @@ class SocialLoginWidget extends StatelessWidget {
       ],
     );
   }
+
 }

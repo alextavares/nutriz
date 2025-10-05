@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
-import '../../../core/app_export.dart';
-import '../../../theme/app_theme.dart';
+import '../../../theme/design_tokens.dart';
 
 class ActionButtonWidget extends StatefulWidget {
   final VoidCallback onPressed;
@@ -47,6 +46,9 @@ class _ActionButtonWidgetState extends State<ActionButtonWidget>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = context.textStyles;
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
       child: Column(
@@ -70,8 +72,8 @@ class _ActionButtonWidgetState extends State<ActionButtonWidget>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppTheme.activeBlue,
-                          AppTheme.activeBlue.withValues(alpha: 0.8),
+                          colors.primary,
+                          colors.primary.withValues(alpha: 0.85),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -79,7 +81,7 @@ class _ActionButtonWidgetState extends State<ActionButtonWidget>
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.activeBlue.withValues(alpha: 0.3),
+                          color: colors.primary.withValues(alpha: 0.30),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -95,9 +97,8 @@ class _ActionButtonWidgetState extends State<ActionButtonWidget>
                         SizedBox(width: 3.w),
                         Text(
                           'Agora: Comer',
-                          style: AppTheme.darkTheme.textTheme.titleMedium
-                              ?.copyWith(
-                            color: AppTheme.textPrimary,
+                          style: textTheme.titleMedium?.copyWith(
+                            color: colors.onPrimary,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.5,
                           ),

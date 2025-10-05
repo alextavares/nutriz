@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class ImagePreviewWidget extends StatelessWidget {
   final File imageFile;
@@ -19,13 +20,15 @@ class ImagePreviewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       margin: EdgeInsets.all(4.w),
       child: Column(
         children: [
           // Image preview
           Container(
-            height: 50.h,
+            height: 37.5.h,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
@@ -62,23 +65,21 @@ class ImagePreviewWidget extends StatelessWidget {
                         children: [
                           CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              AppTheme.activeBlue,
+                              colors.primary,
                             ),
                           ),
                           SizedBox(height: 2.h),
                           Text(
                             'Analisando alimentos...',
-                            style: AppTheme.darkTheme.textTheme.bodyLarge
-                                ?.copyWith(
-                              color: AppTheme.textPrimary,
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: colors.onSurface,
                             ),
                           ),
                           SizedBox(height: 1.h),
                           Text(
                             'Aguarde alguns segundos',
-                            style: AppTheme.darkTheme.textTheme.bodySmall
-                                ?.copyWith(
-                              color: AppTheme.textSecondary,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colors.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -89,7 +90,7 @@ class ImagePreviewWidget extends StatelessWidget {
             ),
           ),
 
-          SizedBox(height: 3.h),
+          SizedBox(height: 2.h),
 
           // Controls
           Row(
@@ -100,13 +101,13 @@ class ImagePreviewWidget extends StatelessWidget {
                 onPressed: isAnalyzing ? null : onRetake,
                 icon: CustomIconWidget(
                   iconName: 'refresh',
-                  color: AppTheme.textPrimary,
+                  color: colors.onSurface,
                   size: 5.w,
                 ),
                 label: Text('Nova Foto'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.darkTheme.colorScheme.surface,
-                  foregroundColor: AppTheme.textPrimary,
+                  backgroundColor: colors.surfaceContainerHigh,
+                  foregroundColor: colors.onSurface,
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../theme/design_tokens.dart';
+import '../../services/user_preferences.dart';
+import 'package:nutritracker/l10n/generated/app_localizations.dart';
 import './widgets/empty_state_widget.dart';
 import './widgets/filter_bottom_sheet_widget.dart';
 import './widgets/filter_chip_widget.dart';
@@ -28,6 +31,8 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   bool _isLoading = false;
   // removed unused: _isRefreshing
   String _searchQuery = '';
+  bool _isPremiumUser = false;
+  late final VoidCallback _prefsListener;
 
   // Mock recipe data
   final List<Map<String, dynamic>> _mockRecipes = [
@@ -59,7 +64,8 @@ class _RecipeBrowserState extends State<RecipeBrowser>
       "prepTimeCategory": "15-30 min",
       "calorieCategory": "400-600 cal",
       "description":
-          "Salmão grelhado perfeitamente temperado com aspargos frescos."
+          "Salmão grelhado perfeitamente temperado com aspargos frescos.",
+      "isPremium": true,
     },
     {
       "id": 3,
@@ -103,7 +109,8 @@ class _RecipeBrowserState extends State<RecipeBrowser>
       "prepTimeCategory": "15-30 min",
       "calorieCategory": "200-400 cal",
       "description":
-          "Tacos deliciosos recheados com lentilhas temperadas e vegetais."
+          "Tacos deliciosos recheados com lentilhas temperadas e vegetais.",
+      "isPremium": true,
     },
     {
       "id": 6,
@@ -147,7 +154,8 @@ class _RecipeBrowserState extends State<RecipeBrowser>
       "prepTimeCategory": "30-60 min",
       "calorieCategory": "200-400 cal",
       "description":
-          "Lasanha saudável usando fatias de abobrinha no lugar da massa."
+          "Lasanha saudável usando fatias de abobrinha no lugar da massa.",
+      "isPremium": true,
     },
   ];
 
@@ -156,13 +164,27 @@ class _RecipeBrowserState extends State<RecipeBrowser>
     super.initState();
     _initializeRecipes();
     _searchController.addListener(_onSearchChanged);
+    _prefsListener = () => _loadPremiumStatus();
+    UserPreferences.changes.addListener(_prefsListener);
+    _loadPremiumStatus();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    UserPreferences.changes.removeListener(_prefsListener);
     super.dispose();
+  }
+
+  Future<void> _loadPremiumStatus() async {
+    final status = await UserPreferences.getPremiumStatus();
+    if (!mounted) return;
+    if (status != _isPremiumUser) {
+      setState(() => _isPremiumUser = status);
+      // Re-sort recipes so itens PRO aparecem ao final quando bloqueados
+      _applyFilters();
+    }
   }
 
   void _initializeRecipes() {
@@ -204,6 +226,13 @@ class _RecipeBrowserState extends State<RecipeBrowser>
       }
     });
 
+    filtered.sort((a, b) {
+      final bool aLocked = _isRecipeLocked(a);
+      final bool bLocked = _isRecipeLocked(b);
+      if (aLocked == bLocked) return 0;
+      return aLocked ? 1 : -1;
+    });
+
     setState(() {
       _filteredRecipes = filtered;
     });
@@ -239,6 +268,10 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   }
 
   void _toggleFavorite(Map<String, dynamic> recipe) {
+    if (_isRecipeLocked(recipe)) {
+      _showProUpgradeMessage('Favoritar receitas exclusivas');
+      return;
+    }
     setState(() {
       recipe['isFavorite'] = !(recipe['isFavorite'] as bool);
     });
@@ -251,8 +284,10 @@ class _RecipeBrowserState extends State<RecipeBrowser>
       SnackBar(
         content: Text(
           recipe['isFavorite']
-              ? 'Receita adicionada aos favoritos'
-              : 'Receita removida dos favoritos',
+              ? AppLocalizations.of(context)?.recipeAddedToFavorites ??
+                  'Recipe added to favorites'
+              : AppLocalizations.of(context)?.recipeRemovedFromFavorites ??
+                  'Recipe removed from favorites',
         ),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
@@ -261,10 +296,16 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   }
 
   void _onRecipeTap(Map<String, dynamic> recipe) {
+    if (_isRecipeLocked(recipe)) {
+      _showProUpgradeMessage('Receitas exclusivas');
+      return;
+    }
     // Navigate to recipe detail (placeholder)
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Abrindo receita: ${recipe['name']}'),
+        content: Text(AppLocalizations.of(context)
+                ?.openingRecipe(recipe['name'] as String) ??
+            'Opening recipe: ${recipe['name']}'),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
@@ -272,6 +313,13 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   }
 
   void _onRecipeLongPress(Map<String, dynamic> recipe) {
+    if (_isRecipeLocked(recipe)) {
+      _showProUpgradeMessage('Receitas exclusivas');
+      return;
+    }
+    if (!_ensurePremiumAccess('Ações rápidas de receita')) {
+      return;
+    }
     HapticFeedback.mediumImpact();
     _showQuickActionsBottomSheet(recipe);
   }
@@ -289,6 +337,9 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   }
 
   void _showQuickActionsBottomSheet(Map<String, dynamic> recipe) {
+    if (!_ensurePremiumAccess('Ações rápidas de receita')) {
+      return;
+    }
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -302,9 +353,14 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   }
 
   void _addToMealPlan(Map<String, dynamic> recipe) {
+    if (!_ensurePremiumAccess('Planejamento de refeições inteligente')) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${recipe['name']} adicionada ao plano de refeições'),
+        content: Text((AppLocalizations.of(context)
+                ?.addedToMealPlan(recipe['name'] as String) ??
+            '${recipe['name']} added to meal plan')),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
@@ -312,9 +368,14 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   }
 
   void _shareRecipe(Map<String, dynamic> recipe) {
+    if (!_ensurePremiumAccess('Compartilhar receitas exclusivas')) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Compartilhando receita: ${recipe['name']}'),
+        content: Text((AppLocalizations.of(context)
+                ?.sharingRecipe(recipe['name'] as String) ??
+            'Sharing recipe: ${recipe['name']}')),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
@@ -322,9 +383,14 @@ class _RecipeBrowserState extends State<RecipeBrowser>
   }
 
   void _findSimilarRecipes(Map<String, dynamic> recipe) {
+    if (!_ensurePremiumAccess('Sugestões avançadas')) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Buscando receitas similares a: ${recipe['name']}'),
+        content: Text((AppLocalizations.of(context)
+                ?.findingSimilar(recipe['name'] as String) ??
+            'Finding recipes similar to: ${recipe['name']}')),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
@@ -358,6 +424,96 @@ class _RecipeBrowserState extends State<RecipeBrowser>
     });
   }
 
+  bool _isRecipePremium(Map<String, dynamic> recipe) =>
+      (recipe['isPremium'] as bool?) ?? false;
+
+  bool _isRecipeLocked(Map<String, dynamic> recipe) =>
+      _isRecipePremium(recipe) && !_isPremiumUser;
+
+  void _openProPlans() {
+    Navigator.pushNamed(context, AppRoutes.proSubscription);
+  }
+
+  void _showProUpgradeMessage(String feature) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('$feature está disponível no NutriTracker PRO'),
+        action: SnackBarAction(
+          label: 'Ver planos',
+          onPressed: _openProPlans,
+        ),
+      ),
+    );
+  }
+
+  bool _ensurePremiumAccess(String feature) {
+    if (_isPremiumUser) {
+      return true;
+    }
+    _showProUpgradeMessage(feature);
+    return false;
+  }
+
+  Widget _buildProUpsellCard() {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textStyles = context.textStyles;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.6.h),
+      decoration: BoxDecoration(
+        color: semantics.premiumContainer,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: semantics.premium.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.workspace_premium_outlined,
+                  color: semantics.premium),
+              SizedBox(width: 2.w),
+              Text(
+                'Receitas PRO liberam mais opções',
+                style: textStyles.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: semantics.premium,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 0.8.h),
+          Text(
+            'Acesse coleções exclusivas, filtros avançados e sugestões automáticas de refeições completas.',
+            style: textStyles.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+          SizedBox(height: 1.2.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _openProPlans,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: semantics.premium,
+                foregroundColor: semantics.onPremium,
+                padding: EdgeInsets.symmetric(vertical: 1.2.h),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Ver benefícios PRO'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   bool get _hasActiveFilters {
     return _activeFilters.values.any((value) {
       if (value is List) return value.isNotEmpty;
@@ -387,16 +543,19 @@ class _RecipeBrowserState extends State<RecipeBrowser>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackgroundDark,
+      backgroundColor: colors.surface,
       appBar: AppBar(
         title: Text(
-          'Receitas',
-          style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
+          AppLocalizations.of(context)?.recipesTitle ?? 'Recipes',
+          style: textStyles.titleLarge?.copyWith(
+            color: colors.onSurface,
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: AppTheme.primaryBackgroundDark,
+        backgroundColor: colors.surface,
         elevation: 0,
         actions: [
           IconButton(
@@ -405,7 +564,7 @@ class _RecipeBrowserState extends State<RecipeBrowser>
             },
             icon: CustomIconWidget(
               iconName: 'favorite_border',
-              color: AppTheme.textSecondary,
+              color: colors.onSurfaceVariant,
               size: 6.w,
             ),
           ),
@@ -435,19 +594,31 @@ class _RecipeBrowserState extends State<RecipeBrowser>
             ),
           ],
 
+          if (!_isPremiumUser)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
+              child: _buildProUpsellCard(),
+            ),
+
           // Recipe Grid
           Expanded(
             child: _filteredRecipes.isEmpty && !_isLoading
                 ? EmptyStateWidget(
                     title: _hasActiveFilters || _searchQuery.isNotEmpty
-                        ? 'Nenhuma receita encontrada'
-                        : 'Carregando receitas...',
+                        ? (AppLocalizations.of(context)?.recipesEmptyFiltered ??
+                            'No recipes found')
+                        : (AppLocalizations.of(context)?.recipesLoadingTitle ??
+                            'Loading recipes...'),
                     subtitle: _hasActiveFilters || _searchQuery.isNotEmpty
-                        ? 'Tente ajustar seus filtros ou termo de busca'
-                        : 'Aguarde enquanto carregamos as melhores receitas para você',
+                        ? (AppLocalizations.of(context)?.recipesEmptySubtitle ??
+                            'Try adjusting your filters or search term')
+                        : (AppLocalizations.of(context)
+                                ?.recipesLoadingSubtitle ??
+                            'Please wait while we load the best recipes for you'),
                     actionText: _hasActiveFilters || _searchQuery.isNotEmpty
-                        ? 'Limpar Filtros'
-                        : 'Atualizar',
+                        ? (AppLocalizations.of(context)?.clearFilters ??
+                            'Clear filters')
+                        : (AppLocalizations.of(context)?.refresh ?? 'Refresh'),
                     onActionTap: _hasActiveFilters || _searchQuery.isNotEmpty
                         ? _clearAllFilters
                         : _onRefresh,
@@ -456,8 +627,8 @@ class _RecipeBrowserState extends State<RecipeBrowser>
                   )
                 : RefreshIndicator(
                     onRefresh: _onRefresh,
-                    color: AppTheme.activeBlue,
-                    backgroundColor: AppTheme.secondaryBackgroundDark,
+                    color: colors.primary,
+                    backgroundColor: colors.surfaceContainer,
                     child: RecipeGridWidget(
                       recipes: _filteredRecipes,
                       onRecipeTap: _onRecipeTap,
@@ -465,6 +636,9 @@ class _RecipeBrowserState extends State<RecipeBrowser>
                       onRecipeLongPress: _onRecipeLongPress,
                       isLoading: _isLoading,
                       onLoadMore: _loadMoreRecipes,
+                      isPremiumUser: _isPremiumUser,
+                      onUnlockPro: () =>
+                          _showProUpgradeMessage('Receitas exclusivas'),
                     ),
                   ),
           ),
@@ -473,3 +647,5 @@ class _RecipeBrowserState extends State<RecipeBrowser>
     );
   }
 }
+
+

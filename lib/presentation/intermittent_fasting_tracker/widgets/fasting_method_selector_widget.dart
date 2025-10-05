@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class FastingMethodSelectorWidget extends StatelessWidget {
   final String selectedMethod;
@@ -22,7 +23,7 @@ class FastingMethodSelectorWidget extends StatelessWidget {
         "subtitle": "16h jejum, 8h alimentação",
         "description": "Método mais popular para iniciantes",
         "icon": "schedule",
-        "color": AppTheme.activeBlue,
+        "color": context.colors.primary,
       },
       {
         "id": "18:6",
@@ -30,7 +31,7 @@ class FastingMethodSelectorWidget extends StatelessWidget {
         "subtitle": "18h jejum, 6h alimentação",
         "description": "Nível intermediário",
         "icon": "timer",
-        "color": AppTheme.warningAmber,
+        "color": context.semanticColors.warning,
       },
       {
         "id": "20:4",
@@ -38,7 +39,7 @@ class FastingMethodSelectorWidget extends StatelessWidget {
         "subtitle": "20h jejum, 4h alimentação",
         "description": "Nível avançado",
         "icon": "fitness_center",
-        "color": AppTheme.errorRed,
+        "color": context.colors.error,
       },
       {
         "id": "custom",
@@ -46,7 +47,7 @@ class FastingMethodSelectorWidget extends StatelessWidget {
         "subtitle": "Configure seu próprio",
         "description": "Defina horários específicos",
         "icon": "settings",
-        "color": AppTheme.premiumGold,
+        "color": context.semanticColors.premium,
       },
     ];
 
@@ -57,8 +58,8 @@ class FastingMethodSelectorWidget extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: Text(
             'Método de Jejum',
-            style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-              color: AppTheme.textPrimary,
+            style: context.textStyles.titleLarge?.copyWith(
+              color: context.colors.onSurface,
               fontSize: 18.sp,
               fontWeight: FontWeight.w600,
             ),
@@ -85,12 +86,12 @@ class FastingMethodSelectorWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? (method["color"] as Color).withValues(alpha: 0.2)
-                        : AppTheme.secondaryBackgroundDark,
+                        : context.colors.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
                           ? (method["color"] as Color)
-                          : AppTheme.dividerGray,
+                          : context.colors.outline,
                       width: isSelected ? 2 : 1,
                     ),
                   ),
@@ -104,7 +105,7 @@ class FastingMethodSelectorWidget extends StatelessWidget {
                             iconName: method["icon"] as String,
                             color: isSelected
                                 ? (method["color"] as Color)
-                                : AppTheme.textSecondary,
+                                : context.colors.onSurfaceVariant,
                             size: 20,
                           ),
                           const Spacer(),
@@ -119,11 +120,10 @@ class FastingMethodSelectorWidget extends StatelessWidget {
                       SizedBox(height: 1.h),
                       Text(
                         method["title"] as String,
-                        style:
-                            AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                        style: context.textStyles.titleMedium?.copyWith(
                           color: isSelected
                               ? (method["color"] as Color)
-                              : AppTheme.textPrimary,
+                              : context.colors.onSurface,
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                         ),
@@ -131,8 +131,8 @@ class FastingMethodSelectorWidget extends StatelessWidget {
                       SizedBox(height: 0.5.h),
                       Text(
                         method["subtitle"] as String,
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: context.colors.onSurfaceVariant,
                           fontSize: 10.sp,
                         ),
                         maxLines: 1,
@@ -142,10 +142,9 @@ class FastingMethodSelectorWidget extends StatelessWidget {
                       Expanded(
                         child: Text(
                           method["description"] as String,
-                          style:
-                              AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                            color:
-                                AppTheme.textSecondary.withValues(alpha: 0.8),
+                          style: context.textStyles.bodySmall?.copyWith(
+                            color: context.colors.onSurfaceVariant
+                                .withValues(alpha: 0.8),
                             fontSize: 9.sp,
                           ),
                           maxLines: 3,

@@ -1,0 +1,88 @@
+
+<!doctype html>
+<meta charset="utf-8" />
+<title>Flow Comparison</title>
+<style>
+ body { background:#111; color:#eee; font-family: system-ui, sans-serif; }
+ h2 { margin: 12px 0; }
+ .wrap { max-width: 1100px; margin: 24px auto; }
+ .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+ .card { background:#1a1a1a; padding: 12px 16px; border-radius: 8px; }
+ table { width: 100%; border-collapse: collapse; }
+ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #333; }
+ small { color:#aaa; }
+ code { background:#222; padding:2px 4px; border-radius:4px; }
+ a { color:#9cf; }
+ ul { margin:6px 0 0 18px; }
+</style>
+<div class="wrap">
+  <h2>Flow Comparison</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>A</h3>
+      <p><small>data/yazio_flow/flow.json</small></p>
+      <p>Nodes: <b>3</b> · Edges: <b>3</b></p>
+      <h4>Top Actions</h4>
+      <table>
+        <tr><th>Label</th><th>Count</th></tr>
+        
+      </table>
+    </div>
+    <div class="card">
+      <h3>B</h3>
+      <p><small>data/nutritracker_flow/flow.json</small></p>
+      <p>Nodes: <b>19</b> · Edges: <b>23</b></p>
+      <h4>Top Actions</h4>
+      <table>
+        <tr><th>Label</th><th>Count</th></tr>
+        <tr><td>não</td><td>2</td></tr>
+<tr><td>sim</td><td>2</td></tr>
+<tr><td>continuar com google</td><td>1</td></tr>
+<tr><td>apple continuar com apple</td><td>1</td></tr>
+<tr><td>se sim, não perguntar novamente</td><td>1</td></tr>
+<tr><td>com.google.android.apps.nexuslauncher:id/base_template_card_</td><td>1</td></tr>
+<tr><td>allow</td><td>1</td></tr>
+<tr><td>don’t allow</td><td>1</td></tr>
+<tr><td>com.android.permissioncontroller:id/grant_singleton</td><td>1</td></tr>
+<tr><td>fri, sep 5</td><td>1</td></tr>
+<tr><td>show calendar list and settings drawer</td><td>1</td></tr>
+<tr><td>september</td><td>1</td></tr>
+<tr><td>search</td><td>1</td></tr>
+<tr><td>play store</td><td>1</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:16px;">
+    <div class="card">
+      <h3>Overlap</h3>
+      <p>Common action labels (<b>0</b>):</p>
+      <ul></ul>
+    </div>
+    <div class="card">
+      <h3>Unique</h3>
+      <div class="grid">
+        <div>
+          <h4>Only in A</h4>
+          <ul></ul>
+        </div>
+        <div>
+          <h4>Only in B</h4>
+          <ul><li>allow</li>
+<li>apple continuar com apple</li>
+<li>com.android.permissioncontroller:id/grant_singleton</li>
+<li>com.google.android.apps.nexuslauncher:id/base_template_card_</li>
+<li>continuar com google</li>
+<li>don’t allow</li>
+<li>fri, sep 5</li>
+<li>não</li>
+<li>play store</li>
+<li>se sim, não perguntar novamente</li>
+<li>search</li>
+<li>september</li>
+<li>show calendar list and settings drawer</li>
+<li>sim</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

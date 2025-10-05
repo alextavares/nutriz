@@ -1,0 +1,27 @@
+digraph flow {
+  rankdir=LR;
+  node [shape=rectangle, style=rounded, fontsize=10];
+  "d3d93452f45e" [label="d3d934"];
+  "78e14a67ffdc" [label="78e14a"];
+  "ed26bf93b21e" [label="ed26bf"];
+  "83f69bf89293" [label="83f69b"];
+  "a1f83a7a09ec" [label="a1f83a"];
+  "0086c7bfe2cf" [label="0086c7"];
+  "12f404114151" [label="12f404"];
+  "295fcd052131" [label="295fcd"];
+  "b994f0fe318d" [label="b994f0"];
+  "d3d93452f45e" -> "d3d93452f45e" [label="If YES, never ask again"];
+  "d3d93452f45e" -> "78e14a67ffdc" [label="NO"];
+  "78e14a67ffdc" -> "78e14a67ffdc" [label="NO"];
+  "78e14a67ffdc" -> "78e14a67ffdc" [label="YES"];
+  "d3d93452f45e" -> "ed26bf93b21e" [label="YES"];
+  "ed26bf93b21e" -> "83f69bf89293" [label="YAZIO"];
+  "ed26bf93b21e" -> "a1f83a7a09ec" [label="Phone"];
+  "a1f83a7a09ec" -> "a1f83a7a09ec" [label="achievement_screen.button.share"];
+  "a1f83a7a09ec" -> "0086c7bfe2cf" [label=""];
+  "a1f83a7a09ec" -> "12f404114151" [label="shared_element.button.next_button"];
+  "ed26bf93b21e" -> "295fcd052131" [label="Messages"];
+  "295fcd052131" -> "295fcd052131" [label="com.android.vending:id/0_resource_name_o"];
+  "295fcd052131" -> "295fcd052131" [label="com.android.vending:id/0_resource_name_o"];
+  "295fcd052131" -> "b994f0fe318d" [label="R$89.90/year"];
+}

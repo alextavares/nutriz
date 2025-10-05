@@ -10,6 +10,8 @@ import 'package:nutritracker/util/upload_stub.dart'
     if (dart.library.html) 'package:nutritracker/util/upload_web.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../theme/app_theme.dart';
+import '../../core/app_export.dart';
+import 'package:nutritracker/l10n/generated/app_localizations.dart';
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
 import '../../routes/app_routes.dart';
@@ -88,12 +90,18 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
         decoration: BoxDecoration(
           color: isNew
-              ? AppTheme.activeBlue.withValues(alpha: 0.08)
+              ? Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withValues(alpha: 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isNew
-                ? AppTheme.activeBlue.withValues(alpha: 0.6)
+                ? Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.6)
                 : Colors.transparent,
           ),
         ),
@@ -103,7 +111,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
             Expanded(
               child: Text(
                 e['name'] as String? ?? '-',
-                style: AppTheme.darkTheme.textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
             ),
             if (isNew)
@@ -111,24 +119,31 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 margin: EdgeInsets.only(right: 2.w),
                 padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.4.h),
                 decoration: BoxDecoration(
-                  color: AppTheme.activeBlue.withValues(alpha: 0.15),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: AppTheme.activeBlue.withValues(alpha: 0.6)),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.6),
+                  ),
                 ),
                 child: Text(
-                  'novo',
-                  style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.activeBlue,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  AppLocalizations.of(context)?.achievementsNewBadge ?? 'New',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
             Text(
               '${e['calories']} kcal',
-              style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.activeBlue,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
             ),
           ],
         ),
@@ -259,14 +274,15 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     final avgFats = (_weeklyFats.fold<int>(0, (a, b) => a + b) / 7).round();
 
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Progresso semanal'),
+        title: Text(AppLocalizations.of(context)?.weeklyProgressTitle ?? 'Weekly Progress'),
         actions: [
           IconButton(
-            icon: Icon(Icons.more_vert, color: AppTheme.textPrimary),
+            icon: Icon(Icons.more_vert,
+                color: Theme.of(context).colorScheme.onSurface),
             onPressed: _openWeekActionsMenu,
-            tooltip: 'Menu',
+            tooltip: AppLocalizations.of(context)?.menu ?? 'Menu',
           ),
           PopupMenuButton<String>(
             onSelected: (v) async {
@@ -289,33 +305,33 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                  value: 'export_csv', child: Text('Export CSV')),
+              PopupMenuItem(
+                  value: 'export_csv', child: Text(AppLocalizations.of(context)?.exportCsv ?? 'Export CSV')),
               if (kIsWeb)
-                const PopupMenuItem(
-                    value: 'download_csv', child: Text('Download CSV')),
-              const PopupMenuItem(
-                  value: 'import_csv', child: Text('Import CSV')),
+                PopupMenuItem(
+                    value: 'download_csv', child: Text(AppLocalizations.of(context)?.downloadCsv ?? 'Download CSV')),
+              PopupMenuItem(
+                  value: 'import_csv', child: Text(AppLocalizations.of(context)?.importCsv ?? 'Import CSV')),
               const PopupMenuDivider(),
-              const PopupMenuItem(
+              PopupMenuItem(
                   value: 'save_week_tpl',
-                  child: Text('Salvar semana como template')),
-              const PopupMenuItem(
+                  child: Text(AppLocalizations.of(context)?.saveWeekAsTemplate ?? 'Save week as template')),
+              PopupMenuItem(
                   value: 'apply_week_tpl',
-                  child: Text('Aplicar template de semana')),
-              const PopupMenuItem(
+                  child: Text(AppLocalizations.of(context)?.applyWeekTemplate ?? 'Apply week template')),
+              PopupMenuItem(
                   value: 'duplicate_week',
-                  child: Text('Duplicar semana → próxima')),
-              const PopupMenuItem(
+                  child: Text(AppLocalizations.of(context)?.duplicateWeekNext ?? 'Duplicate week → next')),
+              PopupMenuItem(
                   value: 'duplicate_week_to',
-                  child: Text('Duplicar semana → escolher data')),
+                  child: Text(AppLocalizations.of(context)?.duplicateWeekPickDate ?? 'Duplicate week → pick date')),
               if (kIsWeb)
                 PopupMenuItem(
                   value: 'install_pwa',
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Instalar app'),
+                      Text(AppLocalizations.of(context)?.installApp ?? 'Install app'),
                       FutureBuilder<bool>(
                         future: _canInstallPwa(),
                         builder: (context, snap) {
@@ -324,8 +340,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             ok ? Icons.check_circle : Icons.hourglass_bottom,
                             size: 16,
                             color: ok
-                                ? AppTheme.successGreen
-                                : AppTheme.textSecondary,
+                                ? context.semanticColors.success
+                                : Theme.of(context).colorScheme.onSurfaceVariant,
                           );
                         },
                       ),
@@ -348,16 +364,15 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                     IconButton(
                       onPressed: () => _changeWeek(-1),
                       icon: const Icon(Icons.chevron_left),
-                      color: AppTheme.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     Expanded(
                       child: Text(
                         _weekRangeLabel(),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
-                        style:
-                            AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                          color: AppTheme.textPrimary,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -365,7 +380,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                     IconButton(
                       onPressed: () => _changeWeek(1),
                       icon: const Icon(Icons.chevron_right),
-                      color: AppTheme.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ],
                 ),
@@ -375,21 +390,25 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 // Summary cards
                 Row(
                   children: [
-                    _summaryCard('Calorias (semana)', '$totalCalWeek kcal',
-                        AppTheme.activeBlue),
-                    SizedBox(width: 3.w),
                     _summaryCard(
-                        'Média diária', '$avgCal kcal', AppTheme.successGreen),
+                        'Calorias (semana)',
+                        '$totalCalWeek kcal',
+                        Theme.of(context).colorScheme.primary),
+                    SizedBox(width: 3.w),
+                    _summaryCard('Média diária', '$avgCal kcal',
+                        context.semanticColors.success),
                   ],
                 ),
                 SizedBox(height: 1.5.h),
                 Row(
                   children: [
                     _summaryCard('Água (semana)', '${totalWaterWeek} ml',
-                        AppTheme.activeBlue),
+                        Theme.of(context).colorScheme.primary),
                     SizedBox(width: 3.w),
-                    _summaryCard('Exercício (semana)',
-                        '${totalExerciseWeek} kcal', AppTheme.warningAmber),
+                    _summaryCard(
+                        'Exercício (semana)',
+                        '${totalExerciseWeek} kcal',
+                        context.semanticColors.warning),
                   ],
                 ),
 
@@ -399,18 +418,20 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Calorias por dia',
-                        style: AppTheme.darkTheme.textTheme.titleMedium
+                    Text(AppLocalizations.of(context)?.caloriesPerDay ?? 'Calories per day',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
                             ?.copyWith(
-                                color: AppTheme.textPrimary,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.w600)),
                     if (_weeklyHasNew.any((e) => e))
                       Text(
-                        '${_weeklyHasNew.where((e) => e).length} dia(s) com itens novos',
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.activeBlue,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        AppLocalizations.of(context)?.daysWithNew(_weeklyHasNew.where((e) => e).length) ?? '${_weeklyHasNew.where((e) => e).length} day(s) with new items',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                   ],
                 ),
@@ -418,7 +439,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 _bars(
                   _weeklyCalories,
                   _dailyCalorieGoal,
-                  AppTheme.activeBlue,
+                  Theme.of(context).colorScheme.primary,
                   highlightMode: 'over',
                   mark: _weeklyHasNew,
                 ),
@@ -426,67 +447,104 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 SizedBox(height: 3.h),
 
                 // Per-meal averages section
-                Text('Médias por refeição (kcal/dia)',
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                    AppLocalizations.of(context)?.perMealAverages ??
+                        'Per-meal averages (kcal/day)',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600)),
                 SizedBox(height: 1.h),
                 _perMealAverages(),
 
                 SizedBox(height: 3.h),
 
                 // Macros averages
-                Text('Médias semanais de macros',
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                    AppLocalizations.of(context)?.weeklyMacroAverages ??
+                        'Weekly macro averages',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600)),
                 SizedBox(height: 1.h),
                 Wrap(
                   spacing: 3.w,
                   runSpacing: 1.h,
                   children: [
-                    _summaryCard('Carboidratos (média)', '${avgCarbs} g',
-                        AppTheme.warningAmber),
-                    _summaryCard('Proteínas (média)', '${avgProteins} g',
-                        AppTheme.successGreen),
-                    _summaryCard('Gorduras (média)', '${avgFats} g',
-                        AppTheme.activeBlue),
+                    _summaryCard(
+                        AppLocalizations.of(context)?.carbsAvg ??
+                            'Carbs (avg)',
+                        '${avgCarbs} g',
+                        context.semanticColors.warning),
+                    _summaryCard(
+                        AppLocalizations.of(context)?.proteinAvg ??
+                            'Protein (avg)',
+                        '${avgProteins} g',
+                        context.semanticColors.success),
+                    _summaryCard(
+                        AppLocalizations.of(context)?.fatAvg ?? 'Fat (avg)',
+                        '${avgFats} g',
+                        Theme.of(context).colorScheme.primary),
                   ],
                 ),
 
                 SizedBox(height: 3.h),
 
                 // Water bars
-                Text('Água por dia',
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600)),
+                Text(AppLocalizations.of(context)?.waterPerDay ?? 'Water per day',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600)),
                 SizedBox(height: 1.h),
                 _bars(
                   _weeklyWater,
                   _waterGoalMl,
-                  AppTheme.activeBlue.withValues(alpha: 0.6),
+                  Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.6),
                   highlightMode: 'under',
                 ),
 
                 SizedBox(height: 3.h),
 
                 // Exercise bars
-                Text('Exercício por dia',
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                    AppLocalizations.of(context)?.exercisePerDay ??
+                        'Exercise per day',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600)),
                 SizedBox(height: 1.h),
-                _bars(_weeklyExercise, 0, AppTheme.warningAmber,
+                _bars(_weeklyExercise, 0, context.semanticColors.warning,
                     highlightMode: 'none'),
 
                 SizedBox(height: 3.h),
 
                 // Daily summary table
-                Text('Resumo diário',
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600)),
+                Text(AppLocalizations.of(context)?.dailySummary ?? 'Daily summary',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600)),
                 SizedBox(height: 1.h),
                 _dailySummaryTable(),
               ],
@@ -500,7 +558,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
   void _openWeekActionsMenu() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.secondaryBackgroundDark,
+      // Use themed elevated surface for sheet background
+      backgroundColor:
+          Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -517,15 +577,16 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                     width: 12.w,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppTheme.dividerGray,
+                      color: Theme.of(context).colorScheme.outline,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
                 SizedBox(height: 2.h),
-                Text('Ações da semana',
-                    style: AppTheme.darkTheme.textTheme.titleLarge
-                        ?.copyWith(color: AppTheme.textPrimary)),
+                Text(
+                    AppLocalizations.of(context)?.weekActions ?? 'Week actions',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface)),
                 SizedBox(height: 1.5.h),
                 _sheetAction('Export CSV', Icons.upload_outlined, () async {
                   Navigator.pop(context);
@@ -573,10 +634,15 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
 
   Widget _sheetAction(String label, IconData icon, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.textPrimary),
-      title: Text(label,
-          style: AppTheme.darkTheme.textTheme.bodyMedium
-              ?.copyWith(color: AppTheme.textPrimary)),
+      leading:
+          Icon(icon, color: Theme.of(context).colorScheme.onSurface),
+      title: Text(
+        label,
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+      ),
       onTap: onTap,
     );
   }
@@ -591,8 +657,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('CSV da semana copiado/compartilhado'),
-        backgroundColor: AppTheme.successGreen,
+        content: Text(AppLocalizations.of(context)?.weekCsvCopied ?? 'Week CSV copied/shared'),
+        backgroundColor: context.semanticColors.success,
       ),
     );
   }
@@ -624,22 +690,26 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
+        backgroundColor:
+            Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
         title: Text(
-          'Nome do arquivo',
-          style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-            color: AppTheme.textPrimary,
-          ),
+          AppLocalizations.of(context)?.fileName ?? 'File name',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
         ),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'arquivo.csv'),
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)?.fileHint ?? 'file.csv',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -673,10 +743,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
+        backgroundColor:
+            Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
         title: Text('Importar CSV da semana',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface)),
         content: SizedBox(
           width: 700,
           child: Column(
@@ -712,8 +783,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -724,8 +796,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               await _loadWeek();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Importado ${imported} dia(s) desta semana'),
-                  backgroundColor: AppTheme.successGreen,
+                  content:
+                      Text('Importado ${imported} dia(s) desta semana'),
+                  backgroundColor: context.semanticColors.success,
                 ),
               );
             },
@@ -809,20 +882,22 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       child: Container(
         padding: EdgeInsets.all(3.w),
         decoration: BoxDecoration(
-          color: AppTheme.secondaryBackgroundDark,
+          color: Theme.of(context).cardTheme.color ??
+              Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.dividerGray),
+          border:
+              Border.all(color: Theme.of(context).colorScheme.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-                style: AppTheme.darkTheme.textTheme.bodySmall
-                    ?.copyWith(color: AppTheme.textSecondary)),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             SizedBox(height: 0.5.h),
             Text(value,
-                style: AppTheme.darkTheme.textTheme.titleMedium
-                    ?.copyWith(color: color, fontWeight: FontWeight.w700)),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: color, fontWeight: FontWeight.w700)),
           ],
         ),
       ),
@@ -837,7 +912,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 2.w),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: Theme.of(context).cardTheme.color ??
+            Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -852,7 +928,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               : highlightMode == 'under'
                   ? under
                   : false;
-          final barColor = highlight ? AppTheme.errorRed : color;
+          final barColor =
+              highlight ? Theme.of(context).colorScheme.error : color;
           final isMarked = mark != null && mark.length > i && mark[i];
           final double delay = (_kBarStaggerFrac * i).clamp(0.0, 0.5);
           return Expanded(
@@ -893,9 +970,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   children: [
                     Text(
                       labels[i],
-                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
                     ),
                     if (isMarked) ...[
                       SizedBox(width: 1.w),
@@ -903,7 +982,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                         width: 6,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: AppTheme.activeBlue,
+                          color: Theme.of(context).colorScheme.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -922,13 +1001,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     Color colorFor(String meal) {
       switch (meal) {
         case 'breakfast':
-          return AppTheme.warningAmber;
+          return context.semanticColors.warning;
         case 'lunch':
-          return AppTheme.successGreen;
+          return context.semanticColors.success;
         case 'dinner':
-          return AppTheme.activeBlue;
+          return Theme.of(context).colorScheme.primary;
         default:
-          return AppTheme.premiumGold;
+          return context.semanticColors.premium;
       }
     }
 
@@ -938,23 +1017,25 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       final ratio = goal <= 0 ? 0.0 : (avg / goal).clamp(0.0, 1.0);
       final baseColor = colorFor(key);
       final over = goal > 0 && avg > goal;
-      final color = over ? AppTheme.errorRed : baseColor;
+      final color = over ? Theme.of(context).colorScheme.error : baseColor;
       final double delay = (_kBarStaggerFrac * index).clamp(0.0, 0.5);
       return Expanded(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 1.w),
           padding: EdgeInsets.all(3.w),
           decoration: BoxDecoration(
-            color: AppTheme.secondaryBackgroundDark,
+            color: Theme.of(context).cardTheme.color ??
+                Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.dividerGray),
+            border: Border.all(
+                color: Theme.of(context).colorScheme.outline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style: AppTheme.darkTheme.textTheme.bodySmall
-                      ?.copyWith(color: AppTheme.textSecondary)),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
               SizedBox(height: 0.4.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -968,10 +1049,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                       if (avg <= 0) {
                         return Text(
                           goal > 0 ? '0/$goal kcal' : '0 kcal',
-                          style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w700,
+                              ),
                         );
                       }
                       final p = (v / avg).clamp(0.0, 1.0);
@@ -980,10 +1064,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                       final shown = (avg * eased).toInt();
                       return Text(
                         goal > 0 ? '$shown/$goal kcal' : '$shown kcal',
-                        style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                          color: color,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w700,
+                            ),
                       );
                     },
                   ),
@@ -991,15 +1078,21 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.errorRed.withValues(alpha: 0.15),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .error
+                            .withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: AppTheme.errorRed.withValues(alpha: 0.6)),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .error
+                                .withValues(alpha: 0.6)),
                       ),
                       child: Text(
-                        'Excedeu',
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.errorRed,
+                        AppLocalizations.of(context)?.overGoal ?? 'Over goal',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -1019,7 +1112,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                       return LinearProgressIndicator(
                         value: 0,
                         minHeight: 8,
-                        backgroundColor: AppTheme.dividerGray,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
                         color: color,
                       );
                     }
@@ -1029,7 +1124,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                     return LinearProgressIndicator(
                       value: eased * ratio,
                       minHeight: 8,
-                      backgroundColor: AppTheme.dividerGray,
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
                       color: color,
                     );
                   },
@@ -1041,27 +1138,39 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       );
     }
 
+    
+    final t = AppLocalizations.of(context);
     return Row(
       children: [
-        item('Café', 'breakfast', 0),
-        item('Almoço', 'lunch', 1),
-        item('Jantar', 'dinner', 2),
-        item('Lanche', 'snack', 3),
+        item(t?.mealBreakfast ?? 'Breakfast', 'breakfast', 0),
+        item(t?.mealLunch ?? 'Lunch', 'lunch', 1),
+        item(t?.mealDinner ?? 'Dinner', 'dinner', 2),
+        item(t?.mealSnack ?? 'Snack', 'snack', 3),
       ],
     );
+            
   }
 
   Widget _dailySummaryTable() {
     String two(int v) => v.toString().padLeft(2, '0');
     final int weekday = _anchorDate.weekday;
     final DateTime monday = _anchorDate.subtract(Duration(days: (weekday - 1)));
-    final labels = ['Data', 'Kcal', 'Água', 'Exerc.', 'Carb', 'Prot', 'Gord'];
+    final labels = [
+      AppLocalizations.of(context)?.hdrDate ?? 'Date',
+      'Kcal',
+      AppLocalizations.of(context)?.hdrWater ?? 'Water',
+      AppLocalizations.of(context)?.hdrExercise ?? 'Exer.',
+      AppLocalizations.of(context)?.hdrCarb ?? 'Carb',
+      AppLocalizations.of(context)?.hdrProt ?? 'Prot',
+      AppLocalizations.of(context)?.hdrFat ?? 'Fat',
+    ];
     return Container(
       padding: EdgeInsets.all(3.w),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: Theme.of(context).cardTheme.color ??
+            Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.dividerGray),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Column(
         children: [
@@ -1073,10 +1182,12 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 Expanded(
                   child: Text(
                     h,
-                    style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                 ),
             ],
@@ -1100,8 +1211,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           final d = monday.add(Duration(days: i));
                           return '${two(d.day)}/${two(d.month)}';
                         }(),
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textPrimary,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -1109,35 +1220,35 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                       child: Text(
                         (_weeklyCalories.length > i ? _weeklyCalories[i] : 0)
                             .toString(),
-                        style: AppTheme.darkTheme.textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                     Expanded(
                       child: Text(
                         ((_weeklyWater.length > i ? _weeklyWater[i] : 0))
                             .toString(),
-                        style: AppTheme.darkTheme.textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                     Expanded(
                       child: Text(
                         ((_weeklyExercise.length > i ? _weeklyExercise[i] : 0))
                             .toString(),
-                        style: AppTheme.darkTheme.textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                     Expanded(
                       child: Text(
                         ((_weeklyCarbs.length > i ? _weeklyCarbs[i] : 0))
                             .toString(),
-                        style: AppTheme.darkTheme.textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                     Expanded(
                       child: Text(
                         ((_weeklyProteins.length > i ? _weeklyProteins[i] : 0))
                             .toString(),
-                        style: AppTheme.darkTheme.textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                     Expanded(
@@ -1166,7 +1277,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.secondaryBackgroundDark,
+      backgroundColor:
+          Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1182,7 +1294,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   width: 12.w,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.dividerGray,
+                    color: Theme.of(context).colorScheme.outline,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1190,17 +1302,17 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               SizedBox(height: 2.h),
               Text(
                 'Registros de ${day.day}/${day.month}',
-                style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                  color: AppTheme.textPrimary,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               SizedBox(height: 0.8.h),
               Text(
                 'Total: $totalKcal kcal | Água: ${waterMl} ml | Exercício: ${exKcal} kcal',
-                style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.activeBlue,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
               SizedBox(height: 1.5.h),
               FutureBuilder<int>(
@@ -1224,11 +1336,14 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                 return Row(
                                   children: [
                                     Text('Somente novos',
-                                        style: AppTheme
-                                            .darkTheme.textTheme.bodySmall
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
                                             ?.copyWith(
-                                          color: AppTheme.textSecondary,
-                                        )),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            )),
                                     SizedBox(width: 1.w),
                                     Switch(
                                       value: showOnlyNew,
@@ -1236,7 +1351,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                         showOnlyNew = v;
                                         setStateFilter(() {});
                                       },
-                                      activeColor: AppTheme.activeBlue,
+                                      activeColor:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                   ],
                                 );
@@ -1266,7 +1382,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                       );
                     },
                     child: Text('Ver dia',
-                        style: TextStyle(color: AppTheme.activeBlue)),
+                        style: TextStyle(
+                            color:
+                                Theme.of(context).colorScheme.primary)),
                   ),
                   Wrap(
                     spacing: 8,
@@ -1280,7 +1398,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             SnackBar(
                               content:
                                   Text('Água ajustada: -250ml (total ${ml}ml)'),
-                              backgroundColor: AppTheme.warningAmber,
+                              backgroundColor: context.semanticColors.warning,
                             ),
                           );
                           await _loadWeek();
@@ -1297,7 +1415,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             SnackBar(
                               content: Text(
                                   'Água registrada: +250ml (total ${ml}ml)'),
-                              backgroundColor: AppTheme.successGreen,
+                              backgroundColor: context.semanticColors.success,
                             ),
                           );
                           await _loadWeek();
@@ -1313,7 +1431,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             SnackBar(
                               content:
                                   const Text('Exercício registrado: +100 kcal'),
-                              backgroundColor: AppTheme.successGreen,
+                              backgroundColor: context.semanticColors.success,
                             ),
                           );
                           await _loadWeek();
@@ -1328,7 +1446,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text('Template de dia salvo'),
-                                backgroundColor: AppTheme.successGreen,
+                                backgroundColor: context.semanticColors.success,
                               ),
                             );
                           }
@@ -1348,7 +1466,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                               SnackBar(
                                 content: const Text(
                                     'Nenhum item "novo" para duplicar'),
-                                backgroundColor: AppTheme.warningAmber,
+                                backgroundColor: context.semanticColors.warning,
                               ),
                             );
                             return;
@@ -1368,12 +1486,19 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           final proceed = await showDialog<bool>(
                             context: context,
                             builder: (_) => AlertDialog(
-                              backgroundColor: AppTheme.secondaryBackgroundDark,
+                              backgroundColor: Theme.of(context)
+                                      .dialogTheme
+                                      .backgroundColor ??
+                                  Theme.of(context).colorScheme.surface,
                               title: Text('Selecionar itens para duplicar',
-                                  style: AppTheme.darkTheme.textTheme.titleLarge
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
                                       ?.copyWith(
-                                    color: AppTheme.textPrimary,
-                                  )),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      )),
                               content: SizedBox(
                                 width: 600,
                                 child: StatefulBuilder(
@@ -1391,8 +1516,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                                 onChanged: (v) => setStateSel(
                                                     () => selected[i] =
                                                         v ?? true),
-                                                activeColor:
-                                                    AppTheme.activeBlue,
+                                                activeColor: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
                                               ),
                                               Expanded(
                                                 child: Column(
@@ -1403,21 +1529,27 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                                       (newEntries[i]['name']
                                                               as String?) ??
                                                           '-',
-                                                      style: AppTheme.darkTheme
-                                                          .textTheme.bodyMedium
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyMedium
                                                           ?.copyWith(
-                                                        color: AppTheme
-                                                            .textPrimary,
-                                                      ),
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .onSurface,
+                                                          ),
                                                     ),
                                                     Text(
                                                       '${newEntries[i]['calories']} kcal',
-                                                      style: AppTheme.darkTheme
-                                                          .textTheme.bodySmall
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
                                                           ?.copyWith(
-                                                        color: AppTheme
-                                                            .textSecondary,
-                                                      ),
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .onSurfaceVariant,
+                                                          ),
                                                     ),
                                                   ],
                                                 ),
@@ -1444,9 +1576,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.pop(context, false),
-                                  child: Text('Cancelar',
+                                  child: Text(
+                                      AppLocalizations.of(context)?.cancel ??
+                                          'Cancel',
                                       style: TextStyle(
-                                          color: AppTheme.textSecondary)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant)),
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(context, true),
@@ -1503,7 +1639,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             SnackBar(
                               content: Text(
                                   'Duplicados ${dup} item(ns) para ${picked.day}/${picked.month}'),
-                              backgroundColor: AppTheme.successGreen,
+                              backgroundColor: context.semanticColors.success,
                             ),
                           );
                         },
@@ -1517,8 +1653,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Template aplicado ao dia'),
-                              backgroundColor: AppTheme.successGreen,
+                              content: Text(AppLocalizations.of(context)?.templateApplied ?? 'Template applied to day'),
+                              backgroundColor: context.semanticColors.success,
                             ),
                           );
                         },
@@ -1536,11 +1672,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             SnackBar(
                               content: Text(
                                   'Dia duplicado para ${to.day}/${to.month}'),
-                              backgroundColor: AppTheme.successGreen,
+                              backgroundColor: context.semanticColors.success,
                             ),
                           );
                         },
-                        child: const Text('Duplicar → amanhã'),
+                        child: Text(AppLocalizations.of(context)?.duplicateTomorrow ?? 'Duplicate → tomorrow'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -1554,7 +1690,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             SnackBar(
                               content: Text(
                                   'Dia duplicado para ${picked.day}/${picked.month}'),
-                              backgroundColor: AppTheme.successGreen,
+                              backgroundColor: context.semanticColors.success,
                             ),
                           );
                         },
@@ -1568,21 +1704,34 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           await showDialog(
                             context: context,
                             builder: (_) => AlertDialog(
-                              backgroundColor: AppTheme.secondaryBackgroundDark,
-                              title: Text('Nome do arquivo',
-                                  style: AppTheme.darkTheme.textTheme.titleLarge
-                                      ?.copyWith(color: AppTheme.textPrimary)),
+                              backgroundColor: Theme.of(context)
+                                      .dialogTheme
+                                      .backgroundColor ??
+                                  Theme.of(context).colorScheme.surface,
+                              title: Text(AppLocalizations.of(context)?.fileName ?? 'File name',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                               content: TextField(
                                 controller: controller,
-                                decoration: const InputDecoration(
-                                    hintText: 'arquivo.csv'),
+                                decoration: InputDecoration(
+                                  hintText: AppLocalizations.of(context)?.fileHint ?? 'file.csv',
+                                ),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancelar',
+                                  child: Text(
+                                      AppLocalizations.of(context)?.cancel ??
+                                          'Cancel',
                                       style: TextStyle(
-                                          color: AppTheme.textSecondary)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant)),
                                 ),
                                 ElevatedButton(
                                   onPressed: () async {
@@ -1605,7 +1754,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                         content: Text(kIsWeb
                                             ? 'CSV do dia baixado'
                                             : 'CSV do dia copiado'),
-                                        backgroundColor: AppTheme.successGreen,
+                                        backgroundColor:
+                                            context.semanticColors.success,
                                       ),
                                     );
                                   },
@@ -1624,10 +1774,18 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           await showDialog(
                             context: context,
                             builder: (_) => AlertDialog(
-                              backgroundColor: AppTheme.secondaryBackgroundDark,
+                              backgroundColor: Theme.of(context)
+                                      .dialogTheme
+                                      .backgroundColor ??
+                                  Theme.of(context).colorScheme.surface,
                               title: Text('Importar CSV do dia',
-                                  style: AppTheme.darkTheme.textTheme.titleLarge
-                                      ?.copyWith(color: AppTheme.textPrimary)),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                               content: SizedBox(
                                 width: 700,
                                 child: Column(
@@ -1641,14 +1799,18 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                             () => clearBefore = v ?? false),
                                         title: Text(
                                             'Limpar dia antes de importar',
-                                            style: AppTheme
-                                                .darkTheme.textTheme.bodyMedium
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
                                                 ?.copyWith(
-                                                    color:
-                                                        AppTheme.textPrimary)),
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface)),
                                         controlAffinity:
                                             ListTileControlAffinity.leading,
-                                        activeColor: AppTheme.activeBlue,
+                                        activeColor: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       );
                                     }),
                                     TextField(
@@ -1683,9 +1845,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancelar',
+                                  child: Text(
+                                      AppLocalizations.of(context)?.cancel ??
+                                          'Cancel',
                                       style: TextStyle(
-                                          color: AppTheme.textSecondary)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant)),
                                 ),
                                 ElevatedButton(
                                   onPressed: () async {
@@ -1700,7 +1866,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                       SnackBar(
                                         content: Text(
                                             'Importado ${n} item(ns) para o dia'),
-                                        backgroundColor: AppTheme.successGreen,
+                                        backgroundColor:
+                                            context.semanticColors.success,
                                       ),
                                     );
                                   },
@@ -1729,10 +1896,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
+        backgroundColor:
+            Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
         title: Text('Salvar dia como template',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface)),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(hintText: 'Nome do template'),
@@ -1740,8 +1908,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1752,7 +1921,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 Navigator.pop(context, true);
               }
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)?.save ?? 'Save'),
           ),
         ],
       ),
@@ -1767,7 +1936,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Nenhum template de dia salvo'),
-          backgroundColor: AppTheme.warningAmber,
+          backgroundColor: context.semanticColors.warning,
         ),
       );
       return;
@@ -1776,10 +1945,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
+        backgroundColor:
+            Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
         title: Text('Aplicar template de dia',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface)),
         content: SizedBox(
           width: 500,
           child: Column(
@@ -1790,23 +1960,24 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   value: clearBefore,
                   onChanged: (v) => setState(() => clearBefore = v ?? false),
                   title: Text('Limpar dia antes de aplicar',
-                      style: AppTheme.darkTheme.textTheme.bodyMedium
-                          ?.copyWith(color: AppTheme.textPrimary)),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface)),
                   controlAffinity: ListTileControlAffinity.leading,
-                  activeColor: AppTheme.activeBlue,
+                  activeColor: Theme.of(context).colorScheme.primary,
                 );
               }),
               for (final t in templates)
                 ListTile(
                   title: Text(
                     (t['label'] as String?) ?? 'sem nome',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium
-                        ?.copyWith(color: AppTheme.textPrimary),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface),
                   ),
                   subtitle: Text(
                     (t['createdAt'] as String?) ?? '',
-                    style: AppTheme.darkTheme.textTheme.bodySmall
-                        ?.copyWith(color: AppTheme.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   onTap: () async {
                     if (clearBefore) {
@@ -1821,7 +1992,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   },
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
-                    color: AppTheme.errorRed,
+                    color: Theme.of(context).colorScheme.error,
                     onPressed: () async {
                       await NutritionStorage.removeDayTemplate(t['id']);
                       if (!mounted) return;
@@ -1836,8 +2007,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:
-                Text('Fechar', style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text('Fechar',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
         ],
       ),
@@ -1854,7 +2026,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Semana duplicada para a próxima'),
-        backgroundColor: AppTheme.successGreen,
+        backgroundColor: context.semanticColors.success,
       ),
     );
   }
@@ -1864,10 +2036,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
+        backgroundColor:
+            Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
         title: Text('Salvar semana como template',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface)),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(hintText: 'Nome do template'),
@@ -1875,8 +2048,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1894,11 +2068,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Template de semana salvo'),
-                  backgroundColor: AppTheme.successGreen,
+                  backgroundColor: context.semanticColors.success,
                 ),
               );
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)?.save ?? 'Save'),
           ),
         ],
       ),
@@ -1912,7 +2086,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Nenhum template de semana salvo'),
-          backgroundColor: AppTheme.warningAmber,
+          backgroundColor: context.semanticColors.warning,
         ),
       );
       return;
@@ -1921,10 +2095,11 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
+        backgroundColor:
+            Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
         title: Text('Aplicar template de semana',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface)),
         content: SizedBox(
           width: 520,
           child: Column(
@@ -1935,23 +2110,23 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   value: clearBefore,
                   onChanged: (v) => setState(() => clearBefore = v ?? false),
                   title: Text('Limpar semana antes de aplicar',
-                      style: AppTheme.darkTheme.textTheme.bodyMedium
-                          ?.copyWith(color: AppTheme.textPrimary)),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface)),
                   controlAffinity: ListTileControlAffinity.leading,
-                  activeColor: AppTheme.activeBlue,
+                  activeColor: Theme.of(context).colorScheme.primary,
                 );
               }),
               for (final t in templates)
                 ListTile(
                   title: Text(
                     (t['label'] as String?) ?? 'sem nome',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium
-                        ?.copyWith(color: AppTheme.textPrimary),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface),
                   ),
                   subtitle: Text(
                     (t['createdAt'] as String?) ?? '',
-                    style: AppTheme.darkTheme.textTheme.bodySmall
-                        ?.copyWith(color: AppTheme.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   onTap: () async {
                     final int weekday = _anchorDate.weekday;
@@ -1970,13 +2145,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text('Template de semana aplicado'),
-                        backgroundColor: AppTheme.successGreen,
+                        backgroundColor: context.semanticColors.success,
                       ),
                     );
                   },
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
-                    color: AppTheme.errorRed,
+                    color: Theme.of(context).colorScheme.error,
                     onPressed: () async {
                       await NutritionStorage.removeWeekTemplate(t['id']);
                       if (!mounted) return;
@@ -1991,8 +2166,9 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:
-                Text('Fechar', style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text('Fechar',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
         ],
       ),
@@ -2013,7 +2189,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       SnackBar(
         content: Text(
             'Semana duplicada para iniciar em ${toMonday.day}/${toMonday.month}'),
-        backgroundColor: AppTheme.successGreen,
+        backgroundColor: context.semanticColors.success,
       ),
     );
   }
@@ -2027,7 +2203,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: Theme.of(context).colorScheme.copyWith(
-                primary: AppTheme.activeBlue,
+                primary: Theme.of(context).colorScheme.primary,
               ),
         ),
         child: child!,
@@ -2075,7 +2251,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         SnackBar(
           content: const Text(
               'Para instalar: Use o menu do navegador → "Instalar aplicativo"'),
-          backgroundColor: AppTheme.warningAmber,
+          backgroundColor: context.semanticColors.warning,
         ),
       );
     }

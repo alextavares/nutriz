@@ -1,0 +1,61 @@
+
+<!doctype html>
+<meta charset="utf-8" />
+<title>Flow Graph</title>
+<style>
+  body { background:#111; color:#eee; font-family: system-ui, sans-serif; }
+  #graph { text-align:center; margin: 24px; }
+  .wrap { max-width: 1200px; margin: auto; }
+  pre { background:#222; padding:12px; white-space:pre-wrap; }
+  a { color:#9cf; }
+  .meta { color:#bbb; font-size:12px; }
+  svg { background:#1a1a1a; border-radius: 8px; }
+}</style>
+<div class="wrap">
+  <h2>Flow Graph</h2>
+  <div id="graph">Rendering…</div>
+  <details>
+    <summary>DOT source</summary>
+    <pre id="dot"></pre>
+  </details>
+  <p class="meta">Rendered with Viz.js · Save this file and open in a browser.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/viz.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/full.render.js"></script>
+<script>
+const dot = `digraph flow {
+  rankdir=LR;
+  node [shape=rectangle, style=rounded, fontsize=10];
+  "d3d93452f45e" [label="d3d934"];
+  "78e14a67ffdc" [label="78e14a"];
+  "ed26bf93b21e" [label="ed26bf"];
+  "83f69bf89293" [label="83f69b"];
+  "a1f83a7a09ec" [label="a1f83a"];
+  "0086c7bfe2cf" [label="0086c7"];
+  "12f404114151" [label="12f404"];
+  "295fcd052131" [label="295fcd"];
+  "b994f0fe318d" [label="b994f0"];
+  "d3d93452f45e" -> "d3d93452f45e" [label="If YES, never ask again"];
+  "d3d93452f45e" -> "78e14a67ffdc" [label="NO"];
+  "78e14a67ffdc" -> "78e14a67ffdc" [label="NO"];
+  "78e14a67ffdc" -> "78e14a67ffdc" [label="YES"];
+  "d3d93452f45e" -> "ed26bf93b21e" [label="YES"];
+  "ed26bf93b21e" -> "83f69bf89293" [label="YAZIO"];
+  "ed26bf93b21e" -> "a1f83a7a09ec" [label="Phone"];
+  "a1f83a7a09ec" -> "a1f83a7a09ec" [label="achievement_screen.button.share"];
+  "a1f83a7a09ec" -> "0086c7bfe2cf" [label=""];
+  "a1f83a7a09ec" -> "12f404114151" [label="shared_element.button.next_button"];
+  "ed26bf93b21e" -> "295fcd052131" [label="Messages"];
+  "295fcd052131" -> "295fcd052131" [label="com.android.vending:id/0_resource_name_obfuscated"];
+  "295fcd052131" -> "295fcd052131" [label="com.android.vending:id/0_resource_name_obfuscated"];
+  "295fcd052131" -> "b994f0fe318d" [label="R$89.90/year"];
+}`;
+document.getElementById('dot').textContent = dot;
+const viz = new Viz();
+viz.renderSVGElement(dot).then(svg => {
+  document.getElementById('graph').innerHTML='';
+  document.getElementById('graph').appendChild(svg);
+}).catch(err => {
+  document.getElementById('graph').textContent = 'Error rendering graph: ' + err;
+});
+</script>

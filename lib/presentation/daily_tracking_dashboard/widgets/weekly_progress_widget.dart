@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class WeeklyProgressWidget extends StatelessWidget {
   final int currentWeek;
@@ -25,22 +26,24 @@ class WeeklyProgressWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.4.h),
       padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2), width: 1),
+        border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Progresso Semanal',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: cs.onSurface,
+            style: textStyles.titleMedium?.copyWith(
+              color: colors.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -53,12 +56,12 @@ class WeeklyProgressWidget extends StatelessWidget {
                 child: Container(
                   padding: EdgeInsets.all(2.w),
                   decoration: BoxDecoration(
-                    color: cs.surface,
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: CustomIconWidget(
                     iconName: 'arrow_back_ios',
-                    color: cs.onSurfaceVariant,
+                    color: colors.onSurfaceVariant,
                     size: 16,
                   ),
                 ),
@@ -66,14 +69,15 @@ class WeeklyProgressWidget extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
                 decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.1),
+                  color: colors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: cs.primary.withValues(alpha: 0.3), width: 1),
+                  border: Border.all(
+                      color: colors.primary.withValues(alpha: 0.3), width: 1),
                 ),
                 child: Text(
                   'Semana $currentWeek',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: cs.primary,
+                  style: textStyles.titleMedium?.copyWith(
+                    color: colors.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -83,12 +87,12 @@ class WeeklyProgressWidget extends StatelessWidget {
                 child: Container(
                   padding: EdgeInsets.all(2.w),
                   decoration: BoxDecoration(
-                    color: cs.surface,
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: CustomIconWidget(
                     iconName: 'arrow_forward_ios',
-                    color: cs.onSurfaceVariant,
+                    color: colors.onSurfaceVariant,
                     size: 16,
                   ),
                 ),
@@ -110,6 +114,8 @@ class WeeklyProgressWidget extends StatelessWidget {
         [dailyGoal, ...weeklyCalories].reduce((a, b) => a > b ? a : b);
     final goalRatio = maxVal == 0 ? 0.0 : (dailyGoal / maxVal).clamp(0.0, 1.0);
     final double barHeight = 8.h;
+    final colors = context.colors;
+    final textStyles = context.textStyles;
 
     return Column(
       children: [
@@ -125,7 +131,8 @@ class WeeklyProgressWidget extends StatelessWidget {
                   right: 0,
                   child: Container(
                     height: 1,
-                    color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.6),
+                    color:
+                        colors.outlineVariant.withValues(alpha: 0.6),
                   ),
                 ),
               Align(
@@ -150,8 +157,8 @@ class WeeklyProgressWidget extends StatelessWidget {
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                               colors: [
-                                Theme.of(context).colorScheme.primary.withValues(alpha: 0.45),
-                                Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                                colors.primary.withValues(alpha: 0.45),
+                                colors.primary.withValues(alpha: 0.2),
                               ],
                             ),
                             boxShadow: const [],
@@ -172,8 +179,8 @@ class WeeklyProgressWidget extends StatelessWidget {
               child: Center(
                 child: Text(
                   labels[i],
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  style: textStyles.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -188,6 +195,8 @@ class WeeklyProgressWidget extends StatelessWidget {
     final labels = const ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
     final int cap = waterGoalMl <= 0 ? 2000 : waterGoalMl;
     final double barHeight = 6.h;
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Column(
       children: [
         SizedBox(
@@ -213,8 +222,8 @@ class WeeklyProgressWidget extends StatelessWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
-                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.16),
+                            colors.primary.withValues(alpha: 0.4),
+                            colors.primary.withValues(alpha: 0.16),
                           ],
                         ),
                         boxShadow: const [],
@@ -233,8 +242,8 @@ class WeeklyProgressWidget extends StatelessWidget {
               child: Center(
                 child: Text(
                   labels[i],
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  style: textStyles.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
                     fontSize: 11,
                   ),
                 ),

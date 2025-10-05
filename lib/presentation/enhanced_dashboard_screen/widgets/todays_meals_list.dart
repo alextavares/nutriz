@@ -6,10 +6,14 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 class TodaysMealsList extends StatelessWidget {
   final List<Map<String, dynamic>> meals;
+  final void Function(Map<String, dynamic> meal)? onDelete;
+  final void Function(Map<String, dynamic> meal)? onTap;
 
   const TodaysMealsList({
     super.key,
     required this.meals,
+    this.onDelete,
+    this.onTap,
   });
 
   @override
@@ -25,8 +29,38 @@ class TodaysMealsList extends StatelessWidget {
       separatorBuilder: (context, index) => SizedBox(height: 2.h),
       itemBuilder: (context, index) {
         final meal = meals[index];
-        return _buildMealCard(context, meal);
+        final child = _buildMealCard(context, meal);
+        if (onDelete != null) {
+          final keyVal = ValueKey('meal_${meal['id'] ?? index}') ;
+          return Dismissible(
+            key: keyVal,
+            direction: DismissDirection.endToStart,
+            background: _deleteBg(),
+            onDismissed: (_) => onDelete?.call(meal),
+            child: InkWell(onTap: () => onTap?.call(meal), child: child),
+          );
+        }
+        return InkWell(onTap: () => onTap?.call(meal), child: child);
       },
+    );
+  }
+
+  Widget _deleteBg() {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Icon(Icons.delete_outline, color: Colors.red),
+          SizedBox(width: 2.w),
+          Text('Excluir', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 

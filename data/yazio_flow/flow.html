@@ -1,0 +1,44 @@
+
+<!doctype html>
+<meta charset="utf-8" />
+<title>Flow Graph</title>
+<style>
+  body { background:#111; color:#eee; font-family: system-ui, sans-serif; }
+  #graph { text-align:center; margin: 24px; }
+  .wrap { max-width: 1200px; margin: auto; }
+  pre { background:#222; padding:12px; white-space:pre-wrap; }
+  a { color:#9cf; }
+  .meta { color:#bbb; font-size:12px; }
+  svg { background:#1a1a1a; border-radius: 8px; }
+}</style>
+<div class="wrap">
+  <h2>Flow Graph</h2>
+  <div id="graph">Rendering…</div>
+  <details>
+    <summary>DOT source</summary>
+    <pre id="dot"></pre>
+  </details>
+  <p class="meta">Rendered with Viz.js · Save this file and open in a browser.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/viz.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/full.render.js"></script>
+<script>
+const dot = `digraph flow {
+  rankdir=LR;
+  node [shape=rectangle, style=rounded, fontsize=10];
+  "b57521b06ecb" [label="b57521"];
+  "af70c5daee7a" [label="af70c5"];
+  "3b497a739b23" [label="3b497a"];
+  "b57521b06ecb" -> "af70c5daee7a" [label=""];
+  "af70c5daee7a" -> "40cf49d93360" [label=""];
+  "3b497a739b23" -> "af70c5daee7a" [label=""];
+}`;
+document.getElementById('dot').textContent = dot;
+const viz = new Viz();
+viz.renderSVGElement(dot).then(svg => {
+  document.getElementById('graph').innerHTML='';
+  document.getElementById('graph').appendChild(svg);
+}).catch(err => {
+  document.getElementById('graph').textContent = 'Error rendering graph: ' + err;
+});
+</script>

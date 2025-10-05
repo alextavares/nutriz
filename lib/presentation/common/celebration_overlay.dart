@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import '../../services/user_preferences.dart';
+import '../../theme/design_tokens.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:lottie/lottie.dart';
 
@@ -11,7 +12,8 @@ enum CelebrationVariant { goal, milestone, achievement }
 
 class CelebrationOverlay extends StatefulWidget {
   final Duration duration;
-  const CelebrationOverlay({super.key, this.duration = const Duration(milliseconds: 1200)});
+  const CelebrationOverlay(
+      {super.key, this.duration = const Duration(milliseconds: 1200)});
 
   static OverlayEntry? _activeEntry;
   static Timer? _activeTimer;
@@ -40,9 +42,9 @@ class CelebrationOverlay extends StatefulWidget {
     _activeEntry = null;
   }
 
-  static Future<void> show(BuildContext context, {Duration duration = const Duration(milliseconds: 1200)}) async {
+  static Future<void> show(BuildContext context,
+      {Duration duration = const Duration(milliseconds: 1200)}) async {
     final overlay = Overlay.of(context);
-    if (overlay == null) return;
     final entry = OverlayEntry(
       builder: (_) => CelebrationOverlay(duration: duration),
     );
@@ -89,13 +91,15 @@ class CelebrationOverlay extends StatefulWidget {
   State<CelebrationOverlay> createState() => _CelebrationOverlayState();
 }
 
-class _CelebrationOverlayState extends State<CelebrationOverlay> with SingleTickerProviderStateMixin {
+class _CelebrationOverlayState extends State<CelebrationOverlay>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: widget.duration)..forward();
+    _ctrl = AnimationController(vsync: this, duration: widget.duration)
+      ..forward();
     // Auto dispose after
     Timer(widget.duration, () {
       if (mounted) setState(() {});
@@ -121,11 +125,15 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> with SingleTick
             return _LottieCelebration(duration: widget.duration);
           }
           // Lightweight confetti painter fallback
+          final palette = _confettiPalette(context);
           return AnimatedBuilder(
             animation: _ctrl,
             builder: (context, _) {
               return CustomPaint(
-                painter: _ConfettiPainter(progress: _ctrl.value),
+                painter: _ConfettiPainter(
+                  progress: _ctrl.value,
+                  palette: palette,
+                ),
                 child: Container(color: Colors.transparent),
               );
             },
@@ -176,6 +184,7 @@ class _LottieCelebrationState extends State<_LottieCelebration>
     _ctrl.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     // Wrap in SizedBox.expand to cover area; IgnorePointer handled by parent
@@ -194,10 +203,14 @@ class _LottieCelebrationState extends State<_LottieCelebration>
               repeat: false,
               // If Lottie fails to parse/load, gracefully fall back to confetti
               errorBuilder: (context, error, stackTrace) {
+                final palette = _confettiPalette(context);
                 return AnimatedBuilder(
                   animation: _ctrl,
                   builder: (context, _) => CustomPaint(
-                    painter: _ConfettiPainter(progress: _ctrl.value),
+                    painter: _ConfettiPainter(
+                      progress: _ctrl.value,
+                      palette: palette,
+                    ),
                     child: const SizedBox.expand(),
                   ),
                 );
@@ -220,8 +233,8 @@ class _LottieCelebrationState extends State<_LottieCelebration>
 
 class _ConfettiPainter extends CustomPainter {
   final double progress; // 0..1
-  final Random _rng = Random();
-  _ConfettiPainter({required this.progress});
+  final List<Color> palette;
+  _ConfettiPainter({required this.progress, required this.palette});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -231,30 +244,39 @@ class _ConfettiPainter extends CustomPainter {
       final t = progress;
       final baseX = (seed % size.width).toDouble();
       final baseY = (seed % 40).toDouble();
-      final fall = Curves.easeOut.transform(t) * (size.height * 0.7 + (seed % 60));
+      final fall =
+          Curves.easeOut.transform(t) * (size.height * 0.7 + (seed % 60));
       final dx = sin((seed % 360) * pi / 180 + t * 8.0) * 12.0;
       final pos = Offset(baseX + dx, baseY + fall);
       final paint = Paint()
         ..style = PaintingStyle.fill
-        ..color = _palette[seed % _palette.length].withOpacity(1 - t * 0.2);
+        ..color = palette[seed % palette.length].withValues(alpha: 1 - t * 0.2);
       final w = 6.0 + (seed % 6);
       final h = 4.0 + (seed % 4);
       canvas.save();
       canvas.translate(pos.dx, pos.dy);
       canvas.rotate((seed % 360) * pi / 180 + t * 6.0);
-      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(-w / 2, -h / 2, w, h), const Radius.circular(2)), paint);
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              Rect.fromLTWH(-w / 2, -h / 2, w, h), const Radius.circular(2)),
+          paint);
       canvas.restore();
     }
   }
 
-  static const List<Color> _palette = <Color>[
-    Color(0xFF2D81E0), // AppTheme.activeBlue
-    Color(0xFF27AE60), // AppTheme.successGreen
-    Color(0xFFF2994A), // AppTheme.warningAmber
-    Color(0xFFFFD54F), // AppTheme.premiumGold
-    Color(0xFF2D81E0), // AppTheme.activeBlue (repeat)
-  ];
-
   @override
-  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) => oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+List<Color> _confettiPalette(BuildContext context) {
+  final colors = context.colors;
+  final semantic = context.semanticColors;
+  return <Color>[
+    colors.primary,
+    semantic.success,
+    semantic.warning,
+    semantic.premium,
+    colors.secondary,
+  ];
 }

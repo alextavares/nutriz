@@ -15,7 +15,8 @@
     <application
             android:label="nutritracker"
             android:name="${applicationName}"
-            android:icon="@mipmap/ic_launcher">
+            android:icon="@mipmap/ic_launcher"
+            android:usesCleartextTraffic="true">
         <meta-data
                 android:name="com.google.firebase.messaging.default_notification_channel_id"
                 android:value="hydration_channel" />
@@ -27,7 +28,6 @@
                 android:theme="@style/LaunchTheme"
                 android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
                 android:hardwareAccelerated="true"
-                android:usesCleartextTraffic="true"
                 android:windowSoftInputMode="adjustResize"
                 android:enableOnBackInvokedCallback="true">
             <!-- Specifies an Android theme to apply to this Activity as soon as

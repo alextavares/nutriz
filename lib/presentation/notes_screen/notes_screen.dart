@@ -493,7 +493,7 @@ class _NoteEditorState extends State<_NoteEditor> {
                     'title': t,
                     'content': c,
                     'emoji': emoji,
-                    'color': color?.value,
+                    'color': color?.toARGB32(),
                     'tags': tags,
                     'attachments': attachments,
                   };
@@ -513,18 +513,16 @@ class _NoteEditorState extends State<_NoteEditor> {
                 ),
               ),
             )
-          ],
+],
         ),
       ),
     );
   }
-}
 
-extension on _NoteEditorState {
   Future<void> _pickImages() async {
     try {
       final ImagePicker picker = ImagePicker();
-      final List<XFile> files = await picker.pickMultiImage(imageQuality: 90) ?? [];
+      final List<XFile> files = await picker.pickMultiImage(imageQuality: 90);
       if (files.isEmpty) return;
       final dir = await getApplicationDocumentsDirectory();
       final notesDir = Directory('${dir.path}/notes');
@@ -555,3 +553,9 @@ extension on _NoteEditorState {
     } catch (_) {}
   }
 }
+
+
+
+
+
+

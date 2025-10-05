@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_export.dart';
+import 'package:nutritracker/l10n/generated/app_localizations.dart';
 import '../../services/nutrition_storage.dart';
 import '../daily_tracking_dashboard/daily_tracking_dashboard.dart';
 import '../enhanced_dashboard_screen/enhanced_dashboard_screen.dart';
@@ -27,7 +28,7 @@ class _RootShellState extends State<RootShell> {
             ? const EnhancedDashboardScreen()
             : const DailyTrackingDashboard(),
         const FoodLoggingScreen(),
-        const SizedBox.shrink(), // slot central para ação de adicionar
+        const SizedBox.shrink(), // center slot for add action
         const ProgressOverviewScreen(),
         const ProfileScreen(),
       ];
@@ -76,7 +77,7 @@ class _RootShellState extends State<RootShell> {
 
   void _onItemTapped(int index) async {
     if (index == 2) {
-      // Ação central: abrir bottom sheet de adicionar
+      // Central action: open add bottom sheet
       _showAddSheet();
       return;
     }
@@ -86,7 +87,8 @@ class _RootShellState extends State<RootShell> {
   void _showAddSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.secondaryBackgroundDark,
+      backgroundColor:
+          Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -99,7 +101,7 @@ class _RootShellState extends State<RootShell> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.search),
-                  title: const Text('Adicionar alimento'),
+                  title: Text(AppLocalizations.of(context)?.addSheetAddFood ?? 'Add food'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0); // ir para Diário
@@ -109,7 +111,7 @@ class _RootShellState extends State<RootShell> {
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.free_breakfast_outlined),
-                  title: const Text('Adicionar ao Café da manhã'),
+                  title: Text(AppLocalizations.of(context)?.addSheetAddBreakfast ?? 'Add to Breakfast'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     // Garanta que, ao voltar, o tab visível não seja o slot vazio (index 2)
@@ -125,7 +127,7 @@ class _RootShellState extends State<RootShell> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.lunch_dining_outlined),
-                  title: const Text('Adicionar ao Almoço'),
+                  title: Text(AppLocalizations.of(context)?.addSheetAddLunch ?? 'Add to Lunch'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
@@ -140,7 +142,7 @@ class _RootShellState extends State<RootShell> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.dinner_dining_outlined),
-                  title: const Text('Adicionar ao Jantar'),
+                  title: Text(AppLocalizations.of(context)?.addSheetAddDinner ?? 'Add to Dinner'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
@@ -155,7 +157,7 @@ class _RootShellState extends State<RootShell> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.emoji_food_beverage_outlined),
-                  title: const Text('Adicionar aos Lanches'),
+                  title: Text(AppLocalizations.of(context)?.addSheetAddSnacks ?? 'Add to Snacks'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
@@ -170,14 +172,14 @@ class _RootShellState extends State<RootShell> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.local_drink_outlined),
-                  title: const Text('Adicionar água (+250 ml)'),
+                  title: Text(AppLocalizations.of(context)?.addSheetAddWater250 ?? 'Add water (+250 ml)'),
                   onTap: () async {
                     Navigator.of(ctx).pop();
                     await NutritionStorage.addWaterMl(_selectedDate.value, 250);
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Adicionado 250 ml de água'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)?.addSheetAddedWater250 ?? 'Added 250 ml of water'),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -186,14 +188,14 @@ class _RootShellState extends State<RootShell> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.local_drink),
-                  title: const Text('Adicionar água (+500 ml)'),
+                  title: Text(AppLocalizations.of(context)?.addSheetAddWater500 ?? 'Add water (+500 ml)'),
                   onTap: () async {
                     Navigator.of(ctx).pop();
                     await NutritionStorage.addWaterMl(_selectedDate.value, 500);
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Adicionado 500 ml de água'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context)?.addSheetAddedWater500 ?? 'Added 500 ml of water'),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -202,7 +204,7 @@ class _RootShellState extends State<RootShell> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.qr_code_scanner),
-                  title: const Text('Scanner/AI de alimento'),
+                  title: Text(AppLocalizations.of(context)?.addSheetFoodScanner ?? 'Food Scanner/AI'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
@@ -210,8 +212,17 @@ class _RootShellState extends State<RootShell> {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.smart_toy_outlined),
+                  title: const Text('Coach de IA'),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    setState(() => _currentIndex = 0);
+                    Navigator.of(context).pushNamed(AppRoutes.aiCoachChat);
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.menu_book_outlined),
-                  title: const Text('Explorar receitas'),
+                  title: Text(AppLocalizations.of(context)?.addSheetExploreRecipes ?? 'Explore recipes'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
@@ -220,7 +231,7 @@ class _RootShellState extends State<RootShell> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.timer_outlined),
-                  title: const Text('Jejum intermitente'),
+                  title: Text(AppLocalizations.of(context)?.addSheetIntermittentFasting ?? 'Intermittent fasting'),
                   onTap: () {
                     Navigator.of(ctx).pop();
                     setState(() => _currentIndex = 0);
@@ -238,7 +249,14 @@ class _RootShellState extends State<RootShell> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    final titles = ['Diário', 'Buscar', 'Adicionar', 'Progresso', 'Perfil'];
+    final t = AppLocalizations.of(context);
+    final titles = [
+      t?.navDiary ?? 'Diary',
+      t?.navSearch ?? 'Search',
+      t?.navAdd ?? 'Add',
+      t?.navProgress ?? 'Progress',
+      t?.navProfile ?? 'Profile',
+    ];
     final cs = Theme.of(context).colorScheme;
     return AppBar(
       backgroundColor: cs.surface,
@@ -246,7 +264,7 @@ class _RootShellState extends State<RootShell> {
       elevation: 0,
       leading: _currentIndex == 0
           ? IconButton(
-              tooltip: 'Dia anterior',
+              tooltip: t?.appbarPrevDay ?? 'Previous day',
               icon: const Icon(Icons.chevron_left),
               onPressed: () {
                 final d = _selectedDate.value.subtract(const Duration(days: 1));
@@ -257,8 +275,7 @@ class _RootShellState extends State<RootShell> {
           : null,
       title: (_currentIndex == 0)
           ? Builder(builder: (context) {
-              final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-              final label = lang == 'pt' ? 'Hoje' : 'Today';
+              final label = t?.appbarToday ?? 'Today';
               return Text(
                 label,
                 style: Theme.of(context).textTheme.titleLarge,
@@ -272,7 +289,7 @@ class _RootShellState extends State<RootShell> {
         if (_currentIndex == 0) ...[
           // Toggle Dashboard Button
           IconButton(
-            tooltip: _useEnhancedDashboard ? 'Dashboard Original' : 'Dashboard v1',
+            tooltip: _useEnhancedDashboard ? (t?.appbarToggleDashboardOriginal ?? 'Original Dashboard') : (t?.appbarToggleDashboardV1 ?? 'Dashboard v1'),
             icon: Icon(
               _useEnhancedDashboard ? Icons.home_outlined : Icons.dashboard_outlined,
               size: 22,
@@ -288,7 +305,7 @@ class _RootShellState extends State<RootShell> {
           ),
           // Gamification diamond
           IconButton(
-            tooltip: 'Gamificação',
+            tooltip: t?.appbarGamificationTooltip ?? 'Gamification',
             icon: Icon(
               Icons.workspace_premium_outlined,
               size: 22,
@@ -298,13 +315,13 @@ class _RootShellState extends State<RootShell> {
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Gamificação em breve')),
+                SnackBar(content: Text(t?.appbarGamificationSoon ?? 'Gamification coming soon')),
               );
             },
           ),
           // Streaks / engagement
           IconButton(
-            tooltip: 'Sequência',
+            tooltip: t?.appbarStreakTooltip ?? 'Streaks',
             icon: Icon(
               Icons.whatshot_outlined,
               size: 22,
@@ -314,13 +331,13 @@ class _RootShellState extends State<RootShell> {
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sequência/Conquistas em breve')),
+                SnackBar(content: Text(t?.appbarStreakSoon ?? 'Streaks/Achievements coming soon')),
               );
             },
           ),
           // Statistics shortcut
           IconButton(
-            tooltip: 'Estatísticas',
+            tooltip: t?.appbarStatisticsTooltip ?? 'Statistics',
             icon: Icon(
               Icons.query_stats_outlined,
               size: 22,
@@ -333,7 +350,7 @@ class _RootShellState extends State<RootShell> {
             },
           ),
           IconButton(
-            tooltip: 'Selecionar data',
+            tooltip: t?.appbarSelectDate ?? 'Select date',
             icon: Icon(
               Icons.calendar_today_outlined,
               size: 22,
@@ -352,8 +369,8 @@ class _RootShellState extends State<RootShell> {
                   return Theme(
                     data: Theme.of(context).copyWith(
                       colorScheme: Theme.of(context).colorScheme.copyWith(
-                            primary: AppTheme.activeBlue,
-                          ),
+                        primary: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     child: child!,
                   );
@@ -373,6 +390,7 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
@@ -389,30 +407,26 @@ class _RootShellState extends State<RootShell> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Diário',
+            icon: const Icon(Icons.home_outlined),
+            label: t?.navDiary ?? 'Diary',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Buscar',
+            icon: const Icon(Icons.search),
+            label: t?.navSearch ?? 'Search',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            label: 'Adicionar',
+            icon: const Icon(Icons.add_circle_outline),
+            label: t?.navAdd ?? 'Add',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.stacked_bar_chart_outlined),
-            label: 'Progresso',
+            icon: const Icon(Icons.stacked_bar_chart_outlined),
+            label: t?.navProgress ?? 'Progress',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
+            icon: const Icon(Icons.person_outline),
+            label: t?.navProfile ?? 'Profile',
           ),
         ],
       ),

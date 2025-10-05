@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import 'package:nutritracker/l10n/generated/app_localizations.dart';
 import './widgets/animated_logo_widget.dart';
 import './widgets/initialization_service.dart';
 import './widgets/loading_indicator_widget.dart';
@@ -85,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Erro inesperado durante a inicialização';
+          _errorMessage = AppLocalizations.of(context)?.splashUnexpectedError ?? 'Unexpected error during initialization';
           // flag not used in UI
         });
       }
@@ -106,13 +107,13 @@ class _SplashScreenState extends State<SplashScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.secondaryBackgroundDark,
         title: Text(
-          'Atualização Necessária',
+          AppLocalizations.of(context)?.splashForceUpdateTitle ?? 'Update Required',
           style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
             color: AppTheme.textPrimary,
           ),
         ),
         content: Text(
-          'Uma nova versão do NutriTracker está disponível. Por favor, atualize o aplicativo para continuar.',
+          AppLocalizations.of(context)?.splashForceUpdateBody ?? 'A new version of NutriTracker is available. Please update the app to continue.',
           style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
             color: AppTheme.textPrimary,
           ),
@@ -127,7 +128,7 @@ class _SplashScreenState extends State<SplashScreen> {
               backgroundColor: AppTheme.activeBlue,
             ),
             child: Text(
-              'Atualizar',
+              AppLocalizations.of(context)?.splashUpdate ?? 'Update',
               style: TextStyle(color: AppTheme.textPrimary),
             ),
           ),
@@ -225,7 +226,7 @@ class _SplashScreenState extends State<SplashScreen> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.w),
           child: Text(
-            _errorMessage ?? 'Erro desconhecido',
+            _errorMessage ?? (AppLocalizations.of(context)?.splashUnknownError ?? 'Unknown error'),
             textAlign: TextAlign.center,
             style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
               color: AppTheme.textSecondary,
@@ -244,7 +245,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
           ),
           child: Text(
-            'Tentar Novamente',
+            AppLocalizations.of(context)?.splashRetry ?? 'Try Again',
             style: TextStyle(
               color: AppTheme.textPrimary,
               fontSize: 12.sp,
@@ -269,7 +270,7 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
         SizedBox(height: 0.5.h),
         Text(
-          'Versão 1.0.0',
+          AppLocalizations.of(context)?.versionLabel('1.0.0') ?? 'Version 1.0.0',
           style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
             color: AppTheme.textSecondary.withValues(alpha: 0.5),
             fontSize: 9.sp,

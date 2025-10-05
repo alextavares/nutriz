@@ -1,0 +1,286 @@
+{
+  "@@locale": "pt",
+  "streakOverviewTitle": "Visão geral da sequência",
+  "streakCurrentLabel": "Sequência atual",
+  "streakDays": "{count} dias",
+  "streakNoStreak": "Sem sequência",
+  "streakLogFood": "Registrar alimento",
+  "streakMilestonesTitle": "Marcos",
+  "streakDayProgress": "Dia {current}/{next}",
+  "streakGoalCompleted": "Meta concluída",
+  "streakWeeklyOverviewTitle": "Visão semanal",
+  "streakLongestTitle": "Maior sequência",
+  "weekMon": "Seg",
+  "weekTue": "Ter",
+  "weekWed": "Qua",
+  "weekThu": "Qui",
+  "weekFri": "Sex",
+  "weekSat": "Sáb",
+  "weekSun": "Dom",
+  "gotIt": "Entendi",
+  "streakNuxBody": "Toque nos pontos para ir a um dia específico.\nSua sequência cresce quando você registra qualquer alimento no dia.",
+  "@streakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@streakDayProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsTitle": "Conquistas",
+  "achievementsTabAll": "Todas",
+  "achievementsTabWater": "Água",
+  "achievementsTabFasting": "Jejum",
+  "achievementsTabCalories": "Calorias",
+  "achievementsTabProtein": "Proteína",
+  "achievementsTabFood": "Alimentos",
+  "achievementsTabTest": "Teste",
+  "achievementsTabFavorites": "Favoritos",
+  "achievementsListView": "Ver em lista",
+  "achievementsGridView": "Ver em grade",
+  "achievementsEmpty": "Sem conquistas ainda",
+  "achievementsDefaultTitle": "Conquista",
+  "achievementsType": "Tipo",
+  "achievementsGoal": "Meta",
+  "achievementsNewBadge": "Novo",
+  "achievementsFavorite": "Favoritar",
+  "achievementsRemoveFavorite": "Remover dos favoritos",
+  "achievementsTotal": "Total: {count}",
+  "@achievementsTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterTypeLabel": "Tipo",
+  "filterTypeAll": "Todos",
+  "filterTypeSuccess": "Sucesso",
+  "filterTypeStreak": "Streak",
+  "filterTypePremium": "Premium",
+  "filterTypeGeneral": "Genérico",
+  "filterGoalLabel": "Meta",
+  "filterGoalAll": "Todas",
+  "filterGoalWater": "Água",
+  "filterGoalFasting": "Jejum",
+  "filterGoalCalories": "Calorias",
+  "filterGoalProtein": "Proteína",
+  "filterGoalFood": "Alimentos",
+  "filterGoalTest": "Teste",
+  "filterSortLabel": "Ordenar",
+  "sortRecent": "Recentes",
+  "sortOldest": "Antigas",
+  "sortType": "Tipo",
+  "navDiary": "Diário",
+  "navSearch": "Buscar",
+  "navAdd": "Adicionar",
+  "navProgress": "Progresso",
+  "navProfile": "Perfil",
+  "addSheetAddFood": "Adicionar alimento",
+  "addSheetAddBreakfast": "Adicionar ao Café da manhã",
+  "addSheetAddLunch": "Adicionar ao Almoço",
+  "addSheetAddDinner": "Adicionar ao Jantar",
+  "addSheetAddSnacks": "Adicionar aos Lanches",
+  "addSheetAddWater250": "Adicionar água (+250 ml)",
+  "addSheetAddedWater250": "Adicionado 250 ml de água",
+  "addSheetAddWater500": "Adicionar água (+500 ml)",
+  "addSheetAddedWater500": "Adicionado 500 ml de água",
+  "addSheetFoodScanner": "Scanner/AI de alimento",
+  "addSheetExploreRecipes": "Explorar receitas",
+  "addSheetIntermittentFasting": "Jejum intermitente",
+  "appbarPrevDay": "Dia anterior",
+  "appbarToday": "Hoje",
+  "appbarToggleDashboardOriginal": "Dashboard Original",
+  "appbarToggleDashboardV1": "Dashboard v1",
+  "appbarGamificationTooltip": "Gamificação",
+  "appbarGamificationSoon": "Gamificação em breve",
+  "appbarStreakTooltip": "Sequência",
+  "appbarStreakSoon": "Sequência/Conquistas em breve",
+  "appbarStatisticsTooltip": "Estatísticas",
+  "appbarSelectDate": "Selecionar data",
+  "splashUnexpectedError": "Erro inesperado durante a inicialização",
+  "splashForceUpdateTitle": "Atualização Necessária",
+  "splashForceUpdateBody": "Uma nova versão do NutriTracker está disponível. Por favor, atualize o aplicativo para continuar.",
+  "splashUpdate": "Atualizar",
+  "splashUnknownError": "Erro desconhecido",
+  "splashRetry": "Tentar Novamente",
+  "versionLabel": "Versão {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "dowMon": "Segunda-feira",
+  "dowTue": "Terça-feira",
+  "dowWed": "Quarta-feira",
+  "dowThu": "Quinta-feira",
+  "dowFri": "Sexta-feira",
+  "dowSat": "Sábado",
+  "dowSun": "Domingo",
+  "dashboardTitle": "Painel",
+  "dashboardQuickActions": "Ações Rápidas",
+  "dashboardTodaysMeals": "Refeições de Hoje",
+  "dashboardViewAll": "Ver Todas",
+  "dashboardAddMeal": "Adicionar Refeição",
+  "streakNext": "• próx: {next}d",
+  "@streakNext": {
+    "placeholders": {
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  "badgeEarnedOn": "Obtida em: {date}",
+  "@badgeEarnedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "close": "Fechar",
+  "weeklyProgressTitle": "Progresso semanal",
+  "menu": "Menu",
+  "exportCsv": "Export CSV",
+  "downloadCsv": "Download CSV",
+  "importCsv": "Import CSV",
+  "saveWeekAsTemplate": "Salvar semana como template",
+  "applyWeekTemplate": "Aplicar template de semana",
+  "duplicateWeekNext": "Duplicar semana → próxima",
+  "duplicateWeekPickDate": "Duplicar semana → escolher data",
+  "installApp": "Instalar app",
+  "caloriesPerDay": "Calorias por dia",
+  "daysWithNew": "{count} dia(s) com itens novos",
+  "@daysWithNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "perMealAverages": "Médias por refeição (kcal/dia)",
+  "weeklyMacroAverages": "Médias semanais de macros",
+  "carbsAvg": "Carboidratos (média)",
+  "proteinAvg": "Proteína (média)",
+  "fatAvg": "Gordura (média)",
+  "waterPerDay": "Água por dia",
+  "exercisePerDay": "Exercício por dia",
+  "dailySummary": "Resumo diário",
+  "mealBreakfast": "Café",
+  "mealLunch": "Almoço",
+  "mealDinner": "Jantar",
+  "mealSnack": "Lanche",
+  "weekCsvCopied": "CSV da semana copiado/compartilhado",
+  "fileName": "Nome do arquivo",
+  "fileHint": "arquivo.csv",
+  "cancel": "Cancelar",
+  "save": "Salvar",
+  "templateApplied": "Template aplicado ao dia",
+  "duplicateTomorrow": "Duplicar → amanhã",
+  "weekActions": "Ações da semana",
+  "hdrDate": "Data",
+  "hdrWater": "Água",
+  "hdrExercise": "Exerc.",
+  "hdrCarb": "Carb",
+  "hdrProt": "Prot",
+  "hdrFat": "Gord",
+  "overGoal": "Excedeu",
+  "onbWelcome": "Bem-vindo",
+  "onbInfoTitle": "Tudo bem não ser perfeito",
+  "onbInfoBody": "Vamos construir hábitos aos poucos. Foque na consistência, não na perfeição.",
+  "continueLabel": "Continuar",
+  "finishLabel": "Concluir",
+  "onbCommitToday": "Compromisso marcado para hoje",
+  "dayStreak": "Sequência de dias",
+  "onbCongratsStreak": "Parabéns, você começou seu streak. Mantenha o ritmo!",
+  "onbImCommitted": "Estou comprometido",
+  "goalsSet": "Metas definidas",
+  "defineGoalsTitle": "Defina suas metas",
+  "defineGoalsBody": "Ajuste calorias e macros para o seu objetivo. Você pode alterar depois.",
+  "openGoalsWizard": "Abrir assistente de metas",
+  "notificationsConfigured": "Notificações configuradas",
+  "remindersSaved": "Lembretes salvos",
+  "remindersTitle": "Lembretes e Notificações",
+  "remindersBody": "Ative lembretes de hidratação para ajudar na consistência diária. Você pode alterar nas configurações depois.",
+  "enableHydrationReminders": "Ativar lembretes de hidratação",
+  "intervalMinutes": "Intervalo (min)",
+  "requesting": "Solicitando…",
+  "allowNotifications": "Permitir notificações",
+  "recipesTitle": "Receitas",
+  "recipesEmptyFiltered": "Nenhuma receita encontrada",
+  "recipesLoadingTitle": "Carregando receitas...",
+  "recipesEmptySubtitle": "Tente ajustar seus filtros ou termo de busca",
+  "recipesLoadingSubtitle": "Aguarde enquanto carregamos as melhores receitas para você",
+  "clearFilters": "Limpar Filtros",
+  "refresh": "Atualizar",
+  "recipeAddedToFavorites": "Receita adicionada aos favoritos",
+  "recipeRemovedFromFavorites": "Receita removida dos favoritos",
+  "openingRecipe": "Abrindo receita: {name}",
+  "@openingRecipe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addedToMealPlan": "{name} adicionada ao plano de refeições",
+  "@addedToMealPlan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sharingRecipe": "Compartilhando receita: {name}",
+  "@sharingRecipe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "findingSimilar": "Buscando receitas similares a: {name}",
+  "@findingSimilar": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "qaAddToMealPlan": "Adicionar ao Plano de Refeições",
+  "qaScheduleThisRecipe": "Agendar esta receita para uma refeição",
+  "qaShareRecipe": "Compartilhar Receita",
+  "qaShareWithFriends": "Enviar para amigos e família",
+  "qaSimilarRecipes": "Receitas Similares",
+  "qaFindSimilar": "Encontrar receitas parecidas",
+  "filtersTitle": "Filtros",
+  "clearAll": "Limpar Tudo",
+  "apply": "Aplicar",
+  "mealType": "Tipo de Refeição",
+  "dietaryRestrictions": "Restrições Alimentares",
+  "prepTime": "Tempo de Preparo",
+  "calories": "Calorias",
+  "dietVegetarian": "Vegetariano",
+  "dietVegan": "Vegano",
+  "dietGlutenFree": "Sem Glúten",
+  "prepLt15": "< 15 min",
+  "prep15to30": "15-30 min",
+  "prep30to60": "30-60 min",
+  "prepGt60": "> 60 min",
+  "calLt200": "< 200 cal",
+  "cal200to400": "200-400 cal",
+  "cal400to600": "400-600 cal",
+  "calGt600": "> 600 cal",
+  "searchRecipesHint": "Buscar receitas..."
+}

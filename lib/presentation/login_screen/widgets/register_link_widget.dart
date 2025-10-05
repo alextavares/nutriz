@@ -1,42 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
-import '../../../core/app_export.dart';
-import '../../../theme/app_theme.dart';
+import '../../../theme/design_tokens.dart';
 
 class RegisterLinkWidget extends StatelessWidget {
-  const RegisterLinkWidget({Key? key}) : super(key: key);
+  final bool isLoading;
+
+  const RegisterLinkWidget({
+    Key? key,
+    this.isLoading = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textStyles = Theme.of(context).textTheme;
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 2.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             'Novo usuário? ',
-            style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
+            style: textStyles.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
             ),
           ),
           GestureDetector(
-            onTap: () {
-              // Handle registration navigation
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tela de cadastro em desenvolvimento'),
-                  backgroundColor: AppTheme.warningAmber,
-                ),
-              );
-            },
+            onTap: isLoading
+                ? null
+                : () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Tela de cadastro em desenvolvimento'),
+                        backgroundColor: semantics.warning,
+                      ),
+                    );
+                  },
             child: Text(
               'Cadastre-se',
-              style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.activeBlue,
+              style: textStyles.bodyMedium?.copyWith(
+                color: isLoading
+                    ? colors.onSurfaceVariant.withValues(alpha: 0.6)
+                    : colors.primary,
                 fontWeight: FontWeight.w600,
-                decoration: TextDecoration.underline,
-                decorationColor: AppTheme.activeBlue,
+                decoration: isLoading ? TextDecoration.none : TextDecoration.underline,
+                decorationColor: colors.primary,
               ),
             ),
           ),

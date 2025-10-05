@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
+import 'package:nutritracker/l10n/generated/app_localizations.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
@@ -19,6 +21,8 @@ class SearchBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
       child: Row(
@@ -27,27 +31,28 @@ class SearchBarWidget extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.secondaryBackgroundDark,
+                color: colors.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.dividerGray.withValues(alpha: 0.3),
+                  color: colors.outlineVariant.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
               child: TextField(
                 controller: controller,
                 onChanged: onChanged,
-                style: AppTheme.darkTheme.textTheme.bodyMedium,
+                style: textStyles.bodyMedium,
                 decoration: InputDecoration(
-                  hintText: 'Buscar receitas...',
-                  hintStyle: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                  hintText: AppLocalizations.of(context)?.searchRecipesHint ??
+                      'Search recipes...',
+                  hintStyle: textStyles.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                   prefixIcon: Padding(
                     padding: EdgeInsets.all(3.w),
                     child: CustomIconWidget(
                       iconName: 'search',
-                      color: AppTheme.textSecondary,
+                      color: colors.onSurfaceVariant,
                       size: 5.w,
                     ),
                   ),
@@ -61,7 +66,7 @@ class SearchBarWidget extends StatelessWidget {
                             padding: EdgeInsets.all(3.w),
                             child: CustomIconWidget(
                               iconName: 'clear',
-                              color: AppTheme.textSecondary,
+                              color: colors.onSurfaceVariant,
                               size: 5.w,
                             ),
                           ),
@@ -84,13 +89,13 @@ class SearchBarWidget extends StatelessWidget {
               padding: EdgeInsets.all(3.w),
               decoration: BoxDecoration(
                 color: hasActiveFilters
-                    ? AppTheme.activeBlue.withValues(alpha: 0.2)
-                    : AppTheme.secondaryBackgroundDark,
+                    ? colors.primary.withValues(alpha: 0.12)
+                    : colors.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: hasActiveFilters
-                      ? AppTheme.activeBlue
-                      : AppTheme.dividerGray.withValues(alpha: 0.3),
+                      ? colors.primary
+                      : colors.outlineVariant.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -99,8 +104,8 @@ class SearchBarWidget extends StatelessWidget {
                   CustomIconWidget(
                     iconName: 'tune',
                     color: hasActiveFilters
-                        ? AppTheme.activeBlue
-                        : AppTheme.textSecondary,
+                        ? colors.primary
+                        : colors.onSurfaceVariant,
                     size: 6.w,
                   ),
                   if (hasActiveFilters)
@@ -110,8 +115,8 @@ class SearchBarWidget extends StatelessWidget {
                       child: Container(
                         width: 2.w,
                         height: 2.w,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.activeBlue,
+                        decoration: BoxDecoration(
+                          color: colors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),

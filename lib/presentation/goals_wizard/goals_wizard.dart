@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../theme/app_theme.dart';
 import '../../services/user_preferences.dart';
+import '../../services/nutrition_storage.dart';
 
 class GoalsWizardScreen extends StatefulWidget {
   const GoalsWizardScreen({super.key});
@@ -18,6 +19,22 @@ class _GoalsWizardScreenState extends State<GoalsWizardScreen> {
   final _carbController = TextEditingController(text: '250');
   final _protController = TextEditingController(text: '120');
   final _fatController = TextEditingController(text: '80');
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefill controllers with current saved goals to reflect reality
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final g = await UserPreferences.getGoals();
+      if (!mounted) return;
+      setState(() {
+        _calController.text = g.totalCalories.toString();
+        _carbController.text = g.carbs.toString();
+        _protController.text = g.proteins.toString();
+        _fatController.text = g.fats.toString();
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -61,12 +78,7 @@ class _GoalsWizardScreenState extends State<GoalsWizardScreen> {
     final carb = int.tryParse(_carbController.text.trim()) ?? 250;
     final prot = int.tryParse(_protController.text.trim()) ?? 120;
     final fat = int.tryParse(_fatController.text.trim()) ?? 80;
-    // Validação leve: calorias estimadas pelas macros
-    final est = (carb * 4) + (prot * 4) + (fat * 9);
-    final diff = (est - total).abs();
-    if (diff > (total * 0.25)) {
-      _warn('Aviso: calorias estimadas pelas macros diferem do total');
-    }
+    // Removido: aviso de discrepância entre macros e calorias totais
     await UserPreferences.setGoals(
       totalCalories: total,
       carbs: carb,
@@ -98,6 +110,10 @@ class _GoalsWizardScreenState extends State<GoalsWizardScreen> {
     };
     await UserPreferences.setMealGoals(perMeal);
     if (!mounted) return;
+    // Notificar dashboard para recarregar metas imediatamente
+    try {
+      NutritionStorage.changes.value = NutritionStorage.changes.value + 1;
+    } catch (_) {}
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: const Text('Metas salvas'),

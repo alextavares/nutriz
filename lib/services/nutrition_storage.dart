@@ -1,8 +1,16 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'achievement_service.dart';
+import 'streak_service.dart';
 
 class NutritionStorage {
+  // Change notifier so UI can refresh when storage mutates
+  static final ValueNotifier<int> changes = ValueNotifier<int>(0);
+  static void _bump() {
+    changes.value = changes.value + 1;
+  }
   static const String _keyPrefix = 'logged_meals_';
   static const String _exercisePrefix = 'exercise_kcal_';
   static const String _waterPrefix = 'water_ml_';
@@ -39,6 +47,40 @@ class NutritionStorage {
     withId['id'] = withId['id'] ?? DateTime.now().millisecondsSinceEpoch;
     current.add(withId);
     await prefs.setString(key, jsonEncode(current));
+    _bump();
+
+    // Mark generic food logging streak and award simple milestones
+    try {
+      final day = DateTime(date.year, date.month, date.day);
+      await StreakService.markCompleted('food_log', day);
+      final streak = await StreakService.currentStreak('food_log');
+
+      // Award all missing milestones up to current streak (deduped)
+      const thresholds = [3, 5, 7, 14, 30];
+      try {
+        final existing = await AchievementService.listAll();
+        final have = <int>{};
+        for (final a in existing) {
+          if ((a['type'] == 'flame') && (a['metaKey'] == 'food_log')) {
+            final v = (a['value'] as num?)?.toInt();
+            if (v != null) have.add(v);
+          }
+        }
+        for (final t in thresholds) {
+          if (streak >= t && !have.contains(t)) {
+            await AchievementService.add({
+              'id': 'food_log_${t}_${DateTime.now().millisecondsSinceEpoch}',
+              'type': 'flame',
+              'title': 'Sequência ${t} dias!',
+              'dateIso': DateTime.now().toIso8601String(),
+              'metaKey': 'food_log',
+              'value': t,
+            });
+          }
+        }
+      } catch (_) {}
+      
+    } catch (_) {}
   }
 
   static Future<void> updateEntryById(
@@ -52,6 +94,7 @@ class NutritionStorage {
       updated['id'] = id;
       current[index] = updated;
       await prefs.setString(key, jsonEncode(current));
+      _bump();
     }
   }
 
@@ -61,12 +104,14 @@ class NutritionStorage {
     final current = await getEntriesForDate(date);
     current.removeWhere((e) => e['id'] == id);
     await prefs.setString(key, jsonEncode(current));
+    _bump();
   }
 
   static Future<void> clearDate(DateTime date) async {
     final prefs = await SharedPreferences.getInstance();
     final key = '$_keyPrefix${_dateKey(date)}';
     await prefs.remove(key);
+    _bump();
   }
 
   // Exercise kcal per day
@@ -80,6 +125,7 @@ class NutritionStorage {
     final prefs = await SharedPreferences.getInstance();
     final key = '$_exercisePrefix${_dateKey(date)}';
     await prefs.setInt(key, kcal < 0 ? 0 : kcal);
+    _bump();
   }
 
   static Future<int> addExerciseCalories(DateTime date, int delta) async {
@@ -100,6 +146,7 @@ class NutritionStorage {
     final prefs = await SharedPreferences.getInstance();
     final key = '$_waterPrefix${_dateKey(date)}';
     await prefs.setInt(key, ml < 0 ? 0 : ml);
+    _bump();
   }
 
   static Future<int> addWaterMl(DateTime date, int delta) async {
@@ -114,6 +161,7 @@ class NutritionStorage {
     final prefs = await SharedPreferences.getInstance();
     final key = '$_exerciseMetaPrefix${_dateKey(date)}';
     await prefs.setString(key, jsonEncode(meta));
+    _bump();
   }
 
   static Future<Map<String, dynamic>> getExerciseMeta(DateTime date) async {
@@ -152,6 +200,7 @@ class NutritionStorage {
     item['savedAt'] = item['savedAt'] ?? DateTime.now().toIso8601String();
     current.add(item);
     await prefs.setString(key, jsonEncode(current));
+    _bump();
   }
 
   // Export / Import diary
@@ -449,3 +498,4 @@ class NutritionStorage {
     }
   }
 }
+

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:intl/intl.dart';
 
-import '../../../core/app_export.dart';
-import '../../../theme/app_theme.dart';
+import '../../../theme/design_tokens.dart';
 
 class MacronutrientProgressWidget extends StatefulWidget {
   final String name;
@@ -52,6 +52,11 @@ class _MacronutrientProgressWidgetState
 
   @override
   Widget build(BuildContext context) {
+    String _fmtInt(int v) {
+      final locale = Localizations.localeOf(context).toString();
+      return NumberFormat.decimalPattern(locale).format(v);
+    }
+
     final percentage =
         widget.total > 0 ? (widget.consumed / widget.total) * 100 : 0.0;
     IconData icon;
@@ -65,6 +70,9 @@ class _MacronutrientProgressWidgetState
     } else {
       icon = Icons.circle;
     }
+
+    final textTheme = context.textStyles;
+    final colors = context.colors;
 
     return GestureDetector(
       onLongPress: widget.onLongPress,
@@ -81,8 +89,8 @@ class _MacronutrientProgressWidgetState
                   SizedBox(width: 6),
                   Text(
                     widget.name,
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                      color: AppTheme.textPrimary,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: colors.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
@@ -92,16 +100,16 @@ class _MacronutrientProgressWidgetState
                 Row(children: [
                   Text(
                     '${percentage.toInt()}%',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+                    style: textTheme.bodyMedium?.copyWith(
                       color: widget.color,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   SizedBox(width: 2.w),
                   Text(
-                    '${widget.consumed}g / ${widget.total}g',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
+                    '${_fmtInt(widget.consumed)} / ${_fmtInt(widget.total)} g',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -111,20 +119,27 @@ class _MacronutrientProgressWidgetState
             ),
             SizedBox(height: 0.6.h),
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(999),
               child: Stack(
                 children: [
                   Container(
-                    height: 12,
-                    color: AppTheme.dividerGray.withValues(alpha: 0.6),
+                    height: 14,
+                    color: widget.color.withValues(alpha: 0.18),
                   ),
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
                       return FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: (percentage / 100) * _animation.value,
-                        child: Container(height: 12, color: widget.color),
+                        widthFactor: (percentage / 100).clamp(0.0, 1.0) *
+                            _animation.value,
+                        child: Container(
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: widget.color,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
                       );
                     },
                   ),

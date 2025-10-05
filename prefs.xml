@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <long name="flutter.achievements_last_added_ts_v1" value="1757799655395" />
+    <boolean name="flutter.protein_ok_marked_day_v1-2025-09-08" value="true" />
+    <boolean name="flutter.ui_reduce_animations_v1" value="false" />
+    <boolean name="flutter.is_authenticated" value="true" />
+    <string name="flutter.streak_store_v1">{&quot;food_log&quot;:{&quot;2025-09-10&quot;:true,&quot;2025-09-13&quot;:true}}</string>
+    <string name="flutter.nutrition_data_cache_last_sync">2025-09-13T22:31:36.668537</string>
+    <long name="flutter.fast_start_eat_min_v1" value="0" />
+    <boolean name="flutter.cal_ok_marked_day_v1-2025-09-08" value="true" />
+    <string name="flutter.logged_meals_2025-09-10">[{&quot;id&quot;:1757544990668,&quot;name&quot;:&quot;Arroz Branco Cozido&quot;,&quot;calories&quot;:26000,&quot;carbs&quot;:5600.0,&quot;protein&quot;:600.0,&quot;fat&quot;:0.0,&quot;brand&quot;:&quot;Genérico&quot;,&quot;quantity&quot;:1.0,&quot;serving&quot;:&quot;20000 g&quot;,&quot;mealTime&quot;:&quot;dinner&quot;,&quot;createdAt&quot;:&quot;2025-09-10T22:56:30.668400&quot;},{&quot;id&quot;:1757544997593,&quot;name&quot;:&quot;Pão Francês&quot;,&quot;calories&quot;:30000,&quot;carbs&quot;:6000.0,&quot;protein&quot;:1000.0,&quot;fat&quot;:400.0,&quot;brand&quot;:&quot;Padaria&quot;,&quot;quantity&quot;:1.0,&quot;serving&quot;:&quot;20000 g&quot;,&quot;mealTime&quot;:&quot;dinner&quot;,&quot;createdAt&quot;:&quot;2025-09-10T22:56:37.593495&quot;}]</string>
+    <string name="flutter.logged_meals_2025-09-13">[{&quot;id&quot;:1757801080450,&quot;name&quot;:&quot;Bana'bonbons de&quot;,&quot;calories&quot;:354,&quot;carbs&quot;:85.0,&quot;protein&quot;:3.2,&quot;fat&quot;:0.0,&quot;brand&quot;:&quot;Casino&quot;,&quot;quantity&quot;:1.0,&quot;serving&quot;:&quot;100 g&quot;,&quot;mealTime&quot;:&quot;lunch&quot;,&quot;createdAt&quot;:&quot;2025-09-13T22:04:40.450312&quot;}]</string>
+    <boolean name="flutter.streak_overview_nux_seen" value="true" />
+    <long name="flutter.fast_start_eat_hour_v1" value="12" />
+    <boolean name="flutter.is_first_launch" value="false" />
+    <boolean name="flutter.ui_use_lottie_celebrations_v1" value="true" />
+    <long name="flutter.water_ml_2025-09-13" value="2000" />
+    <boolean name="flutter.ui_prefs_expanded_v1" value="true" />
+    <boolean name="flutter.cal_ok_marked_day_v1-2025-09-13" value="true" />
+    <string name="flutter.user_email">dev@local</string>
+    <long name="flutter.achievements_last_seen_ts_v1" value="1757799655395" />
+    <boolean name="flutter.cal_ok_marked_day_v1-2025-09-10" value="true" />
+    <boolean name="flutter.onboarding_completed_v1" value="true" />
+    <boolean name="flutter.premium_status" value="false" />
+    <string name="flutter.achievements_v1">[{&quot;id&quot;:&quot;test_1757792419651&quot;,&quot;type&quot;:&quot;star&quot;,&quot;title&quot;:&quot;Badge de Teste&quot;,&quot;dateIso&quot;:&quot;2025-09-13T19:40:19.651643&quot;,&quot;metaKey&quot;:&quot;test&quot;,&quot;value&quot;:1},{&quot;id&quot;:&quot;test_1757799655288&quot;,&quot;type&quot;:&quot;star&quot;,&quot;title&quot;:&quot;Badge de Teste&quot;,&quot;dateIso&quot;:&quot;2025-09-13T21:40:55.288789&quot;,&quot;metaKey&quot;:&quot;test&quot;,&quot;value&quot;:1}]</string>
+    <boolean name="flutter.protein_ok_marked_day_v1-2025-09-10" value="true" />
+    <string name="flutter.achievements_favorites_v1">[&quot;test_1757799655288&quot;]</string>
+    <boolean name="flutter.protein_ok_marked_day_v1-2025-09-13" value="true" />
+</map>

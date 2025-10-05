@@ -85,8 +85,8 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final bmi = _bmi();
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -108,6 +108,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
             Row(
               children: [
                 Expanded(child: _metricCard(
+                  colorScheme: colorScheme,
                   icon: MdiIcons.weightKilogram,
                   title: 'Peso',
                   value: (_metrics['weightKg'] as num?)?.toString() ?? '--',
@@ -116,6 +117,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                 )),
                 SizedBox(width: 3.w),
                 Expanded(child: _metricCard(
+                  colorScheme: colorScheme,
                   icon: MdiIcons.humanMaleHeight,
                   title: 'Altura',
                   value: (_metrics['heightCm'] as num?)?.toString() ?? '--',
@@ -128,6 +130,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
             Row(
               children: [
                 Expanded(child: _metricCard(
+                  colorScheme: colorScheme,
                   icon: MdiIcons.human,
                   title: 'IMC',
                   value: bmi != null ? bmi.toStringAsFixed(1) : '--',
@@ -136,6 +139,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                 )),
                 SizedBox(width: 3.w),
                 Expanded(child: _metricCard(
+                  colorScheme: colorScheme,
                   icon: MdiIcons.heartPulse,
                   title: 'Gordura',
                   value: (_metrics['bodyFatPct'] as num?)?.toString() ?? '--',
@@ -151,9 +155,9 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
             Container(
               height: 22.h,
               decoration: BoxDecoration(
-                color: cs.surface,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
               ),
               padding: const EdgeInsets.all(12),
               child: _weightChart(),
@@ -168,13 +172,21 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
     );
   }
 
-  Widget _metricCard({required IconData icon, required String title, required String value, required String unit, required Color color}) {
-    final cs = Theme.of(context).colorScheme;
+Widget _metricCard({
+    required ColorScheme colorScheme,
+    required IconData icon,
+    required String title,
+    required String value,
+    required String unit,
+    required Color color,
+  }) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -189,16 +201,19 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                )),
+                Text(
+                  title,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   unit.isNotEmpty ? '$value $unit' : value,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ],
             ),
@@ -278,7 +293,6 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -356,3 +370,13 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
         decoration: InputDecoration(labelText: label, isDense: true),
       );
 }
+
+
+
+
+
+
+
+
+
+

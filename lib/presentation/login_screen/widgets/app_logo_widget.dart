@@ -2,28 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class AppLogoWidget extends StatelessWidget {
   const AppLogoWidget({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textStyles = Theme.of(context).textTheme;
     return Column(
       children: [
-        // Logo Container with gradient background
         Container(
           width: 20.w,
           height: 20.w,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppTheme.activeBlue, AppTheme.successGreen],
+            gradient: LinearGradient(
+              colors: [colors.primary, semantics.success],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(4.w),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.activeBlue.withValues(alpha: 0.3),
+                color: colors.primary.withValues(alpha: 0.25),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -32,31 +35,25 @@ class AppLogoWidget extends StatelessWidget {
           child: Center(
             child: CustomIconWidget(
               iconName: 'restaurant_menu',
-              color: AppTheme.textPrimary,
+              color: colors.onPrimary,
               size: 10.w,
             ),
           ),
         ),
-
         SizedBox(height: 2.h),
-
-        // App Name
         Text(
           'NutriTracker',
-          style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
+          style: textStyles.headlineMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+            color: colors.onSurface,
             letterSpacing: -0.5,
           ),
         ),
-
         SizedBox(height: 0.5.h),
-
-        // App Tagline
         Text(
           'Sua jornada nutricional',
-          style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-            color: AppTheme.textSecondary,
+          style: textStyles.bodyMedium?.copyWith(
+            color: colors.onSurfaceVariant,
             fontWeight: FontWeight.w400,
           ),
         ),

@@ -20,14 +20,14 @@ class GeminiClient {
     final imageBytes = await image.readAsBytes();
     final base64Image = base64Encode(imageBytes);
 
-    final candidates = modelCandidates ??
-        <String>[
-          model,
-          'gemini-1.5-flash-latest',
-          'gemini-1.5-flash-8b',
-          'gemini-1.0-pro-vision',
-          'gemini-pro-vision',
-        ];
+    final candidates = modelCandidates ?? <String>[
+      'gemini-1.5-pro-latest',
+      model,
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash-8b',
+      'gemini-1.0-pro-vision',
+      'gemini-pro-vision',
+    ];
 
     DioException? lastDioError;
     GeminiException? lastGeminiError;
@@ -112,33 +112,53 @@ class GeminiClient {
 
   Future<FoodNutritionData> analyzeFoodImage(File imageFile) async {
     const prompt = '''
-Analyze this food image and identify the food items. For each food item detected, provide nutritional information in the following JSON format:
+Você é um nutricionista analisando uma foto de comida. Retorne um JSON no formato abaixo, priorizando UMA entrada AGREGADA do prato inteiro como o primeiro item, e opcionalmente uma lista de componentes depois.
 
+Formato obrigatório:
 {
   "foods": [
     {
-      "name": "Food Name",
-      "calories": 150,
-      "carbs": 30.5,
-      "protein": 8.2,
-      "fat": 2.1,
-      "fiber": 4.0,
-      "sugar": 12.3,
-      "portion_size": "1 cup",
+      "name": "Nome do prato (total)",
+      "calories": 450,
+      "carbs": 50.0,
+      "protein": 12.0,
+      "fat": 22.0,
+      "fiber": 6.0,
+      "sugar": 8.0,
+      "portion_size": "350 g",
       "confidence": 0.85
+    },
+    {
+      "name": "Componente 1 (opcional)",
+      "calories": 120,
+      "carbs": 10.0,
+      "protein": 2.0,
+      "fat": 8.0,
+      "fiber": 1.0,
+      "sugar": 2.0,
+      "portion_size": "80 g",
+      "confidence": 0.8
     }
   ]
 }
 
-Please provide realistic nutritional values per typical serving size. If multiple food items are detected, include all of them. If the image doesn't clearly show food, return an empty foods array.
-''';
+Regras importantes (siga com atenção):
+- Sempre que houver uma tigela/prato com mistura (ex.: salada, bowl, refogado, sopa), crie o PRIMEIRO item como o prato inteiro (agregado) com totais de kcal/macros e uma porção coerente em gramas (ex.: "320 g"). Só depois, opcionalmente, liste componentes. Se houver dúvida, retorne apenas o agregado.
+- Em pratos separados (ex.: carne + arroz com divisórias), pode listar cada item separadamente, mas ainda é recomendado incluir um agregado como primeiro item "Prato (total)".
+- Converta a porção para gramas sempre que possível: use estimativas típicas de densidade (folhas: ~15 g por punhado; tomate/cenoura cru: 80–120 g por xíc.; azeite: 1 colher de sopa ≈ 10 g; molhos cremosos: 1 colher de sopa ≈ 15 g).
+- Inclua gorduras de temperos/azeites/molhos na soma do agregado.
+- O campo "name" do agregado deve conter o tipo do prato, por exemplo: "Salada (total)", "Bowl (total)", "Prato (total)", "Sopa (total)".
+- "confidence" deve estar entre 0 e 1.
+- Se a imagem não mostrar comida de forma clara, retorne {"foods": []}.
+''';;
 
     try {
       final completion = await createMultimodal(
         prompt: prompt,
         image: imageFile,
-        maxTokens: 1024,
+        maxTokens: 1536,
         modelCandidates: const [
+          'gemini-1.5-pro-latest',
           'gemini-1.5-flash-002',
           'gemini-1.5-flash-latest',
           'gemini-1.5-flash-8b',

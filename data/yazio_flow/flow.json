@@ -1,0 +1,36 @@
+{
+  "nodes": [
+    {
+      "id": "b57521b06ecb",
+      "index": 0
+    },
+    {
+      "id": "af70c5daee7a",
+      "index": 1
+    },
+    {
+      "id": "3b497a739b23",
+      "index": 2
+    }
+  ],
+  "edges": [
+    {
+      "from": "b57521b06ecb",
+      "to": "af70c5daee7a",
+      "action": ""
+    },
+    {
+      "from": "af70c5daee7a",
+      "to": "40cf49d93360",
+      "action": ""
+    },
+    {
+      "from": "3b497a739b23",
+      "to": "af70c5daee7a",
+      "action": ""
+    }
+  ],
+  "device": "emulator-5556",
+  "package": "de.yazio.android",
+  "generated_at": 1757107158
+}

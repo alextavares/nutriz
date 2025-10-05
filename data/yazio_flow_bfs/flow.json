@@ -1,0 +1,115 @@
+{
+  "nodes": [
+    {
+      "id": "d3d93452f45e",
+      "index": 0
+    },
+    {
+      "id": "78e14a67ffdc",
+      "index": 2
+    },
+    {
+      "id": "ed26bf93b21e",
+      "index": 5
+    },
+    {
+      "id": "83f69bf89293",
+      "index": 6
+    },
+    {
+      "id": "a1f83a7a09ec",
+      "index": 7
+    },
+    {
+      "id": "0086c7bfe2cf",
+      "index": 9
+    },
+    {
+      "id": "12f404114151",
+      "index": 10
+    },
+    {
+      "id": "295fcd052131",
+      "index": 11
+    },
+    {
+      "id": "b994f0fe318d",
+      "index": 14
+    }
+  ],
+  "edges": [
+    {
+      "from": "d3d93452f45e",
+      "to": "d3d93452f45e",
+      "action": "If YES, never ask again"
+    },
+    {
+      "from": "d3d93452f45e",
+      "to": "78e14a67ffdc",
+      "action": "NO"
+    },
+    {
+      "from": "78e14a67ffdc",
+      "to": "78e14a67ffdc",
+      "action": "NO"
+    },
+    {
+      "from": "78e14a67ffdc",
+      "to": "78e14a67ffdc",
+      "action": "YES"
+    },
+    {
+      "from": "d3d93452f45e",
+      "to": "ed26bf93b21e",
+      "action": "YES"
+    },
+    {
+      "from": "ed26bf93b21e",
+      "to": "83f69bf89293",
+      "action": "YAZIO"
+    },
+    {
+      "from": "ed26bf93b21e",
+      "to": "a1f83a7a09ec",
+      "action": "Phone"
+    },
+    {
+      "from": "a1f83a7a09ec",
+      "to": "a1f83a7a09ec",
+      "action": "achievement_screen.button.share"
+    },
+    {
+      "from": "a1f83a7a09ec",
+      "to": "0086c7bfe2cf",
+      "action": ""
+    },
+    {
+      "from": "a1f83a7a09ec",
+      "to": "12f404114151",
+      "action": "shared_element.button.next_button"
+    },
+    {
+      "from": "ed26bf93b21e",
+      "to": "295fcd052131",
+      "action": "Messages"
+    },
+    {
+      "from": "295fcd052131",
+      "to": "295fcd052131",
+      "action": "com.android.vending:id/0_resource_name_obfuscated"
+    },
+    {
+      "from": "295fcd052131",
+      "to": "295fcd052131",
+      "action": "com.android.vending:id/0_resource_name_obfuscated"
+    },
+    {
+      "from": "295fcd052131",
+      "to": "b994f0fe318d",
+      "action": "R$89.90/year"
+    }
+  ],
+  "device": "emulator-5556",
+  "package": "de.yazio.android",
+  "generated_at": 1757107934
+}

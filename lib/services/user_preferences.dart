@@ -1,7 +1,16 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 class UserPreferences {
+  // Global notifier so UI can react to preference changes immediately
+  static final ValueNotifier<int> changes = ValueNotifier<int>(0);
+  static void _bump() {
+    try {
+      changes.value = changes.value + 1;
+    } catch (_) {}
+  }
+
   static const String _kTotalCalories = 'user_goal_total_calories';
   static const String _kCarbs = 'user_goal_carbs';
   static const String _kProteins = 'user_goal_proteins';
@@ -37,8 +46,13 @@ class UserPreferences {
       'ui_quick_portion_grams_dinner_v1';
   static const String _kQuickPortionGramsSnack =
       'ui_quick_portion_grams_snack_v1';
+  static const String _kPremiumStatus = 'premium_status';
+  static const String _kPremiumPlan = 'premium_plan';
+  static const String _kPremiumPlanPurchase = 'premium_plan_last_purchase';
   // Search results macros view: per 100g or per porção
   static const String _kResultsPer100g = 'ui_results_per_100g_v1';
+  static const String _kUseNlq = 'ui_use_nlq_v1';
+  static const String _kShowSourceBadges = 'ui_show_source_badges_v1';
   // Fasting eating window times
   static const String _kStartEatHour = 'fast_start_eat_hour_v1';
   static const String _kStartEatMinute = 'fast_start_eat_min_v1';
@@ -130,6 +144,66 @@ class UserPreferences {
     return prefs.getBool(_kResultsPer100g) ?? true;
   }
 
+  // Search: use NLQ (free‑text quantities parsing)
+  static Future<void> setUseNlq(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kUseNlq, value);
+  }
+
+  static Future<bool> getUseNlq() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseNlq) ?? true;
+  }
+
+  // Search: show source badges (OFF/FDC/NLQ)
+  static Future<void> setShowSourceBadges(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kShowSourceBadges, value);
+  }
+
+  static Future<bool> getShowSourceBadges() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowSourceBadges) ?? true;
+  }
+
+  static Future<bool> getPremiumStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kPremiumStatus) ?? false;
+  }
+
+  static Future<String?> getPremiumPlanId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kPremiumPlan);
+  }
+
+  static Future<void> setPremiumStatus(bool value,
+      {String? planId, DateTime? purchaseDate}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kPremiumStatus, value);
+    if (value) {
+      if (planId != null) {
+        await prefs.setString(_kPremiumPlan, planId);
+      }
+      if (purchaseDate != null) {
+        await prefs.setString(
+            _kPremiumPlanPurchase, purchaseDate.toIso8601String());
+      } else {
+        await prefs.setString(
+            _kPremiumPlanPurchase, DateTime.now().toIso8601String());
+      }
+    } else {
+      await prefs.remove(_kPremiumPlan);
+      await prefs.remove(_kPremiumPlanPurchase);
+    }
+    _bump();
+  }
+
+  static Future<DateTime?> getPremiumLastPurchase() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kPremiumPlanPurchase);
+    return raw == null ? null : DateTime.tryParse(raw);
+  }
+
   // Search filters
   static const String _kFiltKcalMin = 'ui_filter_kcal_min_v1';
   static const String _kFiltKcalMax = 'ui_filter_kcal_max_v1';
@@ -138,6 +212,21 @@ class UserPreferences {
   static const String _kFiltFat = 'ui_filter_fat_v1';
   static const String _kSortKey = 'ui_sort_key_v1';
   static const String _kSearchHistory = 'ui_search_history_v1';
+  // Profile: objectives and weight targets
+  static const String _kDietType =
+      'user_diet_type_v1'; // e.g., Padrao, Vegetariana
+  static const String _kWeightObjective =
+      'user_weight_objective_v1'; // ganhar|perder|manter
+  static const String _kWeightStartKg = 'user_weight_start_kg_v1';
+  static const String _kWeightGoalKg = 'user_weight_goal_kg_v1';
+  // UI prefs: remember expanded/collapsed state of advanced block
+  static const String _kUiPrefsExpanded = 'ui_prefs_expanded_v1';
+  static const String _kReduceAnimations = 'ui_reduce_animations_v1';
+  static const String _kEnableMilestoneCelebration =
+      'ui_enable_milestone_celebration_v1';
+  static const String _kShowNextMilestoneCaptions =
+      'ui_show_next_milestone_captions_v1';
+  static const String _kUseLottieCelebrations = 'ui_use_lottie_celebrations_v1';
 
   static Future<void> setSearchFilters({
     required double kcalMin,
@@ -167,7 +256,7 @@ class UserPreferences {
       })> getSearchFilters() async {
     final prefs = await SharedPreferences.getInstance();
     final min = prefs.getDouble(_kFiltKcalMin) ?? 0;
-    final max = prefs.getDouble(_kFiltKcalMax) ?? 1000;
+    final max = prefs.getDouble(_kFiltKcalMax) ?? 1500;
     final p = prefs.getBool(_kFiltProt) ?? false;
     final c = prefs.getBool(_kFiltCarb) ?? false;
     final f = prefs.getBool(_kFiltFat) ?? false;
@@ -190,6 +279,55 @@ class UserPreferences {
     return [];
   }
 
+  // Profile objectives APIs
+  static Future<String> getDietType() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDietType) ?? 'Padrão';
+  }
+
+  static Future<void> setDietType(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kDietType, value);
+  }
+
+  static Future<String> getWeightObjective() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWeightObjective) ?? 'ganhar';
+  }
+
+  static Future<void> setWeightObjective(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kWeightObjective, value);
+  }
+
+  static Future<double?> getWeightStartKg() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_kWeightStartKg);
+  }
+
+  static Future<void> setWeightStartKg(double? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_kWeightStartKg);
+    } else {
+      await prefs.setDouble(_kWeightStartKg, value);
+    }
+  }
+
+  static Future<double?> getWeightGoalKg() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_kWeightGoalKg);
+  }
+
+  static Future<void> setWeightGoalKg(double? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_kWeightGoalKg);
+    } else {
+      await prefs.setDouble(_kWeightGoalKg, value);
+    }
+  }
+
   static Future<void> addSearchHistory(String term, {int maxItems = 8}) async {
     final t = term.trim();
     if (t.isEmpty) return;
@@ -206,6 +344,65 @@ class UserPreferences {
   static Future<void> clearSearchHistory() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kSearchHistory);
+  }
+
+  // UI advanced block expanded state
+  static Future<bool> getUiPrefsExpanded() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUiPrefsExpanded) ?? false;
+  }
+
+  static Future<void> setUiPrefsExpanded(bool expanded) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kUiPrefsExpanded, expanded);
+  }
+
+  // UI: reduce animations flag
+  static Future<void> setReduceAnimations(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kReduceAnimations, value);
+    _bump();
+  }
+
+  static Future<bool> getReduceAnimations() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kReduceAnimations) ?? false;
+  }
+
+  // UI: prefer Lottie-based celebrations when available
+  static Future<void> setUseLottieCelebrations(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kUseLottieCelebrations, value);
+    _bump();
+  }
+
+  static Future<bool> getUseLottieCelebrations() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseLottieCelebrations) ?? false;
+  }
+
+  // UI: separate toggle to celebrate achievements (confetti) even when reduce animations is off
+  static Future<void> setEnableMilestoneCelebration(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kEnableMilestoneCelebration, value);
+    _bump();
+  }
+
+  static Future<bool> getEnableMilestoneCelebration() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kEnableMilestoneCelebration) ?? true;
+  }
+
+  // UI: show "next milestone" captions on streak chips
+  static Future<void> setShowNextMilestoneCaptions(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kShowNextMilestoneCaptions, value);
+    _bump();
+  }
+
+  static Future<bool> getShowNextMilestoneCaptions() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowNextMilestoneCaptions) ?? true;
   }
 
   // UI: quick portion chips (grams)
@@ -248,7 +445,8 @@ class UserPreferences {
     if (stopMinute != null) await prefs.setInt(_kStopEatMinute, stopMinute);
   }
 
-  static Future<({int? startHour, int? startMinute, int? stopHour, int? stopMinute})>
+  static Future<
+          ({int? startHour, int? startMinute, int? stopHour, int? stopMinute})>
       getEatingTimes() async {
     final prefs = await SharedPreferences.getInstance();
     final sh = prefs.getInt(_kStartEatHour);
@@ -381,6 +579,26 @@ class UserPreferences {
       'dinner': read('dinner'),
       'snack': read('snack'),
     };
+  }
+
+  static Future<void> clearMealGoals() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kMealKcalBreakfast);
+    await prefs.remove(_kMealCarbBreakfast);
+    await prefs.remove(_kMealProtBreakfast);
+    await prefs.remove(_kMealFatBreakfast);
+    await prefs.remove(_kMealKcalLunch);
+    await prefs.remove(_kMealCarbLunch);
+    await prefs.remove(_kMealProtLunch);
+    await prefs.remove(_kMealFatLunch);
+    await prefs.remove(_kMealKcalDinner);
+    await prefs.remove(_kMealCarbDinner);
+    await prefs.remove(_kMealProtDinner);
+    await prefs.remove(_kMealFatDinner);
+    await prefs.remove(_kMealKcalSnack);
+    await prefs.remove(_kMealCarbSnack);
+    await prefs.remove(_kMealProtSnack);
+    await prefs.remove(_kMealFatSnack);
   }
 }
 

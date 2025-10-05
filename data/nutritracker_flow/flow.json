@@ -1,0 +1,200 @@
+{
+  "nodes": [
+    {
+      "id": "ba20120b71f1",
+      "index": 0
+    },
+    {
+      "id": "22a1215e810a",
+      "index": 1
+    },
+    {
+      "id": "d4ab46d8e572",
+      "index": 1
+    },
+    {
+      "id": "4b830575c702",
+      "index": 3
+    },
+    {
+      "id": "f085a559b8d8",
+      "index": 3
+    },
+    {
+      "id": "7c808a4974d1",
+      "index": 4
+    },
+    {
+      "id": "e39ebce4b834",
+      "index": 5
+    },
+    {
+      "id": "6c18fd025ed6",
+      "index": 6
+    },
+    {
+      "id": "1a6fcfe13131",
+      "index": 7
+    },
+    {
+      "id": "6cd698a403d2",
+      "index": 10
+    },
+    {
+      "id": "0ef388c939f6",
+      "index": 12
+    },
+    {
+      "id": "be8dc6b1fe17",
+      "index": 13
+    },
+    {
+      "id": "b0915fcb0d6d",
+      "index": 14
+    },
+    {
+      "id": "c584061a9270",
+      "index": 16
+    },
+    {
+      "id": "30c3bdcf438b",
+      "index": 18
+    },
+    {
+      "id": "e5cdf88348b5",
+      "index": 20
+    },
+    {
+      "id": "7ecd31c1e5b0",
+      "index": 21
+    },
+    {
+      "id": "e91ec22f4fee",
+      "index": 22
+    },
+    {
+      "id": "bba4991f7a3d",
+      "index": 23
+    }
+  ],
+  "edges": [
+    {
+      "from": "ba20120b71f1",
+      "to": "22a1215e810a",
+      "action": "NÃO"
+    },
+    {
+      "from": "d4ab46d8e572",
+      "to": "d4ab46d8e572",
+      "action": "Continuar com Google"
+    },
+    {
+      "from": "d4ab46d8e572",
+      "to": "4b830575c702",
+      "action": "apple\nContinuar com Apple"
+    },
+    {
+      "from": "f085a559b8d8",
+      "to": "7c808a4974d1",
+      "action": ""
+    },
+    {
+      "from": "f085a559b8d8",
+      "to": "e39ebce4b834",
+      "action": ""
+    },
+    {
+      "from": "f085a559b8d8",
+      "to": "6c18fd025ed6",
+      "action": ""
+    },
+    {
+      "from": "d4ab46d8e572",
+      "to": "1a6fcfe13131",
+      "action": ""
+    },
+    {
+      "from": "1a6fcfe13131",
+      "to": "1a6fcfe13131",
+      "action": "Se sim, não perguntar novamente"
+    },
+    {
+      "from": "1a6fcfe13131",
+      "to": "f085a559b8d8",
+      "action": "NÃO"
+    },
+    {
+      "from": "1a6fcfe13131",
+      "to": "6cd698a403d2",
+      "action": "SIM"
+    },
+    {
+      "from": "ba20120b71f1",
+      "to": "6cd698a403d2",
+      "action": "SIM"
+    },
+    {
+      "from": "6cd698a403d2",
+      "to": "0ef388c939f6",
+      "action": "com.google.android.apps.nexuslauncher:id/base_template_card_"
+    },
+    {
+      "from": "0ef388c939f6",
+      "to": "be8dc6b1fe17",
+      "action": "Allow"
+    },
+    {
+      "from": "0ef388c939f6",
+      "to": "b0915fcb0d6d",
+      "action": "Don’t allow"
+    },
+    {
+      "from": "0ef388c939f6",
+      "to": "b0915fcb0d6d",
+      "action": "com.android.permissioncontroller:id/grant_singleton"
+    },
+    {
+      "from": "6cd698a403d2",
+      "to": "b0915fcb0d6d",
+      "action": "Fri, Sep 5"
+    },
+    {
+      "from": "c584061a9270",
+      "to": "c584061a9270",
+      "action": "Show Calendar List and Settings drawer"
+    },
+    {
+      "from": "c584061a9270",
+      "to": "30c3bdcf438b",
+      "action": "September"
+    },
+    {
+      "from": "c584061a9270",
+      "to": "30c3bdcf438b",
+      "action": "Search"
+    },
+    {
+      "from": "6cd698a403d2",
+      "to": "e5cdf88348b5",
+      "action": "Play Store"
+    },
+    {
+      "from": "e5cdf88348b5",
+      "to": "7ecd31c1e5b0",
+      "action": ""
+    },
+    {
+      "from": "e5cdf88348b5",
+      "to": "e91ec22f4fee",
+      "action": ""
+    },
+    {
+      "from": "e5cdf88348b5",
+      "to": "bba4991f7a3d",
+      "action": ""
+    }
+  ],
+  "device": "emulator-5558",
+  "package": "com.nutritracker.app",
+  "generated_at": 1757110253
+}

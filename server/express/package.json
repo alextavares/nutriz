@@ -1,0 +1,20 @@
+{
+  "name": "nutritracker-ai-coach-express",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "openai": "^4.57.1",
+    "@anthropic-ai/sdk": "^0.27.3",
+    "@google/generative-ai": "^0.21.0",
+    "node-fetch": "^3.3.2",
+    "express-rate-limit": "^7.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}

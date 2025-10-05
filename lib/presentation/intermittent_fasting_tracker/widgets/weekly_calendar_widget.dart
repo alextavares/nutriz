@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class WeeklyCalendarWidget extends StatelessWidget {
   final List<Map<String, dynamic>> weeklyData;
@@ -26,10 +27,10 @@ class WeeklyCalendarWidget extends StatelessWidget {
       padding: EdgeInsets.all(4.w),
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: context.colors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.dividerGray.withValues(alpha: 0.3),
+          color: context.colors.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -40,8 +41,8 @@ class WeeklyCalendarWidget extends StatelessWidget {
             children: [
               Text(
                 'Calendário Semanal',
-                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textPrimary,
+                style: context.textStyles.titleMedium?.copyWith(
+                  color: context.colors.onSurface,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
@@ -53,9 +54,11 @@ class WeeklyCalendarWidget extends StatelessWidget {
                 final double padH = w < 360 ? 8 : 10;
                 final double padV = w < 360 ? 6 : 8;
                 return Container(
-                  padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: padH, vertical: padV),
                   decoration: BoxDecoration(
-                    color: AppTheme.warningAmber.withValues(alpha: 0.2),
+                    color:
+                        context.semanticColors.warning.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -63,14 +66,14 @@ class WeeklyCalendarWidget extends StatelessWidget {
                     children: [
                       CustomIconWidget(
                         iconName: 'local_fire_department',
-                        color: AppTheme.warningAmber,
+                        color: context.semanticColors.warning,
                         size: iSize,
                       ),
                       SizedBox(width: 1.w),
                       Text(
                         '$currentStreak dias',
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.warningAmber,
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: context.semanticColors.warning,
                           fontSize: fs,
                           fontWeight: FontWeight.w600,
                         ),
@@ -98,72 +101,76 @@ class WeeklyCalendarWidget extends StatelessWidget {
                 onTap: () => onDayTap(day),
                 child: LayoutBuilder(builder: (context, constraints) {
                   final w = MediaQuery.of(context).size.width;
-                  final double nameFs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
-                  final double dayFs = w < 340 ? 11.sp : (w < 380 ? 12.sp : 13.sp);
+                  final double nameFs =
+                      w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+                  final double dayFs =
+                      w < 340 ? 11.sp : (w < 380 ? 12.sp : 13.sp);
                   final double iconSize = w < 360 ? 18 : 20;
                   return Column(
-                  children: [
-                    Text(
-                      _getDayName(day.weekday),
-                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                        fontSize: nameFs,
-                      ),
-                    ),
-                    SizedBox(height: 1.h),
-                    Container(
-                      width: 10.w,
-                      height: 10.w,
-                      decoration: BoxDecoration(
-                        color: isCompleted
-                            ? AppTheme.successGreen.withValues(alpha: 0.2)
-                            : isToday
-                                ? AppTheme.activeBlue.withValues(alpha: 0.2)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isCompleted
-                              ? AppTheme.successGreen
-                              : isToday
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.dividerGray,
-                          width: isToday ? 2 : 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: isCompleted
-                            ? CustomIconWidget(
-                                iconName: 'local_fire_department',
-                                color: AppTheme.warningAmber,
-                                size: iconSize,
-                              )
-                            : Text(
-                                '${day.day}',
-                                style: AppTheme.darkTheme.textTheme.bodyMedium
-                                    ?.copyWith(
-                                  color: isToday
-                                      ? AppTheme.activeBlue
-                                      : AppTheme.textPrimary,
-                                  fontSize: dayFs,
-                                  fontWeight: isToday
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                ),
-                              ),
-                    ),
-                    ),
-                    if (isCompleted && duration > 0) ...[
-                      SizedBox(height: 0.5.h),
+                    children: [
                       Text(
-                        '${duration}h',
-                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.successGreen,
-                          fontSize: 9.sp,
-                          fontWeight: FontWeight.w500,
+                        _getDayName(day.weekday),
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: context.colors.onSurfaceVariant,
+                          fontSize: nameFs,
                         ),
                       ),
+                      SizedBox(height: 1.h),
+                      Container(
+                        width: 10.w,
+                        height: 10.w,
+                        decoration: BoxDecoration(
+                          color: isCompleted
+                              ? context.semanticColors.success
+                                  .withValues(alpha: 0.2)
+                              : isToday
+                                  ? context.colors.primary
+                                      .withValues(alpha: 0.2)
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isCompleted
+                                ? context.semanticColors.success
+                                : isToday
+                                    ? context.colors.primary
+                                    : context.colors.outline,
+                            width: isToday ? 2 : 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: isCompleted
+                              ? CustomIconWidget(
+                                  iconName: 'local_fire_department',
+                                  color: context.semanticColors.warning,
+                                  size: iconSize,
+                                )
+                              : Text(
+                                  '${day.day}',
+                                  style:
+                                      context.textStyles.bodyMedium?.copyWith(
+                                    color: isToday
+                                        ? context.colors.primary
+                                        : context.colors.onSurface,
+                                    fontSize: dayFs,
+                                    fontWeight: isToday
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      if (isCompleted && duration > 0) ...[
+                        SizedBox(height: 0.5.h),
+                        Text(
+                          '${duration}h',
+                          style: context.textStyles.bodySmall?.copyWith(
+                            color: context.semanticColors.success,
+                            fontSize: 9.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
                   );
                 }),
               );

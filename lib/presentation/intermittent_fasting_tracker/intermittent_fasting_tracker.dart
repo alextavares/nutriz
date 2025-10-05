@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import '../common/celebration_overlay.dart';
@@ -5,8 +6,8 @@ import '../../services/gamification_engine.dart';
 import '../../services/streak_service.dart';
 
 import '../../core/app_export.dart';
+import '../../theme/design_tokens.dart';
 import './widgets/achievements_widget.dart';
-import './widgets/fasting_control_button_widget.dart';
 import './widgets/fasting_method_selector_widget.dart';
 import './widgets/fasting_timer_widget.dart';
 import './widgets/notification_settings_widget.dart';
@@ -30,7 +31,6 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
   // Fasting state
   bool _isFasting = false;
   String _selectedMethod = "16:8";
-  Duration _remainingTime = const Duration(hours: 16);
   DateTime? _fastingStartTime;
   Duration? _activeTarget; // when fasting: total target duration
   Duration _customTarget = const Duration(hours: 14);
@@ -152,6 +152,321 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     setState(() => _showNextMilestoneCaptions = show);
   }
 
+  Widget _journeyClockPanel() {
+    final Duration target =
+        _activeTarget ?? _getMethodDuration(_selectedMethod);
+    final double targetHours =
+        target.inMinutes <= 0 ? 1 : target.inMinutes / 60.0;
+    final colorScheme = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    final List<Map<String, dynamic>> bars = _weeklyData.take(7).toList();
+    final TextScaler textScaler = MediaQuery.textScalerOf(context);
+    final double scale = textScaler.scale(1);
+    final double barAreaHeight = math.max(150.0, 120.0 * scale.clamp(1.0, 1.4));
+    final bool showTopLabels = scale <= 1.2;
+    final double topLabelHeight = showTopLabels ? 18.0 * scale : 0.0;
+    final double effectiveBarHeight = barAreaHeight - topLabelHeight;
+    final List<DateTime> labelDays = bars.isEmpty
+        ? List.generate(
+            7, (index) => DateTime.now().subtract(Duration(days: 6 - index)))
+        : bars.map((entry) => entry['date'] as DateTime).toList();
+
+    Widget buildBarsRow() {
+      final List<Widget> children = (bars.isEmpty
+              ? _buildPlaceholderBars(barAreaHeight)
+              : bars.map((entry) {
+                  return _buildJourneyBarColumn(
+                    entry: entry,
+                    targetHours: targetHours,
+                    textScale: scale,
+                    barAreaHeight: barAreaHeight,
+                    effectiveBarHeight: effectiveBarHeight,
+                    topLabelHeight: topLabelHeight,
+                    showTopLabel: showTopLabels,
+                  );
+                }).toList())
+          .map((child) => Expanded(child: child))
+          .toList();
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: children,
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.25)),
+      ),
+      padding: EdgeInsets.all(3.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double maxWidth = constraints.maxWidth;
+              final bool compact = maxWidth < 360;
+              final double chipWidth =
+                  math.max(120, math.min(220, maxWidth * 0.45));
+              final Widget chip = _buildMethodBadge(context, chipWidth);
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule,
+                            color: Colors.lightBlueAccent, size: 20),
+                        SizedBox(width: 2.w),
+                        Expanded(
+                          child: Text(
+                            'Horários de jejum',
+                            style: textTheme.titleSmall?.copyWith(
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 1.0.h),
+                    chip,
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  const Icon(Icons.schedule,
+                      color: Colors.lightBlueAccent, size: 20),
+                  SizedBox(width: 2.w),
+                  Expanded(
+                    child: Text(
+                      'Horários de jejum',
+                      style: textTheme.titleSmall?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: 2.w),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: chip,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          SizedBox(height: 1.6.h),
+          SizedBox(
+            height: barAreaHeight,
+            child: buildBarsRow(),
+          ),
+          SizedBox(height: 1.0.h),
+          Row(
+            children: labelDays
+                .map((day) => Expanded(
+                      child: Center(
+                        child: Text(
+                          _weekdayLabel(day),
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
+          SizedBox(height: 1.0.h),
+          Row(
+            children: [
+              Icon(Icons.restaurant,
+                  size: 16, color: colorScheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Janela de alimentação: ${_formatTimeOfDay(_stopEatingTime)} - ${_formatTimeOfDay(_startEatingTime)}',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJourneyBarColumn({
+    required Map<String, dynamic> entry,
+    required double targetHours,
+    required double textScale,
+    required double barAreaHeight,
+    required double effectiveBarHeight,
+    required double topLabelHeight,
+    required bool showTopLabel,
+  }) {
+    final double durationHours =
+        ((entry['duration'] as num?)?.toDouble() ?? 0).clamp(0, 72);
+    final bool completed = (entry['completed'] as bool?) ?? false;
+    final double ratio = targetHours <= 0 ? 0 : durationHours / targetHours;
+    final double clampedRatio = ratio.clamp(0.0, 1.3);
+    final double minVisible = 6.0;
+    final double barHeight =
+        math.max(minVisible, effectiveBarHeight * (clampedRatio / 1.3));
+    final double barWidth = math.max(14.0, 12.0 * textScale.clamp(1.0, 1.3));
+    final colorScheme = context.colors;
+    final textStyles = context.textStyles;
+    final Color base = completed
+        ? colorScheme.primary
+        : colorScheme.primary.withValues(alpha: 0.55);
+
+    final Gradient gradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        base.withValues(alpha: 0.95),
+        base.withValues(alpha: 0.65),
+      ],
+    );
+
+    final String hoursLabel = durationHours == 0
+        ? '--'
+        : (durationHours % 1 == 0
+            ? '${durationHours.toInt()}h'
+            : '${durationHours.toStringAsFixed(1)}h');
+
+    return SizedBox(
+      height: barAreaHeight,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (showTopLabel)
+            SizedBox(
+              height: topLabelHeight,
+              child: Center(
+                child: Text(
+                  hoursLabel,
+                  style: textStyles.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          Container(
+            height: barHeight,
+            width: barWidth,
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: barHeight > 20
+                  ? [
+                      BoxShadow(
+                        color: base.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildPlaceholderBars(double barAreaHeight) {
+    final Color fill = context.colors.outline.withValues(alpha: 0.35);
+    return List.generate(7, (_) {
+      return SizedBox(
+        height: barAreaHeight,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              height: 36,
+              width: 16,
+              decoration: BoxDecoration(
+                color: fill,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildMethodBadge(BuildContext context, double maxWidth) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: context.colors.primary.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            _methodDisplayName(_selectedMethod),
+            style: context.textStyles.labelSmall?.copyWith(
+              color: context.colors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _methodDisplayName(String method) {
+    switch (method) {
+      case '16:8':
+        return 'Método 16:8';
+      case '18:6':
+        return 'Método 18:6';
+      case '20:4':
+        return 'Método 20:4';
+      case 'custom':
+        final hours = _customTarget.inHours;
+        return hours > 0 ? 'Custom • ${hours}h' : 'Custom';
+      default:
+        return 'Método $method';
+    }
+  }
+
+  String _weekdayLabel(DateTime day) {
+    final String? code = Localizations.maybeLocaleOf(context)?.languageCode;
+    final bool isPortuguese = code != null && code.toLowerCase() == 'pt';
+    const pt = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final labels = isPortuguese ? pt : en;
+    return labels[(day.weekday - 1) % 7];
+  }
+
+  String _formatTimeOfDay(TimeOfDay? time) {
+    if (time == null) return '--:--';
+    final String hour = time.hour.toString().padLeft(2, '0');
+    final String minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -188,14 +503,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
         setState(() {
           _isFasting = false;
           _fastingStartTime = null;
-          _remainingTime = Duration.zero;
-        });
+          });
       } else {
         setState(() {
           _isFasting = true;
           _selectedMethod = active.method;
           _fastingStartTime = active.start;
-          _remainingTime = active.target; // keep for display
           _activeTarget = active.target;
         });
       }
@@ -227,12 +540,16 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
         _updateDailyFastingReminders();
       }
       // Reschedule end-of-fast if active
-      if (_notificationsEnabled && _isFasting && _fastingStartTime != null && _activeTarget != null) {
+      if (_notificationsEnabled &&
+          _isFasting &&
+          _fastingStartTime != null &&
+          _activeTarget != null) {
         final now = DateTime.now();
         if (_muteUntil != null && now.isBefore(_muteUntil!)) return;
         NotificationsService.cancelFastingEnd();
         final endAt = _fastingStartTime!.add(_activeTarget!);
-        NotificationsService.scheduleFastingEnd(endAt: endAt, method: _selectedMethod);
+        NotificationsService.scheduleFastingEnd(
+            endAt: endAt, method: _selectedMethod);
       }
     }
   }
@@ -248,8 +565,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
       _weeklyData = List.generate(7, (i) {
         final day = monday.add(Duration(days: i));
         final h = hist.firstWhere(
-          (e) => e.date.year == day.year && e.date.month == day.month && e.date.day == day.day,
-          orElse: () => (date: day, duration: Duration.zero, method: _selectedMethod),
+          (e) =>
+              e.date.year == day.year &&
+              e.date.month == day.month &&
+              e.date.day == day.day,
+          orElse: () =>
+              (date: day, duration: Duration.zero, method: _selectedMethod),
         );
         return {
           'date': day,
@@ -289,7 +610,6 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     setState(() {
       _isFasting = true;
       _fastingStartTime = start;
-      _remainingTime = target;
       _activeTarget = target;
     });
     FastingStorage.start(method: _selectedMethod, start: start, target: target);
@@ -299,12 +619,14 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
       final now = DateTime.now();
       final mutedActive = _muteUntil != null && now.isBefore(_muteUntil!);
       if (!mutedActive) {
-        NotificationsService.scheduleFastingEnd(endAt: endAt, method: _selectedMethod);
+        NotificationsService.scheduleFastingEnd(
+            endAt: endAt, method: _selectedMethod);
       } else {
         // Warn user that notifications are muted
         final u = _muteUntil!;
         String two(int v) => v.toString().padLeft(2, '0');
-        final label = '${two(u.day)}/${two(u.month)} ${two(u.hour)}:${two(u.minute)}';
+        final label =
+            '${two(u.day)}/${two(u.month)} ${two(u.hour)}:${two(u.minute)}';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Notificações silenciadas até $label'),
@@ -316,11 +638,13 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 setState(() => _muteUntil = null);
                 _updateDailyFastingReminders();
                 // schedule end-of-fast now
-                NotificationsService.scheduleFastingEnd(endAt: endAt, method: _selectedMethod);
+                NotificationsService.scheduleFastingEnd(
+                    endAt: endAt, method: _selectedMethod);
               },
-              textColor: AppTheme.successGreen,
+              textColor: context.semanticColors.success,
             ),
-            backgroundColor: AppTheme.textSecondary.withValues(alpha: 0.3),
+            backgroundColor:
+                context.colors.onSurfaceVariant.withValues(alpha: 0.3),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -330,9 +654,9 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     // Show success message
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Jejum iniciado! Método $_selectedMethod',
-            style: AppTheme.darkTheme.textTheme.bodyMedium
-                ?.copyWith(color: AppTheme.textPrimary)),
-        backgroundColor: AppTheme.successGreen,
+            style: context.textStyles.bodyMedium
+                ?.copyWith(color: context.colors.onSurface)),
+        backgroundColor: context.semanticColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
   }
@@ -346,21 +670,25 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
       setState(() {
         _isFasting = false;
         _fastingStartTime = null;
-        _remainingTime = Duration.zero;
       });
       await _loadWeekAndStats();
       await _refreshFastingStreak();
       // Gamification: celebrate once per day
       final celebrate = await GamificationEngine.I.fire(
-        GamificationEvent(type: GamificationEventType.goalCompleted, metaKey: 'fasting', value: fd.inSeconds),
+        GamificationEvent(
+            type: GamificationEventType.goalCompleted,
+            metaKey: 'fasting',
+            value: fd.inSeconds),
       );
-      if (celebrate && mounted) await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.goal);
+      if (celebrate && mounted)
+        await CelebrationOverlay.maybeShow(context,
+            variant: CelebrationVariant.goal);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
               'Jejum finalizado! Duração: ${hours}h ${fd.inMinutes.remainder(60)}min',
-              style: AppTheme.darkTheme.textTheme.bodyMedium
-                  ?.copyWith(color: AppTheme.textPrimary)),
-          backgroundColor: AppTheme.activeBlue,
+              style: context.textStyles.bodyMedium
+                  ?.copyWith(color: context.colors.onSurface)),
+          backgroundColor: context.colors.primary,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
@@ -370,14 +698,18 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
   void _onTimerComplete() {
     NotificationsService.cancelFastingEnd();
     FastingStorage.stopNow().then((d) async {
-    final celebrate = await GamificationEngine.I.fire(
-      GamificationEvent(type: GamificationEventType.goalCompleted, metaKey: 'fasting', value: (d ?? Duration.zero).inSeconds),
-    );
-    if (celebrate && mounted) await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.goal);
+      final celebrate = await GamificationEngine.I.fire(
+        GamificationEvent(
+            type: GamificationEventType.goalCompleted,
+            metaKey: 'fasting',
+            value: (d ?? Duration.zero).inSeconds),
+      );
+      if (celebrate && mounted)
+        await CelebrationOverlay.maybeShow(context,
+            variant: CelebrationVariant.goal);
     });
     setState(() {
       _isFasting = false;
-      _remainingTime = Duration.zero;
     });
     _loadWeekAndStats();
     _refreshFastingStreak();
@@ -387,29 +719,29 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-              backgroundColor: AppTheme.secondaryBackgroundDark,
+              backgroundColor: context.colors.surfaceContainerHigh,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
               title: Row(children: [
                 CustomIconWidget(
                     iconName: 'celebration',
-                    color: AppTheme.premiumGold,
+                    color: context.semanticColors.premium,
                     size: 24),
                 SizedBox(width: 2.w),
                 Text('Parabéns!',
-                    style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                        color: AppTheme.textPrimary, fontSize: 18.sp)),
-          ]),
-          content: Text(
-              'Você completou seu jejum $_selectedMethod com sucesso! 🎉',
-              style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary, fontSize: 14.sp)),
+                    style: context.textStyles.titleLarge?.copyWith(
+                        color: context.colors.onSurface, fontSize: 18.sp)),
+              ]),
+              content: Text(
+                  'Você completou seu jejum $_selectedMethod com sucesso! 🎉',
+                  style: context.textStyles.bodyMedium?.copyWith(
+                      color: context.colors.onSurfaceVariant, fontSize: 14.sp)),
               actions: [
                 ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.successGreen,
-                        foregroundColor: AppTheme.textPrimary),
+                        backgroundColor: context.semanticColors.success,
+                        foregroundColor: context.colors.onSurface),
                     child: Text('Continuar',
                         style: TextStyle(
                             fontSize: 14.sp, fontWeight: FontWeight.w500))),
@@ -428,7 +760,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
       // Avoid changing method during active fast
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Text('Finalize o jejum atual para alterar o método'),
-        backgroundColor: AppTheme.warningAmber,
+        backgroundColor: context.semanticColors.warning,
       ));
       return;
     }
@@ -437,7 +769,6 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     } else {
       setState(() {
         _selectedMethod = method;
-        _remainingTime = _getMethodDuration(method);
       });
     }
   }
@@ -449,7 +780,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     if (!minuteOptions.contains(minutes)) minutes = 0;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.secondaryBackgroundDark,
+      backgroundColor: context.colors.surfaceContainerHigh,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -462,13 +793,13 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Definir método personalizado',
-                    style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                      color: AppTheme.textPrimary,
+                    style: context.textStyles.titleLarge?.copyWith(
+                      color: context.colors.onSurface,
                     )),
                 SizedBox(height: 1.h),
                 Text('Duração do jejum',
-                    style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                    style: context.textStyles.bodySmall?.copyWith(
+                      color: context.colors.onSurfaceVariant,
                     )),
                 Row(
                   children: [
@@ -484,16 +815,16 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                     ),
                     SizedBox(width: 2.w),
                     Text('${hours}h',
-                        style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.activeBlue,
+                        style: context.textStyles.titleMedium?.copyWith(
+                          color: context.colors.primary,
                           fontWeight: FontWeight.w700,
                         )),
                   ],
                 ),
                 SizedBox(height: 1.h),
                 Text('Minutos',
-                    style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                    style: context.textStyles.bodySmall?.copyWith(
+                      color: context.colors.onSurfaceVariant,
                     )),
                 SizedBox(height: 0.5.h),
                 Wrap(
@@ -504,9 +835,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                         label: Text('${m}m'),
                         selected: minutes == m,
                         onSelected: (sel) => setStateBS(() => minutes = m),
-                        selectedColor: AppTheme.activeBlue.withValues(alpha: 0.2),
-                        labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                          color: minutes == m ? AppTheme.activeBlue : AppTheme.textSecondary,
+                        selectedColor:
+                            context.colors.primary.withValues(alpha: 0.2),
+                        labelStyle: context.textStyles.bodySmall?.copyWith(
+                          color: minutes == m
+                              ? context.colors.primary
+                              : context.colors.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -525,13 +859,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       setState(() {
                         _customTarget = d;
                         _selectedMethod = 'custom';
-                        _remainingTime = _getMethodDuration('custom');
                       });
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.successGreen,
-                      foregroundColor: AppTheme.textPrimary,
+                      backgroundColor: context.semanticColors.success,
+                      foregroundColor: context.colors.onSurface,
                     ),
                     child: const Text('Salvar'),
                   ),
@@ -581,12 +914,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-                backgroundColor: AppTheme.secondaryBackgroundDark,
+                backgroundColor: context.colors.surfaceContainerHigh,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 title: Text('Jejum de ${day.day}/${day.month}',
-                    style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.textPrimary, fontSize: 16.sp)),
+                    style: context.textStyles.titleMedium?.copyWith(
+                        color: context.colors.onSurface, fontSize: 16.sp)),
                 content: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,27 +927,25 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       Row(children: [
                         CustomIconWidget(
                             iconName: 'schedule',
-                            color: AppTheme.successGreen,
+                            color: context.semanticColors.success,
                             size: 20),
                         SizedBox(width: 2.w),
                         Text('Duração: ${dayData["duration"]}h',
-                            style: AppTheme.darkTheme.textTheme.bodyMedium
-                                ?.copyWith(
-                                    color: AppTheme.textPrimary,
-                                    fontSize: 14.sp)),
+                            style: context.textStyles.bodyMedium?.copyWith(
+                                color: context.colors.onSurface,
+                                fontSize: 14.sp)),
                       ]),
                       SizedBox(height: 1.h),
                       Row(children: [
                         CustomIconWidget(
                             iconName: 'check_circle',
-                            color: AppTheme.successGreen,
+                            color: context.semanticColors.success,
                             size: 20),
                         SizedBox(width: 2.w),
                         Text('Jejum completado com sucesso',
-                            style: AppTheme.darkTheme.textTheme.bodyMedium
-                                ?.copyWith(
-                                    color: AppTheme.successGreen,
-                                    fontSize: 14.sp)),
+                            style: context.textStyles.bodyMedium?.copyWith(
+                                color: context.semanticColors.success,
+                                fontSize: 14.sp)),
                       ]),
                     ]),
                 actions: [
@@ -622,7 +953,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       onPressed: () => Navigator.of(context).pop(),
                       child: Text('Fechar',
                           style: TextStyle(
-                              color: AppTheme.activeBlue, fontSize: 14.sp))),
+                              color: context.colors.primary, fontSize: 14.sp))),
                 ]);
           });
     }
@@ -637,13 +968,13 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: AppTheme.primaryBackgroundDark,
+        backgroundColor: context.colors.surface,
         appBar: AppBar(
-            backgroundColor: AppTheme.primaryBackgroundDark,
+            backgroundColor: context.colors.surface,
             elevation: 0,
             title: Text('Jejum Intermitente',
-                style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                    color: AppTheme.textPrimary,
+                style: context.textStyles.titleLarge?.copyWith(
+                    color: context.colors.onSurface,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w600)),
             centerTitle: true,
@@ -651,7 +982,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 onPressed: () => Navigator.pop(context),
                 icon: CustomIconWidget(
                     iconName: 'arrow_back',
-                    color: AppTheme.textPrimary,
+                    color: context.colors.onSurface,
                     size: 24)),
             actions: [
               IconButton(
@@ -660,26 +991,34 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                   },
                   icon: CustomIconWidget(
                       iconName: 'help_outline',
-                      color: AppTheme.textSecondary,
+                      color: context.colors.onSurfaceVariant,
                       size: 24)),
             ]),
         body: SingleChildScrollView(
             child: Column(children: [
           SizedBox(height: 2.h),
 
-          // Fasting Timer
+          // Fasting Timer (YAZIO-like card)
           Builder(builder: (context) {
             final total = _activeTarget ?? _getMethodDuration(_selectedMethod);
             // Compute dynamic remaining if active
             final remaining = (_isFasting && _fastingStartTime != null)
                 ? (total - DateTime.now().difference(_fastingStartTime!))
                 : total;
-            final safeRemaining = remaining.isNegative ? Duration.zero : remaining;
-            return FastingTimerWidget(
+            final safeRemaining =
+                remaining.isNegative ? Duration.zero : remaining;
+            final DateTime? startAt = _isFasting ? _fastingStartTime : null;
+            final DateTime? endAt =
+                (_isFasting && _fastingStartTime != null) ? _fastingStartTime!.add(total) : null;
+            return FastingTimerCard(
               isFasting: _isFasting,
               remainingTime: safeRemaining,
               totalDuration: total,
               onTimerComplete: _onTimerComplete,
+              onPrimaryAction: _isFasting ? _stopFasting : _startFasting,
+              primaryActionLabel: _isFasting ? 'Encerrar jejum' : 'Iniciar jejum',
+              startAt: startAt,
+              endAt: endAt,
             );
           }),
           SizedBox(height: 1.h),
@@ -689,16 +1028,18 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryBackgroundDark,
+                    color: context.colors.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.4)),
+                    border: Border.all(
+                        color: context.colors.outline.withValues(alpha: 0.4)),
                   ),
                   child: Text(
                     'Fuso: $_tzName',
-                    style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                    style: context.textStyles.labelSmall?.copyWith(
+                      color: context.colors.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -707,67 +1048,88 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
             ),
           if (_isFasting && _fastingStartTime != null) ...[
             Builder(builder: (context) {
-              final total = _activeTarget ?? _getMethodDuration(_selectedMethod);
+              final total =
+                  _activeTarget ?? _getMethodDuration(_selectedMethod);
               final endAt = _fastingStartTime!.add(total);
               final hh = endAt.hour.toString().padLeft(2, '0');
               final mm = endAt.minute.toString().padLeft(2, '0');
-              return Text(
-                'Termina às $hh:$mm',
-                style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.flag_circle,
+                      size: 16, color: context.colors.onSurfaceVariant),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Termina às $hh:$mm',
+                    style: context.textStyles.labelSmall?.copyWith(
+                      color: context.colors.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               );
             }),
-            SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: Alignment.centerLeft,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppTheme.warningAmber.withValues(alpha: 0.12),
+                  color: context.semanticColors.warning.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppTheme.warningAmber.withValues(alpha: 0.35)),
+                  border: Border.all(
+                      color: context.semanticColors.warning
+                          .withValues(alpha: 0.35)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.local_fire_department, color: Colors.amber, size: 16),
+                    Icon(Icons.local_fire_department,
+                        color: context.semanticColors.warning, size: 16),
                     const SizedBox(width: 6),
                     Text(
-                      _fastingStreak > 0 ? '${_fastingStreak}d jejum' : 'Sem streak jejum',
-                      style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      _fastingStreak > 0
+                          ? '${_fastingStreak}d jejum'
+                          : 'Sem streak jejum',
+                      style: context.textStyles.labelSmall?.copyWith(
+                        color: context.colors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     if (const {3, 5, 7, 14, 30}.contains(_fastingStreak)) ...[
                       const SizedBox(width: 6),
-                      const Icon(Icons.star, color: Colors.amber, size: 14),
+                      Icon(Icons.star, color: context.semanticColors.warning, size: 14),
                     ],
-                    if (_showNextMilestoneCaptions) ...(() {
-                      final thresholds = [3, 5, 7, 14, 30];
-                      int? next;
-                      for (final t in thresholds) {
-                        if (_fastingStreak < t) { next = t; break; }
-                      }
-                      if (next == null) return <Widget>[];
-                      return [
-                        const SizedBox(width: 6),
-                        Text('• próx: ${next}d',
-                            style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                  fontWeight: FontWeight.w600,
-                                )),
-                      ];
-                    })(),
+                    if (_showNextMilestoneCaptions)
+                      ...(() {
+                        final thresholds = [3, 5, 7, 14, 30];
+                        int? next;
+                        for (final t in thresholds) {
+                          if (_fastingStreak < t) {
+                            next = t;
+                            break;
+                          }
+                        }
+                        if (next == null) return <Widget>[];
+                        return [
+                          const SizedBox(width: 6),
+                          Text('• próx: ${next}d',
+                              style: context.textStyles.labelSmall?.copyWith(
+                                color: context.colors.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              )),
+                        ];
+                      })(),
                   ],
                 ),
               ),
             ),
           ],
 
-          SizedBox(height: 4.h),
+          SizedBox(height: 3.h),
+          _journeyClockPanel(),
+          SizedBox(height: 3.h),
 
           // Fasting Method Selector
           FastingMethodSelectorWidget(
@@ -776,20 +1138,8 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
 
           SizedBox(height: 4.h),
 
-          // Control Button
-          Builder(builder: (context) {
-            final now = DateTime.now();
-            final mutedActive = _notificationsEnabled && _muteUntil != null && now.isBefore(_muteUntil!);
-            return FastingControlButtonWidget(
-              isFasting: _isFasting,
-              onStartFasting: _startFasting,
-              onStopFasting: _stopFasting,
-              muted: !_isFasting && mutedActive,
-              muteUntil: _muteUntil,
-            );
-          }),
-
-          SizedBox(height: 4.h),
+          // Control button moved into FastingTimerCard (CTA)
+          SizedBox(height: 2.h),
 
           // Weekly Calendar
           WeeklyCalendarWidget(
@@ -816,10 +1166,13 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
               muteUntil: _muteUntil,
               fastEndAt: (() {
                 if (!_notificationsEnabled) return null;
-                if (!_isFasting || _fastingStartTime == null || _activeTarget == null) return null;
+                if (!_isFasting ||
+                    _fastingStartTime == null ||
+                    _activeTarget == null) return null;
                 // If muted, don't show end notification time
                 final now = DateTime.now();
-                if (_muteUntil != null && now.isBefore(_muteUntil!)) return null;
+                if (_muteUntil != null && now.isBefore(_muteUntil!))
+                  return null;
                 return _fastingStartTime!.add(_activeTarget!);
               })(),
               onMute24h: () async {
@@ -832,7 +1185,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('Lembretes silenciados por 24h'),
-                    backgroundColor: AppTheme.warningAmber,
+                    backgroundColor: context.semanticColors.warning,
                   ),
                 );
               },
@@ -842,21 +1195,27 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 setState(() => _muteUntil = null);
                 _updateDailyFastingReminders();
                 // If there is an active fast, reschedule end notification
-                if (_notificationsEnabled && _isFasting && _fastingStartTime != null && _activeTarget != null) {
+                if (_notificationsEnabled &&
+                    _isFasting &&
+                    _fastingStartTime != null &&
+                    _activeTarget != null) {
                   final endAt = _fastingStartTime!.add(_activeTarget!);
-                  NotificationsService.scheduleFastingEnd(endAt: endAt, method: _selectedMethod);
+                  NotificationsService.scheduleFastingEnd(
+                      endAt: endAt, method: _selectedMethod);
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('Lembretes reativados'),
-                    backgroundColor: AppTheme.successGreen,
+                    backgroundColor: context.semanticColors.success,
                   ),
                 );
               },
               onMuteTomorrow: () async {
                 final now = DateTime.now();
-                final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-                final until = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 8, 0);
+                final tomorrow = DateTime(now.year, now.month, now.day)
+                    .add(const Duration(days: 1));
+                final until =
+                    DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 8, 0);
                 await NotificationsService.setFastingMuteUntil(until);
                 await NotificationsService.cancelDailyFastingReminders();
                 await NotificationsService.cancelFastingEnd();
@@ -865,7 +1224,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Lembretes silenciados até amanhã 08:00'),
-                    backgroundColor: AppTheme.warningAmber,
+                    backgroundColor: context.semanticColors.warning,
                   ),
                 );
               },
@@ -906,23 +1265,16 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
         ])),
         bottomNavigationBar: Container(
             decoration: BoxDecoration(
-                color: AppTheme.secondaryBackgroundDark,
+                color: context.colors.surfaceContainerHigh,
                 boxShadow: [
                   BoxShadow(
-                      color: AppTheme.shadowDark,
+                      color: context.theme.shadowColor,
                       blurRadius: 8,
                       offset: const Offset(0, -2)),
                 ]),
             child: TabBar(
                 controller: _tabController,
-                labelColor: AppTheme.activeBlue,
-                unselectedLabelColor: AppTheme.textSecondary,
-                indicatorColor: AppTheme.activeBlue,
-                indicatorWeight: 3,
-                labelStyle: AppTheme.darkTheme.textTheme.bodySmall
-                    ?.copyWith(fontSize: 10.sp, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: AppTheme.darkTheme.textTheme.bodySmall
-                    ?.copyWith(fontSize: 10.sp, fontWeight: FontWeight.w400),
+                indicatorWeight: 2,
                 onTap: (index) {
                   switch (index) {
                     case 0:
@@ -944,47 +1296,34 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       break;
                   }
                 },
-                tabs: [
+                tabs: const [
                   Tab(
                       icon: CustomIconWidget(
                           iconName: 'dashboard',
-                          color: _tabController.index == 0
-                              ? AppTheme.activeBlue
-                              : AppTheme.textSecondary,
                           size: 20),
                       text: 'Diário'),
                   Tab(
                       icon: CustomIconWidget(
                           iconName: 'schedule',
-                          color: _tabController.index == 1
-                              ? AppTheme.activeBlue
-                              : AppTheme.textSecondary,
                           size: 20),
                       text: 'Jejum'),
                   Tab(
                       icon: CustomIconWidget(
                           iconName: 'restaurant_menu',
-                          color: _tabController.index == 2
-                              ? AppTheme.activeBlue
-                              : AppTheme.textSecondary,
                           size: 20),
                       text: 'Receitas'),
                   Tab(
                       icon: CustomIconWidget(
                           iconName: 'person',
-                          color: _tabController.index == 3
-                              ? AppTheme.activeBlue
-                              : AppTheme.textSecondary,
                           size: 20),
                       text: 'Perfil'),
                   Tab(
                       icon: CustomIconWidget(
                           iconName: 'star',
-                          color: _tabController.index == 4
-                              ? AppTheme.premiumGold
-                              : AppTheme.textSecondary,
                           size: 20),
                       text: 'PRO'),
                 ])));
   }
 }
+
+

@@ -1,0 +1,141 @@
+{
+  "title": "NutriTracker UI Redesign — YAZIO-like",
+  "created": "2025-10-02T00:00:00Z",
+  "updated": "2025-10-03T14:27:54Z",
+  "steps": [
+    {
+      "id": "capture_yazio",
+      "name": "Map YAZIO screens + capture",
+      "status": "completed",
+      "artifacts": [
+        "design/yazio/yazio-fasting-home.png",
+        "design/yazio/yazio-diary.png",
+        "design/yazio/yazio-recipes.png",
+        "design/yazio/yazio-profile.png",
+        "design/yazio/yazio-pro.png"
+      ]
+    },
+    {
+      "id": "extract_tokens",
+      "name": "Extract tokens + create preset",
+      "status": "completed"
+    },
+    {
+      "id": "theme_switch",
+      "name": "Wire theme switch in AppTheme",
+      "status": "completed"
+    },
+    {
+      "id": "unify_components",
+      "name": "Unify bottom nav + components",
+      "status": "in_progress"
+    },
+    {
+      "id": "refactor_fasting",
+      "name": "Refactor Fasting screen",
+      "status": "completed"
+    },
+    {
+      "id": "refactor_core",
+      "name": "Refactor Diary/Recipes/Profile",
+      "status": "pending"
+    },
+    {
+      "id": "validate_polish",
+      "name": "Validate on 5554 + polish",
+      "status": "in_progress"
+    }
+  ],
+  "notes": [
+    {
+      "ts": "2025-10-02T16:12:51Z",
+      "step": "capture_yazio",
+      "note": "capturas base concluídas (design/yazio/*.png)"
+    },
+    {
+      "ts": "2025-10-02T16:12:51Z",
+      "step": "extract_tokens",
+      "note": "preset yazio_like adicionado (lib/theme/presets/yazio_like.dart)"
+    },
+    {
+      "ts": "2025-10-02T16:12:51Z",
+      "step": "theme_switch",
+      "note": "MAIN e AppTheme agora suportam --dart-define=THEME_PRESET=yazio"
+    },
+    {
+      "ts": "2025-10-02T16:27:55Z",
+      "step": "unify_components",
+      "note": "BottomNavigationBar agora usa Theme (root_shell, daily_dashboard) sem cores inline"
+    },
+    {
+      "ts": "2025-10-02T16:29:19Z",
+      "step": "refactor_fasting",
+      "note": "FastingTimerCard criado e integrado; layout card com status/cronometro/CTA/hor\u0011rios"
+    },
+    {
+      "ts": "2025-10-02T16:35:50Z",
+      "step": "unify_components",
+      "note": "AppBar titulo semibold; FilledButtonTheme adicionado; botoes com alturas padrao (YAZIO-like)"
+    },
+    {
+      "ts": "2025-10-02T16:47:48Z",
+      "step": "refactor_fasting",
+      "note": "Polimento final da tela Jejum: linha 'Termina às' com ícone e labelSmall; chip de streak com semantic warning; TabBar inferior herdando Theme (sem cores inline)."
+    },
+    {
+      "ts": "2025-10-02T16:54:23Z",
+      "step": "validate_polish",
+      "note": "validação 5554: capturas fasting/landing salvas em design/validation/5554"
+    },
+    {
+      "ts": "2025-10-02T15:58:00Z",
+      "step": "validate_polish",
+      "note": "capturas adicionais: diário/receitas/perfil/pro salvas (design/validation/5554)"
+    },
+    {
+      "ts": "2025-10-02T16:57:38Z",
+      "step": "unify_components",
+      "note": "removidos AppTheme.* diretos: datepicker (root_shell), botão erro (CustomErrorWidget) para Theme.of colorScheme"
+    },
+    {
+      "ts": "2025-10-02T17:11:58Z",
+      "step": "unify_components",
+      "note": "compat: AppTheme.* agora aponta para preset do THEME_PRESET; re-export de design_tokens para facilitar semanticColors"
+    },
+    {
+      "ts": "2025-10-02T17:19:01Z",
+      "step": "unify_components",
+      "note": "migrados para Theme: recipe_detail quase completo; weekly_progress primeiras seções (lista de entradas, fundo, ícones, badges)"
+    },
+    {
+      "ts": "2025-10-02T19:17:38Z",
+      "step": "unify_components",
+      "note": "exercise_logging: migrate to Theme (semanticColors/primary); weekly: sheet background + drag handle + snackbars themed"
+    },
+    {
+      "ts": "2025-10-02T19:19:28Z",
+      "step": "unify_components",
+      "note": "root_shell: add sheet uses themed background; weekly_progress: dialog/sheet backgrounds and success/warning snackbars themed"
+    },
+    {
+      "ts": "2025-10-02T19:46:28Z",
+      "step": "unify_components",
+      "note": "weekly_progress: remove AppTheme.* and use Theme/semanticColors; refactor sheets/dialogs/snackbars/cards/bars; exercise_logging already themed"
+    },
+    {
+      "ts": "2025-10-02T22:33:56Z",
+      "step": "validate_polish",
+      "note": "analyze ok; build+install emu-5554; screenshot saved; logs under logs/*.log"
+    },
+    {
+      "ts": "2025-10-03T13:42:41Z",
+      "step": "validate_polish",
+      "note": "desabilitado GoogleFonts runtime fetch; rebuild+reinstall OK; travamento resolvido offline"
+    },
+    {
+      "ts": "2025-10-03T14:27:54Z",
+      "step": "validate_polish",
+      "note": "validação visual: capturas 5554 atualizadas; páginas lado-a-lado geradas em docs/compare/*.html"
+    }
+  ]
+}

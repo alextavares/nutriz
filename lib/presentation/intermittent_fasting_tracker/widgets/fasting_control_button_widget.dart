@@ -3,6 +3,7 @@ import 'package:sizer/sizer.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class FastingControlButtonWidget extends StatefulWidget {
   final bool isFasting;
@@ -10,6 +11,8 @@ class FastingControlButtonWidget extends StatefulWidget {
   final VoidCallback onStopFasting;
   final bool muted;
   final DateTime? muteUntil;
+  final double? width;
+  final double? height;
 
   const FastingControlButtonWidget({
     Key? key,
@@ -18,6 +21,8 @@ class FastingControlButtonWidget extends StatefulWidget {
     required this.onStopFasting,
     this.muted = false,
     this.muteUntil,
+    this.width,
+    this.height,
   }) : super(key: key);
 
   @override
@@ -53,7 +58,9 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
   }
 
   void _handleTap() {
-    try { HapticFeedback.lightImpact(); } catch (_) {}
+    try {
+      HapticFeedback.lightImpact();
+    } catch (_) {}
     _animationController.forward().then((_) {
       _animationController.reverse();
     });
@@ -69,8 +76,11 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final colors = context.colors;
+        final textTheme = Theme.of(context).textTheme;
+        final semantics = context.semanticColors;
         return AlertDialog(
-          backgroundColor: AppTheme.secondaryBackgroundDark,
+          backgroundColor: colors.surfaceContainerHigh,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -78,14 +88,14 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
             children: [
               CustomIconWidget(
                 iconName: 'warning',
-                color: AppTheme.warningAmber,
+                color: semantics.warning,
                 size: 24,
               ),
               SizedBox(width: 2.w),
               Text(
                 'Parar Jejum?',
-                style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                  color: AppTheme.textPrimary,
+                style: textTheme.titleLarge?.copyWith(
+                  color: colors.onSurface,
                   fontSize: 18.sp,
                 ),
               ),
@@ -93,8 +103,8 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
           ),
           content: Text(
             'Tem certeza que deseja interromper seu jejum atual? Seu progresso será salvo.',
-            style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
+            style: textTheme.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
               fontSize: 14.sp,
             ),
           ),
@@ -104,7 +114,7 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
               child: Text(
                 'Cancelar',
                 style: TextStyle(
-                  color: AppTheme.textSecondary,
+                  color: colors.onSurfaceVariant,
                   fontSize: 14.sp,
                 ),
               ),
@@ -112,12 +122,14 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                try { HapticFeedback.mediumImpact(); } catch (_) {}
+                try {
+                  HapticFeedback.mediumImpact();
+                } catch (_) {}
                 widget.onStopFasting();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.errorRed,
-                foregroundColor: AppTheme.textPrimary,
+                backgroundColor: colors.error,
+                foregroundColor: colors.onError,
               ),
               child: Text(
                 'Parar Jejum',
@@ -140,6 +152,9 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
       builder: (context, child) {
         final isFasting = widget.isFasting;
         final label = isFasting ? 'Parar Jejum' : 'Iniciar Jejum';
+        final colors = context.colors;
+        final semantics = context.semanticColors;
+        final textTheme = Theme.of(context).textTheme;
         return Transform.scale(
           scale: _scaleAnimation.value,
           child: Column(
@@ -148,20 +163,20 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
               Semantics(
                 button: true,
                 label: label,
-                child: Container(
-                  width: 80.w,
-                  height: 6.h,
+                child: SizedBox(
+                  width: widget.width ?? 80.w,
+                  height: widget.height ?? 6.h,
                   child: ElevatedButton(
                     onPressed: _handleTap,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isFasting
-                          ? AppTheme.errorRed
-                          : AppTheme.successGreen,
-                      foregroundColor: AppTheme.textPrimary,
+                      backgroundColor:
+                          isFasting ? colors.error : semantics.success,
+                      foregroundColor:
+                          isFasting ? colors.onError : colors.onPrimary,
                       elevation: 4,
                       shadowColor: isFasting
-                          ? AppTheme.errorRed.withValues(alpha: 0.3)
-                          : AppTheme.successGreen.withValues(alpha: 0.3),
+                          ? colors.error.withValues(alpha: 0.3)
+                          : semantics.success.withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -171,14 +186,15 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
                       children: [
                         CustomIconWidget(
                           iconName: isFasting ? 'stop' : 'play_arrow',
-                          color: AppTheme.textPrimary,
+                          color: isFasting ? colors.onError : colors.onPrimary,
                           size: 24,
                         ),
                         SizedBox(width: 2.w),
                         if (!isFasting && widget.muted) ...[
                           Tooltip(
                             message: () {
-                              if (widget.muteUntil == null) return 'Notificações silenciadas';
+                              if (widget.muteUntil == null)
+                                return 'Notificações silenciadas';
                               final u = widget.muteUntil!;
                               String two(int v) => v.toString().padLeft(2, '0');
                               return 'Silenciado até ${two(u.day)}/${two(u.month)} ${two(u.hour)}:${two(u.minute)}';
@@ -186,15 +202,21 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
                             child: Icon(
                               Icons.notifications_off_outlined,
                               size: 16,
-                              color: (Color.lerp(AppTheme.warningAmber, Colors.white, 0.2) ?? AppTheme.warningAmber),
+                              color: Color.lerp(
+                                    semantics.warning,
+                                    colors.onSurface,
+                                    0.2,
+                                  ) ??
+                                  semantics.warning,
                             ),
                           ),
                           SizedBox(width: 1.2.w),
                         ],
                         Text(
                           label,
-                          style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
-                            color: AppTheme.textPrimary,
+                          style: textTheme.labelLarge?.copyWith(
+                            color:
+                                isFasting ? colors.onError : colors.onPrimary,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -218,8 +240,8 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
                         ? 'Notificações silenciadas até $untilLabel — término sem notificação'
                         : 'Notificações silenciadas — término sem notificação',
                     textAlign: TextAlign.center,
-                    style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                    style: textTheme.labelSmall?.copyWith(
+                      color: colors.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
                   );

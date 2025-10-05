@@ -1,0 +1,46 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'server/cloudflare/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/cloudflare
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node (for Wrangler)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: |
+          npm i -g wrangler@latest
+
+      - name: Publish Worker
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          wrangler deploy --account-id "$CLOUDFLARE_ACCOUNT_ID" --var OPENAI_MODEL:gpt-4o-mini --var VISION_PROVIDER:openai
+
+      # Optionally set/update non-committed secrets
+      # - name: Set Secrets (optional)
+      #   env:
+      #     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      #     APP_TOKEN: ${{ secrets.APP_TOKEN }}
+      #     ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+      #   run: |
+      #     echo "$OPENAI_API_KEY" | wrangler secret put OPENAI_API_KEY --account-id "$CLOUDFLARE_ACCOUNT_ID" --name nutritracker-worker --quiet
+      #     echo "$APP_TOKEN" | wrangler secret put APP_TOKEN --account-id "$CLOUDFLARE_ACCOUNT_ID" --name nutritracker-worker --quiet
+      #     wrangler kv:namespace list # example of other resources

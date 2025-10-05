@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../theme/design_tokens.dart';
 import '../../services/user_preferences.dart';
 import '../../services/achievement_service.dart';
 import '../../services/streak_service.dart';
@@ -86,9 +87,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     final prefs = await SharedPreferences.getInstance();
+    final premium = await UserPreferences.getPremiumStatus();
     setState(() {
       _email = prefs.getString('user_email') ?? 'usuário@nutritracker.com';
-      _isPremium = prefs.getBool('premium_status') ?? false;
+      _isPremium = premium;
     });
     final goals = await UserPreferences.getGoals();
     if (!mounted) return;
@@ -179,12 +181,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       // Tabs EU | AMIGOS
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 0.8.w),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 3.2.w, vertical: 0.8.w),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant
+                                .withValues(alpha: 0.2),
                           ),
                         ),
                         child: Row(
@@ -193,10 +199,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             SegmentedButton<String>(
                               segments: const [
                                 ButtonSegment(value: 'me', label: Text('EU')),
-                                ButtonSegment(value: 'friends', label: Text('AMIGOS')),
+                                ButtonSegment(
+                                    value: 'friends', label: Text('AMIGOS')),
                               ],
                               selected: {_tab},
-                              onSelectionChanged: (s) => setState(() => _tab = s.first),
+                              onSelectionChanged: (s) =>
+                                  setState(() => _tab = s.first),
                             ),
                           ],
                         ),
@@ -204,105 +212,126 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       SizedBox(height: 1.2.h),
 
                       if (_tab == 'me') ...[
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 3.2.w, vertical: 1.4.w),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 8.w,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.15),
+                                child: Text(
+                                  (_email ?? 'U').substring(0, 1).toUpperCase(),
+                                  style:
+                                      Theme.of(context).textTheme.headlineSmall,
+                                ),
+                              ),
+                              SizedBox(width: 4.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _email ?? '-',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                    SizedBox(height: 0.5.h),
+                                    Row(
+                                      children: [
+                                        CustomIconWidget(
+                                          iconName:
+                                              _isPremium ? 'star' : 'person',
+                                          color: _isPremium
+                                              ? AppTheme.premiumGold
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                          size: 5.w,
+                                        ),
+                                        SizedBox(width: 2.w),
+                                        Text(
+                                          _isPremium
+                                              ? 'Assinatura PRO'
+                                              : 'Plano Gratuito',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 8.w,
-                              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-                              child: Text(
-                                (_email ?? 'U').substring(0, 1).toUpperCase(),
-                                style: Theme.of(context).textTheme.headlineSmall,
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _email ?? '-',
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  SizedBox(height: 0.5.h),
-                                  Row(
-                                    children: [
-                                      CustomIconWidget(
-                                        iconName: _isPremium ? 'star' : 'person',
-                                        color: _isPremium
-                                            ? AppTheme.premiumGold
-                                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                                        size: 5.w,
-                                      ),
-                                      SizedBox(width: 2.w),
-                                      Text(
-                                        _isPremium ? 'Assinatura PRO' : 'Plano Gratuito',
-                                        style: Theme.of(context).textTheme.bodyMedium,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 3.h),
-                      _buildMyProgressCard(),
-                      SizedBox(height: 2.h),
-                      _buildMyObjectivesCard(),
-                      SizedBox(height: 3.h),
-                      Text(
-                        'Metas Diárias',
-                        style:
-                            AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 1.h),
-                      _buildGoalsForm(),
-                      SizedBox(height: 3.h),
-                      _buildHydrationReminderSection(),
-                      SizedBox(height: 3.h),
-                      _buildPerMealGoalsSection(),
-                      SizedBox(height: 3.h),
-                      _buildBackupSection(),
-                      SizedBox(height: 3.h),
-                      KeyedSubtree(
-                          key: _uiPrefsKey,
-                          child: _buildUiPreferencesSection()),
-                      SizedBox(height: 3.h),
-                      ElevatedButton(
-                        onPressed: _confirmLogout,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.errorRed,
-                          padding: EdgeInsets.symmetric(vertical: 2.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        SizedBox(height: 2.4.h),
+                        _isPremium
+                            ? _buildProSubscriberBanner()
+                            : _buildProUpsellBanner(),
+                        SizedBox(height: 3.h),
+                        _buildMyProgressCard(),
+                        SizedBox(height: 2.h),
+                        _buildMyObjectivesCard(),
+                        SizedBox(height: 3.h),
+                        Text(
+                          'Metas Diárias',
+                          style: AppTheme.darkTheme.textTheme.titleMedium
+                              ?.copyWith(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CustomIconWidget(
-                              iconName: 'logout',
-                              color: AppTheme.textPrimary,
-                              size: 5.w,
+                        SizedBox(height: 1.h),
+                        _buildGoalsForm(),
+                        SizedBox(height: 3.h),
+                        _buildHydrationReminderSection(),
+                        SizedBox(height: 3.h),
+                        _buildPerMealGoalsSection(),
+                        SizedBox(height: 3.h),
+                        _buildBackupSection(),
+                        SizedBox(height: 3.h),
+                        KeyedSubtree(
+                            key: _uiPrefsKey,
+                            child: _buildUiPreferencesSection()),
+                        SizedBox(height: 3.h),
+                        ElevatedButton(
+                          onPressed: _confirmLogout,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.errorRed,
+                            padding: EdgeInsets.symmetric(vertical: 2.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            SizedBox(width: 2.w),
-                            const Text('Sair'),
-                          ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CustomIconWidget(
+                                iconName: 'logout',
+                                color: AppTheme.textPrimary,
+                                size: 5.w,
+                              ),
+                              SizedBox(width: 2.w),
+                              const Text('Sair'),
+                            ],
+                          ),
                         ),
-                      ),
                       ] else ...[
                         _buildFriendsPlaceholder(),
                       ],
@@ -345,7 +374,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: controller,
-                  onChanged: (v) => setState(() => valid = v.trim().toUpperCase() == 'SAIR'),
+                  onChanged: (v) =>
+                      setState(() => valid = v.trim().toUpperCase() == 'SAIR'),
                   decoration: const InputDecoration(hintText: 'SAIR'),
                 ),
               ],
@@ -357,16 +387,223 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(color: AppTheme.textSecondary)),
               ),
               ElevatedButton(
-                onPressed: !valid ? null : () async {
-                  Navigator.pop(context);
-                  await _logout();
-                },
+                onPressed: !valid
+                    ? null
+                    : () async {
+                        Navigator.pop(context);
+                        await _logout();
+                      },
                 child: const Text('Sair'),
               ),
             ],
           );
         });
       },
+    );
+  }
+
+  Widget _buildProUpsellBanner() {
+    final cs = Theme.of(context).colorScheme;
+    final featureChips = [
+      _buildProFeatureChip(
+          Icons.auto_graph_outlined, 'Relatórios inteligentes'),
+      _buildProFeatureChip(Icons.restaurant_outlined, 'Planos guiados'),
+      _buildProFeatureChip(
+          Icons.qr_code_scanner, 'Scanner de código de barras'),
+    ];
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 3.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.activeBlue.withValues(alpha: 0.14),
+            AppTheme.premiumGold.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.activeBlue.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('NutriTracker PRO',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.activeBlue,
+                  )),
+          SizedBox(height: 0.8.h),
+          Text(
+            'Personalize refeições, receba alertas inteligentes e acesse a biblioteca completa de receitas exclusivas.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+          ),
+          SizedBox(height: 1.2.h),
+          Wrap(spacing: 2.w, runSpacing: 1.w, children: featureChips),
+          SizedBox(height: 1.6.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _openProSubscription,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 1.6.h),
+                backgroundColor: AppTheme.activeBlue,
+                foregroundColor: AppTheme.textPrimary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Conheça o NutriTracker PRO'),
+            ),
+          ),
+          SizedBox(height: 0.6.h),
+          Text(
+            'Planos a partir de R\$ 14,99/mês · Cancele quando quiser',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProSubscriberBanner() {
+    final cs = Theme.of(context).colorScheme;
+    final semantics = context.semanticColors;
+    final textStyles = context.textStyles;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 3.w),
+      decoration: BoxDecoration(
+        color: semantics.premium.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: semantics.premium.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.workspace_premium_outlined,
+                  color: semantics.premium),
+              SizedBox(width: 2.w),
+              Text(
+                'Você é PRO!',
+                style: textStyles.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: semantics.premium,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 0.8.h),
+          Text(
+            'Aproveite todos os recursos avançados do NutriTracker. Novas receitas e planos chegam toda semana.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+          ),
+          SizedBox(height: 1.4.h),
+          Wrap(
+            spacing: 2.w,
+            runSpacing: 1.w,
+            children: [
+              _buildProFeatureChip(Icons.auto_graph, 'Insights avançados'),
+              _buildProFeatureChip(
+                  Icons.fitness_center_outlined, 'Planos dinâmicos'),
+              _buildProFeatureChip(Icons.menu_book, 'Receitas PRO'),
+            ],
+          ),
+          SizedBox(height: 1.6.h),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _openProSubscription,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.activeBlue,
+                    foregroundColor: AppTheme.textPrimary,
+                    padding: EdgeInsets.symmetric(vertical: 1.4.h),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Explorar benefícios PRO'),
+                ),
+              ),
+            ],
+          ),
+          TextButton(
+            onPressed: _confirmDowngrade,
+            child: const Text('Cancelar PRO (ambiente de testes)'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProFeatureChip(IconData icon, String label) {
+    return Chip(
+      avatar: Icon(icon, size: 16, color: AppTheme.activeBlue),
+      backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.1),
+      labelStyle: Theme.of(context)
+          .textTheme
+          .labelSmall
+          ?.copyWith(color: AppTheme.activeBlue, fontWeight: FontWeight.w600),
+      label: Text(label),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      side: BorderSide(color: AppTheme.activeBlue.withValues(alpha: 0.2)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    );
+  }
+
+  Future<void> _openProSubscription() async {
+    final result =
+        await Navigator.pushNamed(context, AppRoutes.proSubscription);
+    if (result == true) {
+      await _loadProfile();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Assinatura PRO ativada com sucesso!'),
+          backgroundColor: AppTheme.successGreen,
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmDowngrade() async {
+    final shouldDowngrade = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Encerrar PRO'),
+              content: const Text(
+                  'Essa ação está disponível apenas para testes. Confirmar cancelamento da assinatura PRO?'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Manter PRO')),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.errorRed,
+                      foregroundColor: AppTheme.textPrimary),
+                  child: const Text('Cancelar'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+    if (!shouldDowngrade) return;
+    await UserPreferences.setPremiumStatus(false);
+    if (!mounted) return;
+    await _loadProfile();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Plano gratuito reativado'),
+        backgroundColor: AppTheme.activeBlue,
+      ),
     );
   }
 
@@ -383,20 +620,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.12),
-            child: const Icon(Icons.group_outlined, color: AppTheme.activeBlue, size: 18),
+            backgroundColor: cs.primary.withValues(alpha: 0.12),
+            child: Icon(Icons.group_outlined, color: cs.primary, size: 18),
           ),
           SizedBox(width: 3.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Amigos', style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: cs.onSurface, fontWeight: FontWeight.w600,
-                )),
+                Text('Amigos',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w600,
+                        )),
                 const SizedBox(height: 2),
-                Text('Conecte-se com amigos para comparar progresso. Em breve.',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                Text(
+                  'Conecte-se com amigos para comparar progresso. Em breve.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -421,35 +664,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
             current = w; // last valid becomes current
           }
         }
-        final start = _weightStart ?? first;
-        final goal = _weightGoal;
-        final delta = (current != null && start != null) ? (current - start) : null;
+        final double? startValue = _weightStart ?? first;
+        final double? goalValue = _weightGoal;
+        final double? delta = (current != null && startValue != null)
+            ? (current - startValue)
+            : null;
         // progress ratio 0..1 depending on objective direction
         double progress = 0;
-        if (current != null && start != null && goal != null && goal != start) {
-          if (goal > start) {
-            progress = ((current - start) / (goal - start)).clamp(0, 1).toDouble();
+        if (current != null &&
+            startValue != null &&
+            goalValue != null &&
+            goalValue != startValue) {
+          if (goalValue > startValue) {
+            progress = ((current - startValue) / (goalValue - startValue))
+                .clamp(0, 1)
+                .toDouble();
           } else {
-            progress = ((start - current) / (start - goal)).clamp(0, 1).toDouble();
+            progress = ((startValue - current) / (startValue - goalValue))
+                .clamp(0, 1)
+                .toDouble();
           }
         }
         // choose bar color based on direction
         Color barColor = AppTheme.activeBlue;
-        if (start != null && goal != null) {
-          barColor = goal > start
+        if (startValue != null && goalValue != null) {
+          barColor = goalValue > startValue
               ? AppTheme.successGreen
-              : (goal < start ? AppTheme.errorRed : AppTheme.activeBlue);
+              : (goalValue < startValue
+                  ? AppTheme.errorRed
+                  : AppTheme.activeBlue);
         }
-        final bool reached = (current != null && goal != null)
-            ? (current - goal).abs() < 0.2
+        final bool reached = (current != null && goalValue != null)
+            ? (current - goalValue).abs() < 0.2
             : false;
         // show bar only when we have meaningful range
-        final bool showBar =
-            current != null && start != null && goal != null && (goal - start).abs() >= 0.5;
+        final bool showBar = current != null &&
+            startValue != null &&
+            goalValue != null &&
+            (goalValue - startValue).abs() >= 0.5;
 
         // Estimate weeks to goal using simple linear trend (first vs last point)
         double? weeks;
-        if (goal != null && current != null) {
+        if (goalValue != null && current != null) {
           final pts = <(DateTime, double)>[];
           for (final e in data) {
             final w = (e.$2['weightKg'] as num?)?.toDouble();
@@ -461,15 +717,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final days = lastPt.$1.difference(firstPt.$1).inDays;
             if (days > 0) {
               final slopePerDay = (lastPt.$2 - firstPt.$2) / days;
-              final need = (goal - current).abs();
-              final dirOk = (goal > current && slopePerDay > 0) ||
-                  (goal < current && slopePerDay < 0);
+              final need = (goalValue - current).abs();
+              final dirOk = (goalValue > current && slopePerDay > 0) ||
+                  (goalValue < current && slopePerDay < 0);
               if (dirOk && slopePerDay.abs() > 0.0001) {
                 weeks = (need / slopePerDay.abs()) / 7.0;
               }
             }
           }
         }
+
+        String formatWeight(double? value) =>
+            value == null ? '--' : '${value.toStringAsFixed(1)} kg';
 
         String subtitle;
         if (reached && showBar) {
@@ -493,6 +752,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           subtitle = 'Defina sua meta de peso para acompanhar a barra';
         }
 
+        final semantics = context.semanticColors;
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
           decoration: BoxDecoration(
@@ -518,8 +778,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 )),
                         if (reached) ...[
                           const SizedBox(width: 6),
-                          const Icon(Icons.check_circle,
-                              color: AppTheme.successGreen, size: 18),
+                          Icon(
+                            Icons.check_circle,
+                            color: semantics.success,
+                            size: 18,
+                          ),
                         ],
                       ],
                     ),
@@ -533,9 +796,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.bodyMetrics, arguments: {
-                        'openEditor': true,
-                      });
+                      Navigator.pushNamed(context, AppRoutes.bodyMetrics,
+                          arguments: {
+                            'openEditor': true,
+                          });
                     },
                     child: const Text('REGISTRAR PESO'),
                   ),
@@ -549,7 +813,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 6),
-              Text(subtitle, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurface)),
+              Text(subtitle,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: cs.onSurface)),
               if (showBar) ...[
                 const SizedBox(height: 8),
                 ClipRRect(
@@ -559,8 +827,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     value: reached
                         ? 1.0
                         : (progress.isFinite ? progress.clamp(0.0, 1.0) : 0.0),
-                    backgroundColor:
-                        cs.outlineVariant.withValues(alpha: 0.2),
+                    backgroundColor: cs.outlineVariant.withValues(alpha: 0.2),
                     valueColor: AlwaysStoppedAnimation<Color>(barColor),
                   ),
                 ),
@@ -568,12 +835,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(start != null ? '${start.toStringAsFixed(1)} kg' : '--',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-                    Text(current != null ? '${current.toStringAsFixed(1)} kg' : '--',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-                    Text(goal != null ? '${goal.toStringAsFixed(1)} kg' : '--',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                    Text(formatWeight(startValue),
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(color: cs.onSurfaceVariant)),
+                    Text(formatWeight(current),
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(color: cs.onSurfaceVariant)),
+                    Text(formatWeight(goalValue),
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(color: cs.onSurfaceVariant)),
                   ],
                 ),
               ],
@@ -602,9 +878,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('Meus objetivos', style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: cs.onSurface, fontWeight: FontWeight.w600,
-                )),
+                child: Text('Meus objetivos',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w600,
+                        )),
               ),
               TextButton(
                 onPressed: _openObjectivesEditor,
@@ -617,7 +895,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('• '),
-              Expanded(child: Text('Alimentação: $_dietType', style: Theme.of(context).textTheme.bodyMedium)),
+              Expanded(
+                  child: Text('Alimentação: $_dietType',
+                      style: Theme.of(context).textTheme.bodyMedium)),
             ],
           ),
           const SizedBox(height: 4),
@@ -625,7 +905,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('• '),
-              Expanded(child: Text('Objetivo: $objLabel', style: Theme.of(context).textTheme.bodyMedium)),
+              Expanded(
+                  child: Text('Objetivo: $objLabel',
+                      style: Theme.of(context).textTheme.bodyMedium)),
             ],
           ),
         ],
@@ -635,9 +917,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _openObjectivesEditor() async {
     final dietOptions = ['Padrão', 'Vegetariana', 'Vegana', 'Low carb', 'Keto'];
-    final cs = Theme.of(context).colorScheme;
-    final startCtrl = TextEditingController(text: _weightStart?.toStringAsFixed(1) ?? '');
-    final goalCtrl = TextEditingController(text: _weightGoal?.toStringAsFixed(1) ?? '');
+    final startCtrl =
+        TextEditingController(text: _weightStart?.toStringAsFixed(1) ?? '');
+    final goalCtrl =
+        TextEditingController(text: _weightGoal?.toStringAsFixed(1) ?? '');
     String selDiet = _dietType;
     String selObj = _weightObjective;
     await showModalBottomSheet(
@@ -660,17 +943,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Editar objetivos', style: Theme.of(context).textTheme.titleMedium),
+                Text('Editar objetivos',
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 12),
-                Text('Alimentação', style: Theme.of(context).textTheme.bodySmall),
+                Text('Alimentação',
+                    style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 6),
                 DropdownButton<String>(
                   value: selDiet,
-                  items: dietOptions.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  items: dietOptions
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
                   onChanged: (v) => setState(() => selDiet = v ?? selDiet),
                 ),
                 const SizedBox(height: 12),
-                Text('Objetivo de peso', style: Theme.of(context).textTheme.bodySmall),
+                Text('Objetivo de peso',
+                    style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 6),
                 SegmentedButton<String>(
                   segments: const [
@@ -682,14 +970,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onSelectionChanged: (s) => selObj = s.first,
                 ),
                 const SizedBox(height: 12),
-                Text('Peso inicial (kg)', style: Theme.of(context).textTheme.bodySmall),
+                Text('Peso inicial (kg)',
+                    style: Theme.of(context).textTheme.bodySmall),
                 TextField(
                   controller: startCtrl,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(hintText: 'ex.: 70.0'),
                 ),
                 const SizedBox(height: 12),
-                Text('Meta de peso (kg)', style: Theme.of(context).textTheme.bodySmall),
+                Text('Meta de peso (kg)',
+                    style: Theme.of(context).textTheme.bodySmall),
                 TextField(
                   controller: goalCtrl,
                   keyboardType: TextInputType.number,
@@ -702,8 +992,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () async {
                       await UserPreferences.setDietType(selDiet);
                       await UserPreferences.setWeightObjective(selObj);
-                      final s = double.tryParse(startCtrl.text.trim().replaceAll(',', '.'));
-                      final g = double.tryParse(goalCtrl.text.trim().replaceAll(',', '.'));
+                      final s = double.tryParse(
+                          startCtrl.text.trim().replaceAll(',', '.'));
+                      final g = double.tryParse(
+                          goalCtrl.text.trim().replaceAll(',', '.'));
                       await UserPreferences.setWeightStartKg(s);
                       await UserPreferences.setWeightGoalKg(g);
                       if (!mounted) return;
@@ -733,38 +1025,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGoalsForm() {
-  return Builder(builder: (context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
-    decoration: BoxDecoration(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-    ),
-      child: Column(
-        children: [
-          _rowField('Calorias (kcal)', _calController),
-          SizedBox(height: 1.h),
-          _rowField('Carboidratos (g)', _carbController),
-          SizedBox(height: 1.h),
-          _rowField('Proteínas (g)', _protController),
-          SizedBox(height: 1.h),
-          _rowField('Gorduras (g)', _fatController),
-          SizedBox(height: 1.h),
-          _rowField(
-            'Água (ml)',
-            _waterGoalController,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          SizedBox(height: 1.5.h),
-          Align(
-            alignment: Alignment.centerRight,
+    return Builder(builder: (context) {
+      final cs = Theme.of(context).colorScheme;
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            _rowField('Calorias (kcal)', _calController),
+            SizedBox(height: 1.h),
+            _rowField('Carboidratos (g)', _carbController),
+            SizedBox(height: 1.h),
+            _rowField('Proteínas (g)', _protController),
+            SizedBox(height: 1.h),
+            _rowField('Gorduras (g)', _fatController),
+            SizedBox(height: 1.h),
+            _rowField(
+              'Água (ml)',
+              _waterGoalController,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            SizedBox(height: 1.5.h),
+            Align(
+              alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () async {
-                  final total = int.tryParse(_calController.text.trim()) ?? 2000;
-                  final carbs = int.tryParse(_carbController.text.trim()) ?? 250;
-                  final prots = int.tryParse(_protController.text.trim()) ?? 120;
+                  final total =
+                      int.tryParse(_calController.text.trim()) ?? 2000;
+                  final carbs =
+                      int.tryParse(_carbController.text.trim()) ?? 250;
+                  final prots =
+                      int.tryParse(_protController.text.trim()) ?? 120;
                   final fats = int.tryParse(_fatController.text.trim()) ?? 80;
                   await UserPreferences.setGoals(
                     totalCalories: total,
@@ -790,90 +1085,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: const Text('Salvar metas'),
               ),
             ),
-        ],
-      ),
-    );
-  });
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildHydrationReminderSection() {
-  return Builder(builder: (context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
-    decoration: BoxDecoration(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-    ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Lembretes de Hidratação',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w600,
+    return Builder(builder: (context) {
+      final cs = Theme.of(context).colorScheme;
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Lembretes de Hidratação',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
-          ),
-          SizedBox(height: 1.h),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Ativar lembretes',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: cs.onSurface,
+            SizedBox(height: 1.h),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Ativar lembretes',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurface,
+                        ),
                   ),
                 ),
-              ),
-              Switch(
-                value: _hydrationEnabled,
-                onChanged: (v) async {
-                  setState(() => _hydrationEnabled = v);
-                  await UserPreferences.setHydrationReminder(
-                    enabled: v,
-                    intervalMinutes: int.tryParse(
-                            _hydrationIntervalController.text.trim()) ??
-                        60,
-                  );
-                },
-              ),
-            ],
-          ),
-          SizedBox(height: 1.h),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Intervalo (minutos)',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: cs.onSurface,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 28.w,
-                child: TextField(
-                  controller: _hydrationIntervalController,
-                  keyboardType: TextInputType.number,
-                  enabled: _hydrationEnabled,
-                  decoration: const InputDecoration(hintText: '60'),
-                  onChanged: (val) async {
-                    final minutes = int.tryParse(val.trim()) ?? 60;
+                Switch(
+                  value: _hydrationEnabled,
+                  onChanged: (v) async {
+                    setState(() => _hydrationEnabled = v);
                     await UserPreferences.setHydrationReminder(
-                      enabled: _hydrationEnabled,
-                      intervalMinutes: minutes,
+                      enabled: v,
+                      intervalMinutes: int.tryParse(
+                              _hydrationIntervalController.text.trim()) ??
+                          60,
                     );
                   },
                 ),
-              )
-            ],
-          ),
-        ],
-      ),
-    );
-  });
+              ],
+            ),
+            SizedBox(height: 1.h),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Intervalo (minutos)',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurface,
+                        ),
+                  ),
+                ),
+                SizedBox(
+                  width: 28.w,
+                  child: TextField(
+                    controller: _hydrationIntervalController,
+                    keyboardType: TextInputType.number,
+                    enabled: _hydrationEnabled,
+                    decoration: const InputDecoration(hintText: '60'),
+                    onChanged: (val) async {
+                      final minutes = int.tryParse(val.trim()) ?? 60;
+                      await UserPreferences.setHydrationReminder(
+                        enabled: _hydrationEnabled,
+                        intervalMinutes: minutes,
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _rowField(String label, TextEditingController controller,
@@ -885,8 +1180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: cs.onSurface,
-            ),
+                  color: cs.onSurface,
+                ),
           ),
         ),
         SizedBox(width: 3.w),
@@ -906,123 +1201,123 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBackupSection() {
-  return Builder(builder: (context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-    padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
-    decoration: BoxDecoration(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-    ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Backup do Diário',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w600,
+    return Builder(builder: (context) {
+      final cs = Theme.of(context).colorScheme;
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.4.w),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Backup do Diário',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
-          ),
-          SizedBox(height: 1.h),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _exportDiary,
-                  icon: const Icon(Icons.file_download_outlined),
-                  label: const Text('Exportar JSON'),
+            SizedBox(height: 1.h),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _exportDiary,
+                    icon: const Icon(Icons.file_download_outlined),
+                    label: const Text('Exportar JSON'),
+                  ),
                 ),
-              ),
-              SizedBox(width: 2.w),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _importDiary,
-                  icon: const Icon(Icons.file_upload_outlined),
-                  label: const Text('Importar JSON'),
+                SizedBox(width: 2.w),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _importDiary,
+                    icon: const Icon(Icons.file_upload_outlined),
+                    label: const Text('Importar JSON'),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 2.h),
-          Text(
-            'Templates (Dia/Semana)',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w600,
+              ],
             ),
-          ),
-          SizedBox(height: 1.h),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _exportTemplates,
-                  icon: const Icon(Icons.file_download_outlined),
-                  label: const Text('Exportar JSON'),
-                ),
-              ),
-              SizedBox(width: 2.w),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _importTemplates,
-                  icon: const Icon(Icons.file_upload_outlined),
-                  label: const Text('Importar JSON'),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 1.h),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: _confirmClearTemplates,
-              icon: const Icon(Icons.cleaning_services_outlined),
-              label: const Text('Limpar templates'),
+            SizedBox(height: 2.h),
+            Text(
+              'Templates (Dia/Semana)',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
-          ),
-          SizedBox(height: 2.h),
-          Text(
-            'Alimentos (Favoritos / Meus)',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 1.h),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _exportFoods,
-                  icon: const Icon(Icons.file_download_outlined),
-                  label: const Text('Exportar JSON'),
+            SizedBox(height: 1.h),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _exportTemplates,
+                    icon: const Icon(Icons.file_download_outlined),
+                    label: const Text('Exportar JSON'),
+                  ),
                 ),
-              ),
-              SizedBox(width: 2.w),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _importFoods,
-                  icon: const Icon(Icons.file_upload_outlined),
-                  label: const Text('Importar JSON'),
+                SizedBox(width: 2.w),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _importTemplates,
+                    icon: const Icon(Icons.file_upload_outlined),
+                    label: const Text('Importar JSON'),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 1.h),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: _confirmClearFoods,
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('Limpar alimentos'),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
-  });
+            SizedBox(height: 1.h),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _confirmClearTemplates,
+                icon: const Icon(Icons.cleaning_services_outlined),
+                label: const Text('Limpar templates'),
+              ),
+            ),
+            SizedBox(height: 2.h),
+            Text(
+              'Alimentos (Favoritos / Meus)',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            SizedBox(height: 1.h),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _exportFoods,
+                    icon: const Icon(Icons.file_download_outlined),
+                    label: const Text('Exportar JSON'),
+                  ),
+                ),
+                SizedBox(width: 2.w),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _importFoods,
+                    icon: const Icon(Icons.file_upload_outlined),
+                    label: const Text('Importar JSON'),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 1.h),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _confirmClearFoods,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Limpar alimentos'),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildUiPreferencesSection() {
@@ -1056,7 +1351,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   setState(() => _uiPrefsExpanded = next);
                   await UserPreferences.setUiPrefsExpanded(next);
                 },
-                icon: Icon(_uiPrefsExpanded ? Icons.expand_less : Icons.expand_more),
+                icon: Icon(
+                    _uiPrefsExpanded ? Icons.expand_less : Icons.expand_more),
               )
             ],
           ),
@@ -1090,12 +1386,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     await UserPreferences.setReduceAnimations(v);
                     if (v) {
                       // If animations reduced, cancel any active celebration overlay immediately
-                      try { CelebrationOverlay.cancelActive(); } catch (_) {}
+                      try {
+                        CelebrationOverlay.cancelActive();
+                      } catch (_) {}
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('Animações reduzidas'),
-                            backgroundColor: AppTheme.textSecondary.withValues(alpha: 0.3),
+                            backgroundColor:
+                                AppTheme.textSecondary.withValues(alpha: 0.3),
                             behavior: SnackBarBehavior.floating,
                             duration: const Duration(seconds: 2),
                           ),
@@ -1133,12 +1432,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     await UserPreferences.setEnableMilestoneCelebration(v);
                     if (!v) {
                       // Immediately stop any active overlay if celebrations disabled
-                      try { CelebrationOverlay.cancelActive(); } catch (_) {}
+                      try {
+                        CelebrationOverlay.cancelActive();
+                      } catch (_) {}
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('Celebrações desativadas'),
-                            backgroundColor: AppTheme.textSecondary.withValues(alpha: 0.3),
+                            backgroundColor:
+                                AppTheme.textSecondary.withValues(alpha: 0.3),
                             behavior: SnackBarBehavior.floating,
                             duration: const Duration(seconds: 2),
                           ),
@@ -1170,7 +1472,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Exibir “Próximo marco” nos chips'),
-                  subtitle: const Text('Mostra “• próx: Nd” nos chips de streak'),
+                  subtitle:
+                      const Text('Mostra “• próx: Nd” nos chips de streak'),
                   value: value,
                   onChanged: (v) async {
                     await UserPreferences.setShowNextMilestoneCaptions(v);
@@ -1188,7 +1491,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Usar Lottie nas celebrações'),
-                  subtitle: const Text('Animações Lottie quando disponível (fallback para confete)'),
+                  subtitle: const Text(
+                      'Animações Lottie quando disponível (fallback para confete)'),
                   value: value,
                   onChanged: (v) async {
                     await UserPreferences.setUseLottieCelebrations(v);
@@ -1201,7 +1505,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 0.8.h),
 
             // Search & food preferences
-            Text('Busca e alimentos', style: Theme.of(context).textTheme.titleSmall),
+            Text('Busca e alimentos',
+                style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 6),
             FutureBuilder<bool>(
               future: UserPreferences.getUseNlq(),
@@ -1210,7 +1515,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Interpretar quantidades no texto (NLQ)'),
-                  subtitle: const Text('Ex.: "150g frango", "2 ovos e 1 banana"'),
+                  subtitle:
+                      const Text('Ex.: "150g frango", "2 ovos e 1 banana"'),
                   value: value,
                   onChanged: (v) async {
                     await UserPreferences.setUseNlq(v);
@@ -1218,8 +1524,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     setState(() {});
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(v ? 'NLQ ativado por padrão' : 'NLQ desativado por padrão'),
-                        backgroundColor: v ? AppTheme.successGreen : AppTheme.textSecondary.withValues(alpha: 0.3),
+                        content: Text(v
+                            ? 'NLQ ativado por padrão'
+                            : 'NLQ desativado por padrão'),
+                        backgroundColor: v
+                            ? AppTheme.successGreen
+                            : AppTheme.textSecondary.withValues(alpha: 0.3),
                         behavior: SnackBarBehavior.floating,
                         duration: const Duration(seconds: 2),
                       ),
@@ -1245,7 +1555,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             // QA helpers (local only)
-            Text('QA / Depuração', style: Theme.of(context).textTheme.bodyMedium),
+            Text('QA / Depuração',
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 6),
             Wrap(spacing: 8, runSpacing: 8, children: [
               ElevatedButton.icon(
@@ -1254,7 +1565,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   await StreakService.clearAll();
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('Conquistas e streaks limpos'), backgroundColor: AppTheme.activeBlue),
+                    SnackBar(
+                        content: const Text('Conquistas e streaks limpos'),
+                        backgroundColor: AppTheme.activeBlue),
                   );
                 },
                 icon: const Icon(Icons.delete_outline),
@@ -1272,7 +1585,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   });
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('Badge de teste concedido'), backgroundColor: AppTheme.successGreen),
+                    SnackBar(
+                        content: const Text('Badge de teste concedido'),
+                        backgroundColor: AppTheme.successGreen),
                   );
                 },
                 icon: const Icon(Icons.workspace_premium_outlined),
@@ -1283,7 +1598,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   await StreakRecalculator.recalcAllOverDays(days: 60);
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('Streaks recalculados (últimos 60 dias)'), backgroundColor: AppTheme.successGreen),
+                    SnackBar(
+                        content: const Text(
+                            'Streaks recalculados (últimos 60 dias)'),
+                        backgroundColor: AppTheme.successGreen),
                   );
                 },
                 icon: const Icon(Icons.restart_alt),
@@ -1292,12 +1610,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ElevatedButton.icon(
                 onPressed: () async {
                   await WeeklyGoalService.clearLastPerfectWeek();
-                  final created = await WeeklyGoalService.evaluatePerfectCaloriesWeek();
+                  final created =
+                      await WeeklyGoalService.evaluatePerfectCaloriesWeek();
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(created ? 'Semana perfeita reavaliada e concedida' : 'Semana perfeita reavaliada (sem mudança)'),
-                      backgroundColor: created ? AppTheme.successGreen : AppTheme.activeBlue,
+                      content: Text(created
+                          ? 'Semana perfeita reavaliada e concedida'
+                          : 'Semana perfeita reavaliada (sem mudança)'),
+                      backgroundColor:
+                          created ? AppTheme.successGreen : AppTheme.activeBlue,
                     ),
                   );
                 },
@@ -1306,7 +1628,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               ElevatedButton.icon(
                 onPressed: () async {
-                  await CelebrationOverlay.maybeShow(context, variant: CelebrationVariant.achievement);
+                  await CelebrationOverlay.maybeShow(context,
+                      variant: CelebrationVariant.achievement);
                 },
                 icon: const Icon(Icons.celebration_outlined),
                 label: const Text('Testar celebração'),
@@ -1336,7 +1659,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: const InputDecoration(hintText: '5'),
                         onSubmitted: (val) async {
                           final m = int.tryParse(val.trim()) ?? 5;
-                          await UserPreferences.setNewBadgeMinutes(m.clamp(1, 60));
+                          await UserPreferences.setNewBadgeMinutes(
+                              m.clamp(1, 60));
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1371,10 +1695,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final ts = (snap.data?['ts'] as int?) ?? 0;
             return Text(
               'Itens no cache: $count • Atualizado: ${_formatTs(ts)}',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             );
           },
         ),
@@ -1610,7 +1932,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: controller,
-                  onChanged: (v) => setState(() => valid = v.trim().toUpperCase() == 'LIMPAR'),
+                  onChanged: (v) => setState(
+                      () => valid = v.trim().toUpperCase() == 'LIMPAR'),
                   decoration: const InputDecoration(hintText: 'LIMPAR'),
                 ),
               ],
@@ -1738,17 +2061,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SizedBox(height: 0.6.h),
-              Row(
-                children: [
-                  Expanded(child: _miniField('kcal', _mealKcal[mealKey]!)),
-                  SizedBox(width: 2.w),
-                  Expanded(child: _miniField('Carboidratos (g)', _mealCarb[mealKey]!)),
-                  SizedBox(width: 2.w),
+          Row(
+            children: [
+              Expanded(child: _miniField('kcal', _mealKcal[mealKey]!)),
+              SizedBox(width: 2.w),
+              Expanded(
+                  child: _miniField('Carboidratos (g)', _mealCarb[mealKey]!)),
+              SizedBox(width: 2.w),
               Expanded(child: _miniField('Proteínas (g)', _mealProt[mealKey]!)),
               SizedBox(width: 2.w),
               Expanded(child: _miniField('Gorduras (g)', _mealFat[mealKey]!)),
-                ],
-              ),
+            ],
+          ),
           SizedBox(height: 1.h),
         ],
       );
@@ -1790,13 +2114,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () async {
                   final map = <String, MealGoals>{
                     'breakfast': MealGoals(
-                      kcal:
-                          int.tryParse(_mealKcal['breakfast']!.text.trim()) ?? 0,
+                      kcal: int.tryParse(_mealKcal['breakfast']!.text.trim()) ??
+                          0,
                       carbs:
-                          int.tryParse(_mealCarb['breakfast']!.text.trim()) ?? 0,
+                          int.tryParse(_mealCarb['breakfast']!.text.trim()) ??
+                              0,
                       proteins:
-                          int.tryParse(_mealProt['breakfast']!.text.trim()) ?? 0,
-                      fats: int.tryParse(_mealFat['breakfast']!.text.trim()) ?? 0,
+                          int.tryParse(_mealProt['breakfast']!.text.trim()) ??
+                              0,
+                      fats:
+                          int.tryParse(_mealFat['breakfast']!.text.trim()) ?? 0,
                     ),
                     'lunch': MealGoals(
                       kcal: int.tryParse(_mealKcal['lunch']!.text.trim()) ?? 0,
@@ -1807,7 +2134,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     'dinner': MealGoals(
                       kcal: int.tryParse(_mealKcal['dinner']!.text.trim()) ?? 0,
-                      carbs: int.tryParse(_mealCarb['dinner']!.text.trim()) ?? 0,
+                      carbs:
+                          int.tryParse(_mealCarb['dinner']!.text.trim()) ?? 0,
                       proteins:
                           int.tryParse(_mealProt['dinner']!.text.trim()) ?? 0,
                       fats: int.tryParse(_mealFat['dinner']!.text.trim()) ?? 0,
@@ -1871,7 +2199,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: controller,
-                  onChanged: (v) => setState(() => valid = v.trim().toUpperCase() == 'CONFIRMAR'),
+                  onChanged: (v) => setState(
+                      () => valid = v.trim().toUpperCase() == 'CONFIRMAR'),
                   decoration: const InputDecoration(hintText: 'CONFIRMAR'),
                 ),
               ],
@@ -2235,7 +2564,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: controller,
-                  onChanged: (v) => setState(() => valid = v.trim().toUpperCase() == 'LIMPAR'),
+                  onChanged: (v) => setState(
+                      () => valid = v.trim().toUpperCase() == 'LIMPAR'),
                   decoration: const InputDecoration(hintText: 'LIMPAR'),
                 ),
               ],
@@ -2299,7 +2629,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: controller,
-                  onChanged: (v) => setState(() => valid = v.trim().toUpperCase() == 'LIMPAR'),
+                  onChanged: (v) => setState(
+                      () => valid = v.trim().toUpperCase() == 'LIMPAR'),
                   decoration: const InputDecoration(hintText: 'LIMPAR'),
                 ),
               ],

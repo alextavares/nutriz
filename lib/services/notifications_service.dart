@@ -22,7 +22,9 @@ class NotificationsService {
 
   static Future<void> _ensureTimezone() async {
     if (!_tzInitialized) {
-      try { tzdata.initializeTimeZones(); } catch (_) {}
+      try {
+        tzdata.initializeTimeZones();
+      } catch (_) {}
       _tzInitialized = true;
     }
     // Without native plugin, keep default tz.local. We schedule by relative deltas.
@@ -83,18 +85,24 @@ class NotificationsService {
       playSound: true,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
-    await _plugin.zonedSchedule(
-      2001,
-      'Jejum concluído',
-      'Você completou seu jejum $method. 🎉',
-      scheduleTime,
-      details,
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: null,
-    );
+    const details =
+        NotificationDetails(android: androidDetails, iOS: iosDetails);
+    try {
+      await _plugin.zonedSchedule(
+        2001,
+        'Jejum concluido',
+        'Voce completou seu jejum $method.',
+        scheduleTime,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: null,
+      );
+    } catch (err, stack) {
+      debugPrint('NotificationsService.scheduleFastingEnd error: $err');
+      debugPrintStack(stackTrace: stack);
+    }
   }
 
   static Future<void> cancelFastingEnd() async {
@@ -112,8 +120,10 @@ class NotificationsService {
       playSound: true,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
-    await _plugin.show(2001, 'Jejum concluído', 'Você completou seu jejum $method. 🎉', details);
+    const details =
+        NotificationDetails(android: androidDetails, iOS: iosDetails);
+    await _plugin.show(2001, 'Jejum concluído',
+        'Você completou seu jejum $method. 🎉', details);
   }
 
   // Daily reminders at specific local times
@@ -128,7 +138,8 @@ class NotificationsService {
     await _ensureTimezone();
     // Compute relative delta to next occurrence in local time, then add to tz.now
     final nowLocal = DateTime.now();
-    var target = DateTime(nowLocal.year, nowLocal.month, nowLocal.day, hour, minute);
+    var target =
+        DateTime(nowLocal.year, nowLocal.month, nowLocal.day, hour, minute);
     if (target.isBefore(nowLocal)) target = target.add(const Duration(days: 1));
     final diff = target.difference(nowLocal);
     final nowTz = tz.TZDateTime.now(tz.local);
@@ -142,18 +153,25 @@ class NotificationsService {
       playSound: true,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
-    await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduled,
-      details,
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+    const details =
+        NotificationDetails(android: androidDetails, iOS: iosDetails);
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (err, stack) {
+      debugPrint('NotificationsService.scheduleDailyReminder failed for id '
+          '$id: $err');
+      debugPrintStack(stackTrace: stack);
+    }
   }
 
   static Future<void> cancelDailyReminder(int id) async {
@@ -205,6 +223,10 @@ class NotificationsService {
     final prefs = await SharedPreferences.getInstance();
     final iso = prefs.getString(_kFastingMuteUntilIso);
     if (iso == null || iso.isEmpty) return null;
-    try { return DateTime.parse(iso); } catch (_) { return null; }
+    try {
+      return DateTime.parse(iso);
+    } catch (_) {
+      return null;
+    }
   }
 }

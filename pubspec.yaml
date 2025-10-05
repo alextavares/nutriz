@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:       # 🚨 CRITICAL: Required for every Flutter project - DO NOT REMOVE
     sdk: flutter # 🚨 CRITICAL: Required for every Flutter project - DO NOT REMOVE
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
   
   # 🚨 CRITICAL: Core UI and responsive design - DO NOT REMOVE OR MODIFY
   sizer: ^2.0.15              # Required for responsive design system
@@ -16,6 +19,7 @@ dependencies:
   google_fonts: ^6.1.0       # Required for typography (replaces local fonts)
   shared_preferences: ^2.2.2 # Required for local data storage
   web: ^1.1.1
+  lottie: ^2.7.0
   
   # Feature dependencies - safe to modify
   cached_network_image: ^3.3.1
@@ -28,6 +32,8 @@ dependencies:
   image_picker: ^1.1.2
   path_provider: ^2.1.5
   universal_html: ^2.2.4
+  js: ^0.6.7
+  image: ^4.1.7
   flutter_local_notifications: ^17.2.2
   share_plus: ^7.2.2
   material_design_icons_flutter: ^7.0.7296
@@ -37,9 +43,11 @@ dev_dependencies:
   flutter_test:    # 🚨 CRITICAL: Required for Flutter project testing - DO NOT REMOVE
     sdk: flutter   # 🚨 CRITICAL: Required for Flutter project testing - DO NOT REMOVE
   flutter_lints: ^5.0.0 # 🚨 CRITICAL: Required for code quality - DO NOT REMOVE
+  golden_toolkit: ^0.15.0
 
 flutter:
   uses-material-design: true # 🚨 CRITICAL: Required for Material icon font - DO NOT REMOVE
+  generate: true
   assets:
     - env.json
     - assets/

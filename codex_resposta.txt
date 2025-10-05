@@ -1,0 +1,37 @@
+Fase 1 — UI mínima e segura — Resultado
+
+- Removido código morto
+  - lib/services/nutrition_storage.dart: removi o bloco antigo guardado com if (false) { ... }.
+
+- Streak Overview: thresholds 3/5/7/14/30
+  - lib/presentation/streaks/streak_overview_screen.dart:100
+  - Atualizei: const thresholds = [3, 5, 7, 14, 30];
+
+- Streak Overview: pontos semanais "tocáveis"
+  - lib/presentation/streaks/streak_overview_screen.dart
+  - Em _weekOverview(), cada dot agora é um GestureDetector que navega para AppRoutes.dailyTrackingDashboard com arguments { 'date': DateTime(d.year, d.month, d.day).toIso8601String() }.
+
+- Dashboard: deep-link para data
+  - lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:41 — adicionado bool _initArgsHandled = false;
+  - lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart:165 — didChangeDependencies() agora lê ModalRoute.of(context)?.settings.arguments, faz parse de 'date', ajusta _selectedDate e chama _loadToday/_loadWeek uma vez.
+
+- Achievements: aba "Alimentos"
+  - lib/presentation/achievements/all_achievements_screen.dart: já estava em conformidade (8 abas, inclui 'Alimentos', filtro/meta 'food_log').
+
+Validação
+
+- flutter analyze: apenas avisos; sem erros bloqueantes.
+- flutter test:
+  - test/food_log_milestones_test.dart — 1 passed
+  - test/food_log_recalc_award_test.dart — 1 passed
+
+Comandos usados
+
+- flutter analyze
+- flutter test test/food_log_milestones_test.dart
+- flutter test test/food_log_recalc_award_test.dart
+
+Próximos passos
+
+- Posso seguir para a Fase 2 (NUX + localização) ou rodar toda a suíte de testes e cobertura se preferir.
+

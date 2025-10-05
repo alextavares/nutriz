@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class CameraControlsWidget extends StatelessWidget {
   final VoidCallback onCameraPressed;
@@ -17,6 +18,9 @@ class CameraControlsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       margin: EdgeInsets.all(4.w),
       child: Column(
@@ -26,11 +30,10 @@ class CameraControlsWidget extends StatelessWidget {
             height: 40.h,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppTheme.darkTheme.colorScheme.surface,
+              color: colors.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppTheme.darkTheme.colorScheme.outline
-                    .withValues(alpha: 0.2),
+                color: colors.outlineVariant.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -38,13 +41,13 @@ class CameraControlsWidget extends StatelessWidget {
               children: [
                 CustomIconWidget(
                   iconName: 'camera_alt',
-                  color: AppTheme.activeBlue,
+                  color: colors.primary,
                   size: 20.w,
                 ),
                 SizedBox(height: 3.h),
                 Text(
                   'Detectar Alimentos com IA',
-                  style: AppTheme.darkTheme.textTheme.headlineSmall,
+                  style: textTheme.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 2.h),
@@ -52,8 +55,8 @@ class CameraControlsWidget extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 8.w),
                   child: Text(
                     'Capture uma foto ou selecione da galeria para identificar automaticamente os alimentos e suas informações nutricionais',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -73,15 +76,15 @@ class CameraControlsWidget extends StatelessWidget {
                   onPressed: isCameraInitialized ? onCameraPressed : null,
                   icon: CustomIconWidget(
                     iconName: 'camera_alt',
-                    color: AppTheme.textPrimary,
+                    color: colors.onPrimary,
                     size: 6.w,
                   ),
                   label: Text('Tirar Foto'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isCameraInitialized
-                        ? AppTheme.activeBlue
-                        : AppTheme.darkTheme.colorScheme.outline,
-                    foregroundColor: AppTheme.textPrimary,
+                        ? colors.primary
+                        : colors.outlineVariant,
+                    foregroundColor: colors.onPrimary,
                     padding: EdgeInsets.symmetric(vertical: 3.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -98,14 +101,14 @@ class CameraControlsWidget extends StatelessWidget {
                   onPressed: onGalleryPressed,
                   icon: CustomIconWidget(
                     iconName: 'photo_library',
-                    color: AppTheme.activeBlue,
+                    color: colors.primary,
                     size: 6.w,
                   ),
                   label: Text('Galeria'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.activeBlue,
+                    foregroundColor: colors.primary,
                     padding: EdgeInsets.symmetric(vertical: 3.h),
-                    side: BorderSide(color: AppTheme.activeBlue),
+                    side: BorderSide(color: colors.primary),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -122,24 +125,24 @@ class CameraControlsWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(4.w),
               decoration: BoxDecoration(
-                color: AppTheme.warningAmber.withValues(alpha: 0.1),
+                color: semantics.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: AppTheme.warningAmber.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: semantics.warning.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
                   CircularProgressIndicator(
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(AppTheme.warningAmber),
+                        AlwaysStoppedAnimation<Color>(semantics.warning),
                     strokeWidth: 2,
                   ),
                   SizedBox(width: 3.w),
                   Expanded(
                     child: Text(
                       'Inicializando câmera...',
-                      style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.warningAmber,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: semantics.warning,
                       ),
                     ),
                   ),
@@ -153,7 +156,7 @@ class CameraControlsWidget extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(4.w),
             decoration: BoxDecoration(
-              color: AppTheme.darkTheme.colorScheme.surface,
+              color: colors.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -163,23 +166,23 @@ class CameraControlsWidget extends StatelessWidget {
                   children: [
                     CustomIconWidget(
                       iconName: 'lightbulb',
-                      color: AppTheme.premiumGold,
+                      color: semantics.premium,
                       size: 5.w,
                     ),
                     SizedBox(width: 2.w),
                     Text(
                       'Dicas para melhor detecção:',
-                      style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
-                        color: AppTheme.premiumGold,
+                      style: textTheme.titleSmall?.copyWith(
+                        color: semantics.premium,
                       ),
                     ),
                   ],
                 ),
                 SizedBox(height: 2.h),
-                _buildTip('• Certifique-se de ter boa iluminação'),
-                _buildTip('• Fotografe os alimentos de perto'),
-                _buildTip('• Evite sombras no prato'),
-                _buildTip('• Um alimento por vez funciona melhor'),
+                _buildTip(context, '• Certifique-se de ter boa iluminação'),
+                _buildTip(context, '• Fotografe os alimentos de perto'),
+                _buildTip(context, '• Evite sombras no prato'),
+                _buildTip(context, '• Um alimento por vez funciona melhor'),
               ],
             ),
           ),
@@ -188,14 +191,14 @@ class CameraControlsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTip(String text) {
+  Widget _buildTip(BuildContext context, String text) {
     return Padding(
       padding: EdgeInsets.only(bottom: 1.h),
       child: Text(
         text,
-        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-          color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
-        ),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: context.colors.onSurfaceVariant,
+            ),
       ),
     );
   }

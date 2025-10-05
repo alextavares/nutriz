@@ -15,9 +15,18 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
   String _selectedMealTime = 'lunch';
   DateTime? _targetDate;
 
+  String _smartMealForTime(DateTime dt) {
+    final h = dt.hour;
+    if (h < 11) return "breakfast";
+    if (h < 16) return "lunch";
+    return "dinner";
+  }
+
   @override
   void initState() {
     super.initState();
+// Smart default meal by time of day
+    _selectedMealTime = _smartMealForTime(DateTime.now());
     // Read initial meal and date from route args
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments;
@@ -172,12 +181,17 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                         final result = await Navigator.pushNamed(
                           context,
                           AppRoutes.aiFoodDetection,
+                          arguments: {
+                            'mealKey': _selectedMealTime,
+                            if (_targetDate != null) 'targetDate': _targetDate!.toIso8601String(),
+                          },
                         );
                         if (!mounted) return;
                         if (result is Map<String, dynamic>) {
                           final args = {
                             ..._baseArgs(),
                             'prefillFood': result,
+                            'reviewOnly': true,
                           };
                           Navigator.pushReplacementNamed(
                             context,
@@ -188,6 +202,7 @@ class _AddFoodEntryScreenState extends State<AddFoodEntryScreen> {
                           final args = {
                             ..._baseArgs(),
                             'prefillFoods': result,
+                            'reviewOnly': true,
                           };
                           Navigator.pushReplacementNamed(
                             context,

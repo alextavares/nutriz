@@ -1,0 +1,20 @@
+As instruções da Fase 1 estão corretas e prontas para o Codex aplicar.
+
+Pequenas observações para evitar atritos:
+
+- Rotulagem de abas em Conquistas: o projeto usa PT-BR ("Todas", "Água", "Jejum", "Calorias", "Proteína"). Se preferir manter padrão PT, use "Alimentos" no lugar de "Food". Se quiser EN ("All", "Water", … "Food"), ajuste todas as abas para consistência.
+- Após remover o bloco antigo (if (false)) em NutritionStorage, rode flutter analyze para evitar avisos de código morto.
+
+Fluxo recomendado agora:
+
+- Envie as instruções ao Codex (VS Code) na raiz do projeto.
+- Depois que ele aplicar:
+  - Rode: flutter analyze
+  - Rode: flutter test
+- Valide manualmente:
+  - Ações do dia → Visão geral da sequência → chips 3/5/7/14/30
+  - Toque um ponto semanal → abre o Dashboard naquela data
+  - Conquistas → ver a aba de alimentos (Food/Alimentos)
+
+Quando tiver os resultados do analyze/test, envie aqui. Em seguida aplicamos a Fase 2 (NUX + localização).
+

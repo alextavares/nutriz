@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 class InitializationService {
   static const String _keyIsFirstLaunch = 'is_first_launch';
+  static const String _keyOnboardingCompleted = 'onboarding_completed_v1';
   static const String _keyIsAuthenticated = 'is_authenticated';
   static const String _keyPremiumStatus = 'premium_status';
   static const String _keyUserPreferences = 'user_preferences';
@@ -38,10 +39,11 @@ class InitializationService {
 
       // Determine navigation destination
       String nextRoute;
-      if (isFirstLaunch) {
-        // No onboarding implemented; go to login on first launch
-        nextRoute = '/login-screen';
-        await prefs.setBool(_keyIsFirstLaunch, false);
+      final bool onboardingCompleted =
+          prefs.getBool(_keyOnboardingCompleted) ?? false;
+      if (isFirstLaunch || !onboardingCompleted) {
+        // First run or onboarding not completed yet
+        nextRoute = '/onboarding';
       } else if (!isAuthenticated) {
         nextRoute = '/login-screen';
       } else {

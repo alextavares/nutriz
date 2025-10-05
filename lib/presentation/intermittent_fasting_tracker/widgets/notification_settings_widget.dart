@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class NotificationSettingsWidget extends StatefulWidget {
   final bool notificationsEnabled;
@@ -42,6 +43,8 @@ class NotificationSettingsWidget extends StatefulWidget {
 class _NotificationSettingsWidgetState
     extends State<NotificationSettingsWidget> {
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
+    final theme = Theme.of(context);
+    final colors = context.colors;
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: isStartTime
@@ -49,15 +52,15 @@ class _NotificationSettingsWidgetState
           : (widget.stopEatingTime ?? const TimeOfDay(hour: 20, minute: 0)),
       builder: (BuildContext context, Widget? child) {
         return Theme(
-          data: AppTheme.darkTheme.copyWith(
-            timePickerTheme: TimePickerThemeData(
-              backgroundColor: AppTheme.secondaryBackgroundDark,
-              hourMinuteTextColor: AppTheme.textPrimary,
-              dayPeriodTextColor: AppTheme.textPrimary,
-              dialHandColor: AppTheme.activeBlue,
-              dialBackgroundColor: AppTheme.primaryBackgroundDark,
-              hourMinuteColor: AppTheme.dividerGray.withValues(alpha: 0.3),
-              dayPeriodColor: AppTheme.activeBlue.withValues(alpha: 0.2),
+          data: theme.copyWith(
+            timePickerTheme: theme.timePickerTheme.copyWith(
+              backgroundColor: colors.surfaceContainerHigh,
+              hourMinuteTextColor: colors.onSurface,
+              dayPeriodTextColor: colors.onSurface,
+              dialHandColor: colors.primary,
+              dialBackgroundColor: colors.surfaceContainerHighest,
+              hourMinuteColor: colors.outlineVariant.withValues(alpha: 0.3),
+              dayPeriodColor: colors.primary.withValues(alpha: 0.2),
             ),
           ),
           child: child!,
@@ -81,14 +84,17 @@ class _NotificationSettingsWidgetState
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       padding: EdgeInsets.all(4.w),
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: colors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.dividerGray.withValues(alpha: 0.3),
+          color: colors.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -98,14 +104,14 @@ class _NotificationSettingsWidgetState
             children: [
               CustomIconWidget(
                 iconName: 'notifications',
-                color: AppTheme.activeBlue,
+                color: colors.primary,
                 size: 24,
               ),
               SizedBox(width: 2.w),
               Text(
                 'Lembretes',
-                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textPrimary,
+                style: textTheme.titleMedium?.copyWith(
+                  color: colors.onSurface,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
@@ -124,8 +130,8 @@ class _NotificationSettingsWidgetState
                   children: [
                     Text(
                       'Ativar Lembretes',
-                      style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textPrimary,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurface,
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w500,
                       ),
@@ -133,8 +139,8 @@ class _NotificationSettingsWidgetState
                     SizedBox(height: 0.5.h),
                     Text(
                       'Receba notificações para iniciar e parar o jejum',
-                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
                         fontSize: 12.sp,
                       ),
                     ),
@@ -144,9 +150,9 @@ class _NotificationSettingsWidgetState
               Switch(
                 value: widget.notificationsEnabled,
                 onChanged: widget.onNotificationToggle,
-                activeColor: AppTheme.activeBlue,
-                inactiveThumbColor: AppTheme.textSecondary,
-                inactiveTrackColor: AppTheme.dividerGray,
+                activeColor: colors.primary,
+                inactiveThumbColor: colors.onSurfaceVariant,
+                inactiveTrackColor: colors.outlineVariant,
               ),
             ],
           ),
@@ -163,6 +169,8 @@ class _NotificationSettingsWidgetState
                     time: widget.startEatingTime,
                     icon: 'restaurant',
                     onTap: () => _selectTime(context, true),
+                    colors: colors,
+                    textTheme: textTheme,
                   ),
                 ),
                 SizedBox(width: 3.w),
@@ -172,6 +180,8 @@ class _NotificationSettingsWidgetState
                     time: widget.stopEatingTime,
                     icon: 'no_meals',
                     onTap: () => _selectTime(context, false),
+                    colors: colors,
+                    textTheme: textTheme,
                   ),
                 ),
               ],
@@ -180,19 +190,19 @@ class _NotificationSettingsWidgetState
             SizedBox(height: 2.h),
 
             // Scheduled summary hint (includes mute warning inside)
-            _scheduledHint(),
+            _scheduledHint(colors, textTheme),
 
             // Mute controls
-            _muteControls(),
+            _muteControls(colors, semantics, textTheme),
 
             // Notification Types
             Container(
               padding: EdgeInsets.all(3.w),
               decoration: BoxDecoration(
-                color: AppTheme.activeBlue.withValues(alpha: 0.1),
+                color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.activeBlue.withValues(alpha: 0.3),
+                  color: colors.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
@@ -200,8 +210,8 @@ class _NotificationSettingsWidgetState
                 children: [
                   Text(
                     'Tipos de Lembrete',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.activeBlue,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.primary,
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -211,16 +221,15 @@ class _NotificationSettingsWidgetState
                     children: [
                       CustomIconWidget(
                         iconName: 'schedule',
-                        color: AppTheme.textSecondary,
+                        color: colors.onSurfaceVariant,
                         size: 16,
                       ),
                       SizedBox(width: 2.w),
                       Expanded(
                         child: Text(
                           'Horário de iniciar/parar jejum',
-                          style:
-                              AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
                             fontSize: 11.sp,
                           ),
                         ),
@@ -232,16 +241,15 @@ class _NotificationSettingsWidgetState
                     children: [
                       CustomIconWidget(
                         iconName: 'trending_up',
-                        color: AppTheme.textSecondary,
+                        color: colors.onSurfaceVariant,
                         size: 16,
                       ),
                       SizedBox(width: 2.w),
                       Expanded(
                         child: Text(
                           'Progresso e conquistas',
-                          style:
-                              AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
                             fontSize: 11.sp,
                           ),
                         ),
@@ -262,16 +270,18 @@ class _NotificationSettingsWidgetState
     required TimeOfDay? time,
     required String icon,
     required VoidCallback onTap,
+    required ColorScheme colors,
+    required TextTheme textTheme,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(3.w),
         decoration: BoxDecoration(
-          color: AppTheme.primaryBackgroundDark,
+          color: colors.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: AppTheme.dividerGray.withValues(alpha: 0.5),
+            color: colors.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
         child: Column(
@@ -281,7 +291,7 @@ class _NotificationSettingsWidgetState
               children: [
                 CustomIconWidget(
                   iconName: icon,
-                  color: AppTheme.textSecondary,
+                  color: colors.onSurfaceVariant,
                   size: 16,
                 ),
                 SizedBox(width: 1.w),
@@ -297,10 +307,11 @@ class _NotificationSettingsWidgetState
                       }
                       return t;
                     }
+
                     return Text(
                       compact(title),
-                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
                         fontSize: 10.sp,
                       ),
                       maxLines: w < 140 ? 1 : 2,
@@ -314,10 +325,9 @@ class _NotificationSettingsWidgetState
             SizedBox(height: 1.h),
             Text(
               _formatTime(time),
-              style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                color: time != null
-                    ? AppTheme.textPrimary
-                    : AppTheme.textSecondary,
+              style: textTheme.titleMedium?.copyWith(
+                color:
+                    time != null ? colors.onSurface : colors.onSurfaceVariant,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
               ),
@@ -328,7 +338,10 @@ class _NotificationSettingsWidgetState
     );
   }
 
-  Widget _scheduledHint() {
+  Widget _scheduledHint(
+    ColorScheme colors,
+    TextTheme textTheme,
+  ) {
     final tz = widget.timezoneName ?? '';
     final start = _formatTime(widget.startEatingTime);
     final stop = _formatTime(widget.stopEatingTime);
@@ -339,9 +352,9 @@ class _NotificationSettingsWidgetState
       padding: EdgeInsets.all(3.w),
       margin: EdgeInsets.only(bottom: 1.h),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: colors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.4)),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,15 +363,15 @@ class _NotificationSettingsWidgetState
             children: [
               CustomIconWidget(
                 iconName: 'schedule',
-                color: AppTheme.activeBlue,
+                color: colors.primary,
                 size: 18,
               ),
               SizedBox(width: 2.w),
               Expanded(
                 child: Text(
                   'Agendado diariamente',
-                  style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textPrimary,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
@@ -375,9 +388,10 @@ class _NotificationSettingsWidgetState
                 final w = MediaQuery.of(context).size.width;
                 final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
                 return Text(
-                  'Romper: $start • Iniciar: $stop' + (tz.isNotEmpty ? '  •  Fuso: $tz' : ''),
-                  style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                  'Romper: $start • Iniciar: $stop' +
+                      (tz.isNotEmpty ? '  •  Fuso: $tz' : ''),
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                     fontSize: fs,
                   ),
@@ -397,8 +411,8 @@ class _NotificationSettingsWidgetState
                       final mm = two(endAt.minute);
                       return 'Término (notificação): $hh:$mm';
                     }(),
-                    style: AppTheme.darkTheme.textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                    style: textTheme.labelSmall?.copyWith(
+                      color: colors.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                       fontSize: fs,
                     ),
@@ -414,13 +428,19 @@ class _NotificationSettingsWidgetState
 
   // (Mute warning moved inside _scheduledHint())
 
-  Widget _muteControls() {
-    final muted = widget.muteUntil != null && DateTime.now().isBefore(widget.muteUntil!);
+  Widget _muteControls(
+    ColorScheme colors,
+    AppSemanticColors semantics,
+    TextTheme textTheme,
+  ) {
+    final muted =
+        widget.muteUntil != null && DateTime.now().isBefore(widget.muteUntil!);
     String untilLabel = '';
     if (muted) {
       final u = widget.muteUntil!;
       String two(int v) => v.toString().padLeft(2, '0');
-      untilLabel = '${two(u.day)}/${two(u.month)} ${two(u.hour)}:${two(u.minute)}';
+      untilLabel =
+          '${two(u.day)}/${two(u.month)} ${two(u.hour)}:${two(u.minute)}';
     }
     return Row(
       children: [
@@ -430,8 +450,8 @@ class _NotificationSettingsWidgetState
             icon: const Icon(Icons.notifications_off_outlined, size: 16),
             label: const Text('Silenciar 24h'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.warningAmber,
-              foregroundColor: AppTheme.textPrimary,
+              backgroundColor: semantics.warning,
+              foregroundColor: semantics.onWarning,
               visualDensity: VisualDensity.compact,
             ),
           ),
@@ -442,16 +462,17 @@ class _NotificationSettingsWidgetState
             label: const Text('Até amanhã 08:00'),
             style: OutlinedButton.styleFrom(
               visualDensity: VisualDensity.compact,
-              foregroundColor: AppTheme.textSecondary,
-              side: BorderSide(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+              foregroundColor: colors.onSurfaceVariant,
+              side: BorderSide(
+                  color: colors.outlineVariant.withValues(alpha: 0.6)),
             ),
           ),
         ] else ...[
           Expanded(
             child: Text(
               'Silenciado até $untilLabel',
-              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
+              style: textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -463,25 +484,18 @@ class _NotificationSettingsWidgetState
             label: const Text('Restaurar agora'),
             style: OutlinedButton.styleFrom(
               visualDensity: VisualDensity.compact,
-              foregroundColor: AppTheme.activeBlue,
-              side: BorderSide(color: AppTheme.activeBlue.withValues(alpha: 0.6)),
+              foregroundColor: colors.primary,
+              side: BorderSide(color: colors.primary.withValues(alpha: 0.6)),
             ),
           ),
         ]
       ],
     );
   }
-
-  void _onMuteUntilTomorrow() {
-    // Bubble up via onMute24h with a special intent? We don't have a dedicated callback,
-    // so reusing onMute24h would be confusing. Instead, emit a custom notification event
-    // by using the provided onMute24h but with tomorrow 08:00 behavior handled by parent.
-    // Since we can't pass parameters, we use an Inherited pattern or, simpler, Navigator pop and message.
-    // For simplicity, show a local event using context's inherited widget is not available.
-    // Thus, we'll use a method channel via scaffold messenger. Instead, we will call onMute24h
-    // only if provided; parent will detect this via different button? Not possible.
-    // So to implement, we transform this button to call a global static handler via NotificationService? Not ideal.
-    // Simpler: we will use an event through a SnackBar? Can't pass data up.
-    // Conclusion: Convert this widget to accept a separate callback onMuteTomorrow.
-  }
 }
+
+
+
+
+
+

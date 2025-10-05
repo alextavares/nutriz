@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class LoginFormWidget extends StatefulWidget {
   final Function(String email, String password) onLogin;
@@ -82,176 +83,120 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textStyles = Theme.of(context).textTheme;
+    final borderRadius = BorderRadius.circular(2.w);
+
+    OutlineInputBorder outline(Color color, [double width = 1]) =>
+        OutlineInputBorder(
+          borderRadius: borderRadius,
+          borderSide: BorderSide(color: color, width: width),
+        );
+
+    InputDecoration decoration({
+      required String label,
+      required String hint,
+      required Widget prefixIcon,
+      Widget? suffixIcon,
+    }) {
+      final borderColor = colors.outlineVariant.withValues(alpha: 0.5);
+      return InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: prefixIcon,
+        suffixIcon: suffixIcon,
+        border: outline(borderColor),
+        enabledBorder: outline(borderColor),
+        focusedBorder: outline(colors.primary, 2),
+        errorBorder: outline(colors.error),
+        focusedErrorBorder: outline(colors.error, 2),
+        fillColor: colors.surfaceContainerHigh,
+        filled: true,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 4.w,
+          vertical: 2.h,
+        ),
+      );
+    }
+
+    Widget icon(String name) => Padding(
+          padding: EdgeInsets.all(3.w),
+          child: CustomIconWidget(
+            iconName: name,
+            color: colors.onSurfaceVariant,
+            size: 5.w,
+          ),
+        );
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Email Field
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
-            style: AppTheme.darkTheme.textTheme.bodyLarge,
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'Digite seu email',
-              prefixIcon: Padding(
-                padding: EdgeInsets.all(3.w),
-                child: CustomIconWidget(
-                  iconName: 'email',
-                  color: AppTheme.textSecondary,
-                  size: 5.w,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: BorderSide(
-                  color: AppTheme.dividerGray.withValues(alpha: 0.5),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: BorderSide(
-                  color: AppTheme.dividerGray.withValues(alpha: 0.5),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: const BorderSide(
-                  color: AppTheme.activeBlue,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: const BorderSide(
-                  color: AppTheme.errorRed,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: const BorderSide(
-                  color: AppTheme.errorRed,
-                  width: 2,
-                ),
-              ),
-              fillColor: AppTheme.secondaryBackgroundDark,
-              filled: true,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 4.w,
-                vertical: 2.h,
-              ),
+            style: textStyles.bodyLarge,
+            decoration: decoration(
+              label: 'Email',
+              hint: 'Digite seu email',
+              prefixIcon: icon('email'),
             ),
             validator: _validateEmail,
           ),
-
           SizedBox(height: 2.h),
-
-          // Password Field
           TextFormField(
             controller: _passwordController,
             obscureText: !_isPasswordVisible,
             textInputAction: TextInputAction.done,
-            style: AppTheme.darkTheme.textTheme.bodyLarge,
-            decoration: InputDecoration(
-              labelText: 'Senha',
-              hintText: 'Digite sua senha',
-              prefixIcon: Padding(
-                padding: EdgeInsets.all(3.w),
-                child: CustomIconWidget(
-                  iconName: 'lock',
-                  color: AppTheme.textSecondary,
-                  size: 5.w,
-                ),
-              ),
+            style: textStyles.bodyLarge,
+            decoration: decoration(
+              label: 'Senha',
+              hint: 'Digite sua senha',
+              prefixIcon: icon('lock'),
               suffixIcon: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
+                  setState(() => _isPasswordVisible = !_isPasswordVisible);
                 },
                 child: Padding(
                   padding: EdgeInsets.all(3.w),
                   child: CustomIconWidget(
-                    iconName:
-                        _isPasswordVisible ? 'visibility' : 'visibility_off',
-                    color: AppTheme.textSecondary,
+                    iconName: _isPasswordVisible
+                        ? 'visibility'
+                        : 'visibility_off',
+                    color: colors.onSurfaceVariant,
                     size: 5.w,
                   ),
                 ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: BorderSide(
-                  color: AppTheme.dividerGray.withValues(alpha: 0.5),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: BorderSide(
-                  color: AppTheme.dividerGray.withValues(alpha: 0.5),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: const BorderSide(
-                  color: AppTheme.activeBlue,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: const BorderSide(
-                  color: AppTheme.errorRed,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(2.w),
-                borderSide: const BorderSide(
-                  color: AppTheme.errorRed,
-                  width: 2,
-                ),
-              ),
-              fillColor: AppTheme.secondaryBackgroundDark,
-              filled: true,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 4.w,
-                vertical: 2.h,
               ),
             ),
             validator: _validatePassword,
             onFieldSubmitted: (_) => _handleLogin(),
           ),
-
           SizedBox(height: 1.h),
-
-          // Forgot Password Link
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: () {
-                // Handle forgot password
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Funcionalidade em desenvolvimento'),
-                    backgroundColor: AppTheme.warningAmber,
+                  SnackBar(
+                    content: const Text('Funcionalidade em desenvolvimento'),
+                    backgroundColor: semantics.warning,
                   ),
                 );
               },
               child: Text(
                 'Esqueci minha senha?',
-                style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.activeBlue,
+                style: textStyles.bodyMedium?.copyWith(
+                  color: colors.primary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
           ),
-
           SizedBox(height: 3.h),
-
-          // Login Button
           SizedBox(
             width: double.infinity,
             height: 6.h,
@@ -260,31 +205,34 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
                   _isFormValid && !widget.isLoading ? _handleLogin : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    _isFormValid ? AppTheme.activeBlue : AppTheme.dividerGray,
-                foregroundColor: AppTheme.textPrimary,
-                disabledBackgroundColor: AppTheme.dividerGray,
-                disabledForegroundColor: AppTheme.textSecondary,
+                    _isFormValid ? colors.primary : colors.outlineVariant,
+                foregroundColor: colors.onPrimary,
+                disabledBackgroundColor:
+                    colors.outlineVariant.withValues(alpha: 0.4),
+                disabledForegroundColor: colors.onSurfaceVariant,
                 elevation: _isFormValid ? 2 : 0,
-                shadowColor: AppTheme.shadowDark,
+                shadowColor: colors.shadow,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(2.w),
+                  borderRadius: borderRadius,
                 ),
               ),
               child: widget.isLoading
                   ? SizedBox(
                       width: 5.w,
                       height: 5.w,
-                      child: const CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppTheme.textPrimary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colors.onPrimary,
+                        ),
                       ),
                     )
                   : Text(
                       'Entrar',
-                      style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
+                      style: textStyles.labelLarge?.copyWith(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
+                        color: colors.onPrimary,
                       ),
                     ),
             ),
@@ -293,4 +241,5 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
       ),
     );
   }
+
 }

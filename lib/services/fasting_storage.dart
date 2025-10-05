@@ -93,12 +93,15 @@ class FastingStorage {
 
   static Future<List<({DateTime date, Duration duration, String method})>>
       getHistoryInRange(DateTime start, DateTime end) async {
+    // Normalize to inclusive day boundaries to avoid time-of-day exclusion
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day, 23, 59, 59, 999);
     final map = await getHistoryMap();
     final out = <({DateTime date, Duration duration, String method})>[];
     for (final entry in map.entries) {
       try {
         final d = DateTime.parse(entry.key);
-        if (!d.isBefore(start) && !d.isAfter(end)) {
+        if (!d.isBefore(startDay) && !d.isAfter(endDay)) {
           final m = entry.value as Map<String, dynamic>;
           out.add((
             date: d,

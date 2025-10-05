@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class AchievementsWidget extends StatelessWidget {
   final List<Map<String, dynamic>> achievements;
@@ -21,10 +22,10 @@ class AchievementsWidget extends StatelessWidget {
       padding: EdgeInsets.all(4.w),
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: context.colors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.dividerGray.withValues(alpha: 0.3),
+          color: context.colors.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -34,14 +35,14 @@ class AchievementsWidget extends StatelessWidget {
             children: [
               CustomIconWidget(
                 iconName: 'emoji_events',
-                color: AppTheme.premiumGold,
+                color: context.semanticColors.premium,
                 size: 24,
               ),
               SizedBox(width: 2.w),
               Text(
                 'Conquistas',
-                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textPrimary,
+                style: context.textStyles.titleMedium?.copyWith(
+                  color: context.colors.onSurface,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
@@ -59,7 +60,7 @@ class AchievementsWidget extends StatelessWidget {
                   icon: 'calendar_today',
                   value: '$totalFastingDays',
                   label: 'Dias Total',
-                  color: AppTheme.activeBlue,
+                  color: context.colors.primary,
                 ),
               ),
               SizedBox(width: 3.w),
@@ -69,7 +70,7 @@ class AchievementsWidget extends StatelessWidget {
                   icon: 'local_fire_department',
                   value: '$longestStreak',
                   label: 'Maior Sequência',
-                  color: AppTheme.warningAmber,
+                  color: context.semanticColors.warning,
                 ),
               ),
             ],
@@ -129,7 +130,7 @@ class AchievementsWidget extends StatelessWidget {
           SizedBox(height: 1.h),
           Text(
             value,
-            style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+            style: context.textStyles.titleMedium?.copyWith(
               color: color,
               fontSize: fsValue,
               fontWeight: FontWeight.w700,
@@ -137,8 +138,8 @@ class AchievementsWidget extends StatelessWidget {
           ),
           Text(
             label,
-            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
+            style: context.textStyles.bodySmall?.copyWith(
+              color: context.colors.onSurfaceVariant,
               fontSize: fsLabel,
             ),
             textAlign: TextAlign.center,
@@ -148,7 +149,8 @@ class AchievementsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildAchievementCard(BuildContext context, Map<String, dynamic> achievement) {
+  Widget _buildAchievementCard(
+      BuildContext context, Map<String, dynamic> achievement) {
     final isUnlocked = achievement["unlocked"] as bool;
     final title = achievement["title"] as String;
     // description unused here by design (card compact)
@@ -164,13 +166,13 @@ class AchievementsWidget extends StatelessWidget {
       padding: EdgeInsets.all(pad.toDouble()),
       decoration: BoxDecoration(
         color: isUnlocked
-            ? AppTheme.premiumGold.withValues(alpha: 0.1)
-            : AppTheme.dividerGray.withValues(alpha: 0.1),
+            ? context.semanticColors.premium.withValues(alpha: 0.1)
+            : context.colors.outline.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isUnlocked
-              ? AppTheme.premiumGold.withValues(alpha: 0.5)
-              : AppTheme.dividerGray.withValues(alpha: 0.3),
+              ? context.semanticColors.premium.withValues(alpha: 0.5)
+              : context.colors.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -178,14 +180,18 @@ class AchievementsWidget extends StatelessWidget {
         children: [
           CustomIconWidget(
             iconName: isUnlocked ? 'diamond' : 'lock',
-            color: isUnlocked ? AppTheme.premiumGold : AppTheme.textSecondary,
+            color: isUnlocked
+                ? context.semanticColors.premium
+                : context.colors.onSurfaceVariant,
             size: iconSize,
           ),
           SizedBox(height: 1.h),
           Text(
             title,
-            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-              color: isUnlocked ? AppTheme.premiumGold : AppTheme.textSecondary,
+            style: context.textStyles.bodySmall?.copyWith(
+              color: isUnlocked
+                  ? context.semanticColors.premium
+                  : context.colors.onSurfaceVariant,
               fontSize: titleFs,
               fontWeight: FontWeight.w600,
             ),
@@ -197,8 +203,8 @@ class AchievementsWidget extends StatelessWidget {
             SizedBox(height: 0.5.h),
             Text(
               '${(progress * target).toInt()}/$target',
-              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
+              style: context.textStyles.bodySmall?.copyWith(
+                color: context.colors.onSurfaceVariant,
                 fontSize: progFs,
               ),
             ),

@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/app_export.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/design_tokens.dart';
 import './widgets/app_logo_widget.dart';
 import './widgets/login_form_widget.dart';
 import './widgets/register_link_widget.dart';
@@ -37,26 +36,22 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin(String email, String password) async {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
     setState(() {
       _isLoading = true;
     });
 
-    // Dismiss keyboard
     FocusScope.of(context).unfocus();
 
     try {
-      // Simulate network delay
       await Future.delayed(const Duration(seconds: 2));
 
-      // Check mock credentials
       if (_mockCredentials.containsKey(email) &&
           _mockCredentials[email] == password) {
-        // Success haptic feedback
         HapticFeedback.lightImpact();
 
-        // Show success message
         if (mounted) {
-          // Persist authenticated session
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('is_authenticated', true);
           await prefs.setString('user_email', email);
@@ -65,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Login realizado com sucesso!'),
-              backgroundColor: AppTheme.successGreen,
+              backgroundColor: semantics.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(2.w),
@@ -73,20 +68,17 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          // Navigate to dashboard
           Navigator.pushReplacementNamed(context, '/daily-tracking-dashboard');
         }
       } else {
-        // Error haptic feedback
         HapticFeedback.mediumImpact();
 
-        // Show error message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
                   'Credenciais inválidas. Verifique seu email e senha.'),
-              backgroundColor: AppTheme.errorRed,
+              backgroundColor: colors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(2.w),
@@ -96,12 +88,11 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      // Network error handling
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Erro de rede. Verifique sua conexão.'),
-            backgroundColor: AppTheme.errorRed,
+            backgroundColor: colors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(2.w),
@@ -119,19 +110,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleSocialLogin(String provider) async {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Simulate social login process
       await Future.delayed(const Duration(seconds: 1));
-
-      // Success haptic feedback
       HapticFeedback.lightImpact();
 
       if (mounted) {
-        // Persist authenticated session for social login
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('is_authenticated', true);
         await prefs.setString('user_email', 'social@$provider');
@@ -140,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Login com $provider realizado com sucesso!'),
-            backgroundColor: AppTheme.successGreen,
+            backgroundColor: semantics.success,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(2.w),
@@ -148,7 +137,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        // Navigate to dashboard
         Navigator.pushReplacementNamed(context, '/daily-tracking-dashboard');
       }
     } catch (e) {
@@ -156,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro no login com $provider'),
-            backgroundColor: AppTheme.errorRed,
+            backgroundColor: colors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(2.w),
@@ -175,8 +163,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackgroundDark,
+      backgroundColor: colors.surface,
       body: SafeArea(
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -195,32 +185,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       SizedBox(height: 8.h),
-
-                      // App Logo
                       const AppLogoWidget(),
-
                       SizedBox(height: 6.h),
-
-                      // Login Form
                       LoginFormWidget(
                         onLogin: _handleLogin,
                         isLoading: _isLoading,
                       ),
-
                       SizedBox(height: 4.h),
-
-                      // Social Login Options
                       SocialLoginWidget(
                         onSocialLogin: _handleSocialLogin,
                         isLoading: _isLoading,
                       ),
-
                       const Spacer(),
-
-                      // Register Link
-                      const RegisterLinkWidget(),
-
-                      SizedBox(height: 2.h),
+                      RegisterLinkWidget(
+                        isLoading: _isLoading,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '© ${DateTime.now().year} NutriTracker. Todos os direitos reservados.',
+                        textAlign: TextAlign.center,
+                        style: textStyles.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      SizedBox(height: 3.h),
                     ],
                   ),
                 ),
@@ -231,4 +219,5 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
 }

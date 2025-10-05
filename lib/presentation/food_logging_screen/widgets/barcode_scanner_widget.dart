@@ -69,6 +69,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
       _cameraController = CameraController(
         camera,
         kIsWeb ? ResolutionPreset.medium : ResolutionPreset.high,
+        enableAudio: false,
       );
 
       await _cameraController!.initialize();
@@ -390,7 +391,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
 class _ScannerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paintMask = Paint()..color = Colors.black.withOpacity(0.45);
+    final paintMask = Paint()..color = Colors.black.withValues(alpha: 0.45);
     final rect = Offset.zero & size;
     canvas.drawRect(rect, paintMask);
 

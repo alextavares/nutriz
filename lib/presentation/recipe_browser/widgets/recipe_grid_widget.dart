@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 import './recipe_card_widget.dart';
 
 class RecipeGridWidget extends StatelessWidget {
@@ -11,6 +12,8 @@ class RecipeGridWidget extends StatelessWidget {
   final Function(Map<String, dynamic>) onRecipeLongPress;
   final bool isLoading;
   final VoidCallback? onLoadMore;
+  final bool isPremiumUser;
+  final VoidCallback onUnlockPro;
 
   const RecipeGridWidget({
     Key? key,
@@ -20,6 +23,8 @@ class RecipeGridWidget extends StatelessWidget {
     required this.onRecipeLongPress,
     this.isLoading = false,
     this.onLoadMore,
+    required this.isPremiumUser,
+    required this.onUnlockPro,
   }) : super(key: key);
 
   @override
@@ -39,14 +44,14 @@ class RecipeGridWidget extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 2.h),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
-          childAspectRatio: 0.75,
+          childAspectRatio: 0.72,
           crossAxisSpacing: 2.w,
           mainAxisSpacing: 2.h,
         ),
         itemCount: recipes.length + (isLoading ? 2 : 0),
         itemBuilder: (context, index) {
           if (index >= recipes.length) {
-            return _buildSkeletonCard();
+            return _buildSkeletonCard(context);
           }
 
           final recipe = recipes[index];
@@ -55,6 +60,8 @@ class RecipeGridWidget extends StatelessWidget {
             onTap: () => onRecipeTap(recipe),
             onFavoriteToggle: () => onFavoriteToggle(recipe),
             onLongPress: () => onRecipeLongPress(recipe),
+            isPremiumUser: isPremiumUser,
+            onUnlockPro: onUnlockPro,
           );
         },
       ),
@@ -68,11 +75,12 @@ class RecipeGridWidget extends StatelessWidget {
     return 2; // Phone
   }
 
-  Widget _buildSkeletonCard() {
+  Widget _buildSkeletonCard(BuildContext context) {
+    final colors = context.colors;
     return Container(
       margin: EdgeInsets.all(1.w),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackgroundDark,
+        color: colors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -81,14 +89,14 @@ class RecipeGridWidget extends StatelessWidget {
             flex: 3,
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.dividerGray.withValues(alpha: 0.3),
+                color: colors.outlineVariant.withValues(alpha: 0.25),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: Center(
                 child: CustomIconWidget(
                   iconName: 'image',
-                  color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.4),
                   size: 8.w,
                 ),
               ),
@@ -105,7 +113,7 @@ class RecipeGridWidget extends StatelessWidget {
                     width: double.infinity,
                     height: 2.h,
                     decoration: BoxDecoration(
-                      color: AppTheme.dividerGray.withValues(alpha: 0.3),
+                      color: colors.outlineVariant.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -114,7 +122,7 @@ class RecipeGridWidget extends StatelessWidget {
                     width: 60.w,
                     height: 1.5.h,
                     decoration: BoxDecoration(
-                      color: AppTheme.dividerGray.withValues(alpha: 0.3),
+                      color: colors.outlineVariant.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -125,7 +133,8 @@ class RecipeGridWidget extends StatelessWidget {
                         width: 15.w,
                         height: 1.5.h,
                         decoration: BoxDecoration(
-                          color: AppTheme.dividerGray.withValues(alpha: 0.3),
+                          color:
+                              colors.outlineVariant.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -134,7 +143,8 @@ class RecipeGridWidget extends StatelessWidget {
                         width: 15.w,
                         height: 1.5.h,
                         decoration: BoxDecoration(
-                          color: AppTheme.dividerGray.withValues(alpha: 0.3),
+                          color:
+                              colors.outlineVariant.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),

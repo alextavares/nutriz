@@ -1,0 +1,29 @@
+# Codecov configuration for NutriTracker (Flutter)
+
+coverage:
+  precision: 2
+  round: down
+  range: "50...90"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+ignore:
+  - "lib/**.g.dart"
+  - "lib/**.freezed.dart"
+  - "lib/**/generated/**"
+  - "lib/**/gen/**"
+  - "test/**/fixtures/**"
+  - "test/**/helpers/**"
+
+comment:
+  layout: "reach, diff, flags, files"
+  require_changes: false
+  after_n_builds: 1
+

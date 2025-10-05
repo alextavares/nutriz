@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'gemini_client.dart' as gem;
 import 'gemini_service.dart';
 import 'openai_client.dart' as oi;
+import 'openai_service.dart';
 import 'env_service.dart';
 
 class AiProvider {
@@ -33,12 +34,16 @@ class AiProvider {
     ai._geminiClient = gem.GeminiClient(gsvc.dio, gsvc.authApiKey);
 
     if (provider == 'openai') {
+      await OpenAIService.init();
       final key = ai.openAiKey;
       if (key == null || key.isEmpty) {
         // Try to load from EnvService as fallback
         try {
-          final k = await EnvService.get('OPENAI_API_KEY');
-          if (k != null && k.isNotEmpty) {
+          String? k = await EnvService.get('OPENAI_API_KEY');
+          if (k == null || k.isEmpty) {
+            k = OpenAIService.apiKey;
+          }
+          if (k.isNotEmpty) {
             ai._openAIClient = oi.OpenAIClient(k);
           } else {
             debugPrint(
@@ -66,13 +71,14 @@ class AiProvider {
     final ai = AiProvider._(p, openAiModel: openAiModel, openAiKey: openAiKey);
     ai._geminiClient = gem.GeminiClient(gsvc.dio, gsvc.authApiKey);
     if (p == 'openai') {
+      await OpenAIService.init();
       String keyVal = openAiKey ?? '';
       if (keyVal.isEmpty) {
         keyVal = const String.fromEnvironment('OPENAI_API_KEY');
       }
       if (keyVal.isEmpty) {
         try {
-          keyVal = await EnvService.get('OPENAI_API_KEY') ?? '';
+          keyVal = await EnvService.get('OPENAI_API_KEY') ?? OpenAIService.apiKey;
         } catch (_) {}
       }
       if (keyVal.isNotEmpty) {

@@ -7,6 +7,8 @@ import 'dart:convert';
 import '../../core/app_export.dart';
 import '../../services/coach_api_service.dart';
 import '../../services/nutrition_storage.dart';
+import '../../services/user_preferences.dart';
+import '../../theme/design_tokens.dart';
 
 abstract class _ChatEntry {}
 
@@ -37,10 +39,44 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
   final ImagePicker _picker = ImagePicker();
   DateTime _targetDate = DateTime.now();
   String _defaultMealKey = 'snack';
+  bool _isPremiumUser = false;
+  late final VoidCallback _prefsListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefsListener = () => _loadPremiumStatus();
+    UserPreferences.changes.addListener(_prefsListener);
+    _loadPremiumStatus();
+  }
+
+  Future<void> _loadPremiumStatus() async {
+    final status = await UserPreferences.getPremiumStatus();
+    if (!mounted) return;
+    setState(() => _isPremiumUser = status);
+  }
+
+  @override
+  void dispose() {
+    UserPreferences.changes.removeListener(_prefsListener);
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    if (!_isPremiumUser) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Coach de IA'),
+          backgroundColor: cs.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: _buildLockedState(context),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Coach de IA'),
@@ -78,13 +114,20 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                   ),
                   const SizedBox(width: 8),
                   _sending
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(cs.primary),
+                              )),
                         )
                       : IconButton(
                           onPressed: _onSend,
-                          icon: const Icon(Icons.send),
+                          icon: Icon(Icons.send, color: cs.primary),
                           tooltip: 'Enviar',
                         ),
                 ],
@@ -139,7 +182,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                   avatar: Icon(it.icon, size: 18),
                   label: Text(it.label),
                   onPressed: it.onTap,
-                  backgroundColor: cs.surfaceVariant.withValues(alpha: 0.3),
+                  backgroundColor:
+                      cs.surfaceContainerHighest.withValues(alpha: 0.3),
                   visualDensity: VisualDensity.compact,
                 ),
               ),
@@ -150,6 +194,10 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
   }
 
   Future<void> _onSend() async {
+    if (!_isPremiumUser) {
+      _showProUpgradeMessage('Coach de IA');
+      return;
+    }
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
     setState(() {
@@ -160,7 +208,9 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
     });
     try {
       final history = _buildHistory();
-      final coachReply = await CoachApiService.instance.sendMessage(message: text, history: history);
+      final ctx = await _buildDailyContext();
+      final coachReply = await CoachApiService.instance
+          .sendMessage(message: text, history: history, context: ctx);
       if (!mounted) return;
       setState(() {
         // remove typing
@@ -197,13 +247,71 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
     return hist;
   }
 
+  Future<Map<String, dynamic>> _buildDailyContext() async {
+    final date = DateTime(_targetDate.year, _targetDate.month, _targetDate.day);
+    final entries = await NutritionStorage.getEntriesForDate(date);
+    int kcal = 0;
+    double carbs = 0, protein = 0, fat = 0;
+    for (final e in entries) {
+      kcal += (e['calories'] as num?)?.toInt() ?? 0;
+      carbs += (e['carbs'] as num?)?.toDouble() ?? 0.0;
+      protein += (e['protein'] as num?)?.toDouble() ?? 0.0;
+      fat += (e['fat'] as num?)?.toDouble() ?? 0.0;
+    }
+    final water = await NutritionStorage.getWaterMl(date);
+    final goals = await UserPreferences.getGoals();
+    final remainingKcal =
+        (goals.totalCalories - kcal).clamp(0, goals.totalCalories);
+    final remainingCarb = (goals.carbs - carbs).clamp(0, goals.carbs).toInt();
+    final remainingProt =
+        (goals.proteins - protein).clamp(0, goals.proteins).toInt();
+    final remainingFat = (goals.fats - fat).clamp(0, goals.fats).toInt();
+    final remainingWater =
+        (goals.waterGoalMl - water).clamp(0, goals.waterGoalMl);
+    return {
+      'date':
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+      'goals': {
+        'calories': goals.totalCalories,
+        'carbs_g': goals.carbs,
+        'protein_g': goals.proteins,
+        'fat_g': goals.fats,
+        'water_ml': goals.waterGoalMl,
+      },
+      'consumed': {
+        'calories': kcal,
+        'carbs_g': carbs,
+        'protein_g': protein,
+        'fat_g': fat,
+        'water_ml': water,
+      },
+      'remaining': {
+        'calories': remainingKcal,
+        'carbs_g': remainingCarb,
+        'protein_g': remainingProt,
+        'fat_g': remainingFat,
+        'water_ml': remainingWater,
+      }
+    };
+  }
+
   Future<void> _onAttachPhoto() async {
+    if (!_isPremiumUser) {
+      _showProUpgradeMessage('Anexar fotos no Coach');
+      return;
+    }
     final choice = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Wrap(children: [
-          ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Escolher da galeria'), onTap: () => Navigator.pop(ctx, 'gallery')),
-          ListTile(leading: const Icon(Icons.photo_camera_outlined), title: const Text('Tirar foto'), onTap: () => Navigator.pop(ctx, 'camera')),
+          ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Escolher da galeria'),
+              onTap: () => Navigator.pop(ctx, 'gallery')),
+          ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Tirar foto'),
+              onTap: () => Navigator.pop(ctx, 'camera')),
           const SizedBox(height: 6),
         ]),
       ),
@@ -212,16 +320,19 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
     try {
       XFile? picked;
       if (choice == 'gallery') {
-        picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 90);
+        picked = await _picker.pickImage(
+            source: ImageSource.gallery, imageQuality: 90);
       } else {
-        picked = await _picker.pickImage(source: ImageSource.camera, imageQuality: 90);
+        picked = await _picker.pickImage(
+            source: ImageSource.camera, imageQuality: 90);
       }
       if (picked == null) return;
       final file = File(picked.path);
       await _sendPhoto(file);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Falha ao anexar: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao anexar: ${e.toString()}')));
     }
   }
 
@@ -230,14 +341,19 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
       final bytes = await file.readAsBytes();
       final b64 = base64Encode(bytes);
       setState(() => _items.add(_ChatTyping()));
-      final cands = await CoachApiService.instance.analyzePhoto(imageBase64: b64);
+      final cands =
+          await CoachApiService.instance.analyzePhoto(imageBase64: b64);
       if (!mounted) return;
       setState(() {
         // remove typing
         final idx = _items.lastIndexWhere((e) => e is _ChatTyping);
         if (idx >= 0) _items.removeAt(idx);
         _items.add(_ChatEvents([
-          { 'tool': 'analisar_foto', 'ok': true, 'result': { 'candidatos': cands } },
+          {
+            'tool': 'analisar_foto',
+            'ok': true,
+            'result': {'candidatos': cands}
+          },
         ]));
       });
     } catch (e) {
@@ -246,7 +362,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
         final idx = _items.lastIndexWhere((e) => e is _ChatTyping);
         if (idx >= 0) _items.removeAt(idx);
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Falha na análise da foto: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha na análise da foto: ${e.toString()}')));
     }
   }
 
@@ -301,7 +418,10 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: const [
-            SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(
+                height: 16,
+                width: 16,
+                child: CircularProgressIndicator(strokeWidth: 2)),
             SizedBox(width: 8),
             Text('Nutri está pensando…'),
           ],
@@ -333,8 +453,13 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
         break;
       case 'buscar_alimento':
         final itens = (result['itens'] as List?) ?? const [];
-        final names = itens.take(3).map((it) => (it['nome'] ?? '').toString()).where((s) => s.isNotEmpty).join(', ');
-        content = Text('OFF resultados: ${names.isEmpty ? 'sem itens' : names}');
+        final names = itens
+            .take(3)
+            .map((it) => (it['nome'] ?? '').toString())
+            .where((s) => s.isNotEmpty)
+            .join(', ');
+        content =
+            Text('OFF resultados: ${names.isEmpty ? 'sem itens' : names}');
         break;
       case 'analisar_barcode':
         final item = (result['item'] as Map?) ?? const {};
@@ -342,15 +467,16 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
         final porcao = (item['porcao'] ?? '').toString();
         final np = (item['nutricao_por_porcao'] as Map?) ?? const {};
         final kcal = np['kcal']?.toString() ?? '';
-        content = Row(
-          mainAxisSize: MainAxisSize.min,
+        content = Wrap(
+          spacing: 8,
+          runSpacing: 6,
           children: [
-            Flexible(child: Text('Código: ${nome.isEmpty ? 'produto' : nome} • ${porcao.isEmpty ? '' : porcao} • ${kcal.isEmpty ? '' : '$kcal kcal'}')),
-            const SizedBox(width: 8),
+            Text(
+                'Código: ${nome.isEmpty ? 'produto' : nome} • ${porcao.isEmpty ? '' : porcao} • ${kcal.isEmpty ? '' : '$kcal kcal'}'),
             TextButton(
               onPressed: () {
                 final typed = Map<String, dynamic>.from(
-                  (item as Map).map((k, v) => MapEntry(k.toString(), v)),
+                  (item).map((k, v) => MapEntry(k.toString(), v)),
                 );
                 _quickLogBarcode(typed);
               },
@@ -364,10 +490,16 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
         final porcaoLog = (result['porcao'] ?? '').toString();
         final kcalLog = (result['kcal'] ?? '').toString();
         final meal = (result['mealTime'] ?? '').toString();
-        content = Text('Adicionado: ${nomeLog.isEmpty ? 'alimento' : nomeLog} • ${porcaoLog.isEmpty ? '' : porcaoLog} • ${kcalLog.isEmpty ? '' : '$kcalLog kcal'} ${meal.isNotEmpty ? '• $meal' : ''}');
+        content = Text(
+            'Adicionado: ${nomeLog.isEmpty ? 'alimento' : nomeLog} • ${porcaoLog.isEmpty ? '' : porcaoLog} • ${kcalLog.isEmpty ? '' : '$kcalLog kcal'} ${meal.isNotEmpty ? '• $meal' : ''}');
         break;
       case 'analisar_foto':
-        final cands = (result['candidatos'] as List?)?.cast<dynamic>().map<Map<String, dynamic>>((x) => (x as Map).map((k, v) => MapEntry(k.toString(), v))).toList() ?? const [];
+        final cands = (result['candidatos'] as List?)
+                ?.cast<dynamic>()
+                .map<Map<String, dynamic>>(
+                    (x) => (x as Map).map((k, v) => MapEntry(k.toString(), v)))
+                .toList() ??
+            const [];
         content = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -376,16 +508,17 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
             for (final c in cands)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
                   children: [
-                    Flexible(child: Text('${c['nome'] ?? ''} • ${(c['porcao'] ?? '').toString()} • conf ${((c['confianca'] ?? '')).toString()}')),
-                    const SizedBox(width: 8),
+                    Text(
+                        '${c['nome'] ?? ''} • ${(c['porcao'] ?? '').toString()} • conf ${((c['confianca'] ?? '')).toString()}'),
                     TextButton(
-                      onPressed: () => _searchAndLogCandidate(c['nome']?.toString() ?? ''),
+                      onPressed: () =>
+                          _searchAndLogCandidate(c['nome']?.toString() ?? ''),
                       child: const Text('Buscar e Logar'),
                     ),
-                    const SizedBox(width: 6),
                     OutlinedButton(
                       onPressed: () => _quickLogCandidate(c),
                       child: const Text('Logar rápido'),
@@ -407,7 +540,33 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
         final s = sugs.isNotEmpty ? (sugs.first as Map) : null;
         final nome = s?['nome']?.toString() ?? '';
         final kcal = s?['kcal']?.toString() ?? '';
-        content = Text('Sugestão: ${nome.isEmpty ? 'refeição' : nome} ${kcal.isNotEmpty ? '• $kcal kcal' : ''}');
+        content = Text(
+            'Sugestão: ${nome.isEmpty ? 'refeição' : nome} ${kcal.isNotEmpty ? '• $kcal kcal' : ''}');
+        break;
+      case 'sugerir_log_refeicao':
+        final sugAny = ((result['sugestao'] as Map?) ?? result);
+        final sug = Map<String, dynamic>.from(
+            sugAny.map((k, v) => MapEntry(k.toString(), v)));
+        final nomeS = (sug['nome'] ?? '').toString();
+        final porcaoS = (sug['porcao'] ?? '').toString();
+        final kcalS = (sug['kcal'] ?? '').toString();
+        final mg = (sug['macros_g'] as Map?) ?? const {};
+        final c = (mg['carbo'] as num?)?.toInt() ?? 0;
+        final p = (mg['proteina'] as num?)?.toInt() ?? 0;
+        final g = (mg['gordura'] as num?)?.toInt() ?? 0;
+        final meal = (sug['mealTime'] ?? '').toString();
+        content = Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            Text(
+                '${nomeS.isEmpty ? 'Sugestão' : nomeS}${porcaoS.isNotEmpty ? ' • $porcaoS' : ''}${kcalS.isNotEmpty ? ' • $kcalS kcal' : ''} • C ${c}g • P ${p}g • G ${g}g${meal.isNotEmpty ? ' • $meal' : ''}'),
+            ElevatedButton(
+              onPressed: () => _confirmAndLogSuggestion(sug),
+              child: const Text('Registrar'),
+            ),
+          ],
+        );
         break;
       default:
         content = Text('Ferramenta: $tool');
@@ -416,17 +575,26 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
       margin: const EdgeInsets.only(top: 6, bottom: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: ok ? cs.surfaceVariant : cs.errorContainer,
+        color: ok ? cs.surfaceContainerHighest : cs.errorContainer,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(ok ? Icons.task_alt : Icons.error_outline, size: 16, color: ok ? cs.primary : cs.error),
-          const SizedBox(width: 8),
-          Flexible(child: content),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxW = constraints.maxWidth;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(ok ? Icons.task_alt : Icons.error_outline,
+                  size: 16, color: ok ? cs.primary : cs.error),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxW - 40),
+                child: content,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -463,7 +631,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                 TextField(
                   controller: ctrl,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Quantidade de porções'),
+                  decoration:
+                      const InputDecoration(labelText: 'Quantidade de porções'),
                   onChanged: (v) {
                     portions = double.tryParse(v.replaceAll(',', '.')) ?? 1.0;
                   },
@@ -486,8 +655,12 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirmar')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Confirmar')),
           ],
         );
       },
@@ -522,7 +695,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
         }
       ]));
     });
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alimento adicionado')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Alimento adicionado')));
   }
 
   Future<void> _searchAndLogCandidate(String name) async {
@@ -531,7 +705,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
       final items = await CoachApiService.instance.searchFoods(name, topK: 5);
       if (!mounted) return;
       if (items.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Nenhum item encontrado para "$name"')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Nenhum item encontrado para "$name"')));
         return;
       }
       final selected = await showDialog<Map<String, dynamic>>(
@@ -548,7 +723,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                     for (final it in items)
                       ListTile(
                         title: Text((it['nome'] ?? '').toString()),
-                        subtitle: Text('kcal/100g: ${(it['nutricao_por_100g']?['kcal'] ?? '').toString()}'),
+                        subtitle: Text(
+                            'kcal/100g: ${(it['nutricao_por_100g']?['kcal'] ?? '').toString()}'),
                         onTap: () => Navigator.pop(ctx, it),
                       ),
                   ],
@@ -596,8 +772,12 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-              ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Salvar')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancelar')),
+              ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Salvar')),
             ],
           );
         },
@@ -606,7 +786,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
 
       final grams = int.tryParse(gramsController.text.trim()) ?? 0;
       if (grams <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Porção inválida')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Porção inválida')));
         return;
       }
 
@@ -649,10 +830,12 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
           }
         ]));
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alimento adicionado')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Alimento adicionado')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Falha ao buscar/logar: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao buscar/logar: ${e.toString()}')));
     }
   }
 
@@ -694,12 +877,14 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
       final items = await CoachApiService.instance.searchFoods(name, topK: 3);
       if (items.isEmpty) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Nenhum item encontrado para "$name"')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Nenhum item encontrado para "$name"')));
         return;
       }
       final selected = items.first;
       final per100 = selected['nutricao_por_100g'] as Map? ?? const {};
-      int grams = _parseGramsFromPortion((cand['porcao'] ?? '').toString()) ?? 150;
+      int grams =
+          _parseGramsFromPortion((cand['porcao'] ?? '').toString()) ?? 150;
 
       double ratio = grams / 100.0;
       final baseKcal = (per100['kcal'] as num?)?.toDouble() ?? 0.0;
@@ -733,10 +918,14 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                   onChanged: (v) {
                     final g = int.tryParse(v.trim()) ?? grams;
                     final r = g / 100.0;
-                    final baseKcal2 = (per100['kcal'] as num?)?.toDouble() ?? 0.0;
-                    final baseCarb2 = (per100['carbo'] as num?)?.toDouble() ?? 0.0;
-                    final baseProt2 = (per100['proteina'] as num?)?.toDouble() ?? 0.0;
-                    final baseFat2 = (per100['gordura'] as num?)?.toDouble() ?? 0.0;
+                    final baseKcal2 =
+                        (per100['kcal'] as num?)?.toDouble() ?? 0.0;
+                    final baseCarb2 =
+                        (per100['carbo'] as num?)?.toDouble() ?? 0.0;
+                    final baseProt2 =
+                        (per100['proteina'] as num?)?.toDouble() ?? 0.0;
+                    final baseFat2 =
+                        (per100['gordura'] as num?)?.toDouble() ?? 0.0;
                     kcal = (baseKcal2 * r).round();
                     carbs = baseCarb2 * r;
                     protein = baseProt2 * r;
@@ -760,8 +949,12 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-              ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirmar')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancelar')),
+              ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Confirmar')),
             ],
           );
         },
@@ -797,10 +990,178 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
           }
         ]));
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alimento adicionado')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Alimento adicionado')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Falha no log rápido: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha no log rápido: ${e.toString()}')));
     }
   }
+
+  Future<void> _confirmAndLogSuggestion(Map<String, dynamic> sug) async {
+    final name = (sug['nome'] ?? '').toString();
+    final porcao = (sug['porcao'] ?? '1 porção').toString();
+    final kcal = (sug['kcal'] as num?)?.toInt() ?? 0;
+    final mg = (sug['macros_g'] as Map?) ?? const {};
+    final carbs = (mg['carbo'] as num?)?.toDouble() ?? 0.0;
+    final protein = (mg['proteina'] as num?)?.toDouble() ?? 0.0;
+    final fat = (mg['gordura'] as num?)?.toDouble() ?? 0.0;
+    String mealKey = (sug['mealTime'] ?? '').toString();
+    if (mealKey.isEmpty) mealKey = _defaultMealKey;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        String localMeal = mealKey;
+        return StatefulBuilder(builder: (ctx2, setSt) {
+          return AlertDialog(
+            title: const Text('Confirmar registro'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    '$name\n$porcao • ${kcal > 0 ? '$kcal kcal' : ''}\nC ${carbs.toStringAsFixed(0)}g • P ${protein.toStringAsFixed(0)}g • G ${fat.toStringAsFixed(0)}g'),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: localMeal,
+                  items: const [
+                    DropdownMenuItem(value: 'breakfast', child: Text('Café')),
+                    DropdownMenuItem(value: 'lunch', child: Text('Almoço')),
+                    DropdownMenuItem(value: 'dinner', child: Text('Jantar')),
+                    DropdownMenuItem(value: 'snack', child: Text('Lanche')),
+                  ],
+                  onChanged: (v) => setSt(() => localMeal = v ?? 'snack'),
+                  decoration: const InputDecoration(labelText: 'Período'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx2, false),
+                  child: const Text('Cancelar')),
+              ElevatedButton(
+                  onPressed: () {
+                    mealKey = localMeal;
+                    Navigator.pop(ctx2, true);
+                  },
+                  child: const Text('Registrar')),
+            ],
+          );
+        });
+      },
+    );
+    if (ok != true) return;
+
+    final entry = <String, dynamic>{
+      'name': name.isEmpty ? 'Alimento' : name,
+      'brand': null,
+      'calories': kcal,
+      'carbs': carbs,
+      'protein': protein,
+      'fat': fat,
+      'quantity': 1.0,
+      'serving': porcao,
+      'mealTime': mealKey,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    await NutritionStorage.addEntry(_targetDate, entry);
+    if (!mounted) return;
+    setState(() {
+      _items.add(_ChatEvents([
+        {
+          'tool': 'log_refeicao',
+          'ok': true,
+          'result': {
+            'nome': entry['name'],
+            'porcao': entry['serving'],
+            'kcal': entry['calories'],
+            'mealTime': entry['mealTime'],
+          }
+        }
+      ]));
+    });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Alimento registrado')));
+  }
+
+  Widget _buildLockedState(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.smart_toy_outlined,
+                      color: colors.primary, size: 26),
+                  SizedBox(width: 2.w),
+                  Text(
+                    'Desbloqueie o Coach de IA',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors.primary,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 1.2.h),
+              Text(
+                'Assinantes PRO recebem orientações personalizadas, registro rápido via IA e análise instantânea de fotos.',
+                style: textTheme.bodySmall
+                    ?.copyWith(color: colors.onSurfaceVariant),
+              ),
+              SizedBox(height: 1.6.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _openProPlans,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.primary,
+                    foregroundColor: colors.onPrimary,
+                    padding: EdgeInsets.symmetric(vertical: 1.6.h),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Conhecer planos PRO'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showProUpgradeMessage(String feature) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('$feature está disponível no NutriTracker PRO'),
+        action: SnackBarAction(
+          label: 'Ver planos',
+          onPressed: _openProPlans,
+        ),
+      ),
+    );
+  }
+
+  void _openProPlans() {
+    Navigator.pushNamed(context, AppRoutes.proSubscription);
+  }
 }
+

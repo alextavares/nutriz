@@ -54,11 +54,26 @@ To run the app with environment variables defined in an env.json file, follow th
     - Add the following to the "Additional arguments" field:
     ```bash
     --dart-define-from-file=env.json
-    ```
+ ```
 
 ## 📁 Project Structure
 
 ```
+
+## 🔒 OpenRouter Vision via Backend
+
+- Copie `server/express/.env.example` para `.env` e configure:
+  - `VISION_PROVIDER=openrouter`
+  - `OPENROUTER_API_KEY=sk-or-...`
+  - Opcional: `OPENROUTER_MODEL=openai/gpt-4o-mini`, `OPENROUTER_SITE_URL=https://seuapp.com`, `OPENROUTER_SITE_NAME=NutriTracker`
+- Execute o servidor Express:
+  ```bash
+  cd server/express
+  npm install
+  npm run dev
+  ```
+- No app Flutter, garanta que `COACH_API_BASE_URL` (via `env.json` ou `--dart-define`) aponte para esse servidor (ex.: `https://api.seuapp.com` ou `http://10.0.2.2:8002` no emulador Android).
+- A análise de fotos passa a usar `POST /vision/analyze_food`, mantendo a chave do OpenRouter protegida no backend. Se o backend estiver indisponível, o app tenta fallback para Gemini (se configurado).
 flutter_app/
 ├── android/            # Android-specific configuration
 ├── ios/                # iOS-specific configuration

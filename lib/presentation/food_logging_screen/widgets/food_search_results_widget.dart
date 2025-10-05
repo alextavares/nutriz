@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
@@ -27,6 +26,8 @@ class FoodSearchResultsWidget extends StatefulWidget {
   final VoidCallback? onHeaderRightTap;
   // Controls whether to display macros per 100g or per serving
   final bool showPer100g;
+  // Controls whether to display source badges (OFF/FDC/NLQ)
+  final bool showSourceBadges;
 
   const FoodSearchResultsWidget({
     Key? key,
@@ -46,6 +47,7 @@ class FoodSearchResultsWidget extends StatefulWidget {
     this.headerRightText,
     this.onHeaderRightTap,
     this.showPer100g = true,
+    this.showSourceBadges = true,
   }) : super(key: key);
 
   @override
@@ -96,51 +98,72 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  widget.title,
-                  style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Text(
-                '$displayedCount itens • $favCount favoritos',
-                style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              SizedBox(width: 3.w),
-              if (widget.headerRightText != null &&
-                  widget.onHeaderRightTap != null)
-                TextButton(
-                  onPressed: widget.onHeaderRightTap,
-                  child: Text(widget.headerRightText!),
-                ),
-              if (widget.enableOnlyFavsToggle)
-                Row(
-                  children: [
-                    Text(
-                      'Somente favoritos',
-                      style: AppTheme.darkTheme.textTheme.bodySmall,
-                    ),
-                    SizedBox(width: 2.w),
-                    Switch(
-                      value: _onlyFavs,
-                      onChanged: (v) => setState(() => _onlyFavs = v),
-                      activeColor: AppTheme.premiumGold,
-                    ),
-                    if (_onlyFavs) ...[
-                      SizedBox(width: 1.w),
-                      TextButton(
-                        onPressed: () => setState(() => _onlyFavs = false),
-                        child: const Text('Limpar'),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      widget.title,
+                      style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ],
-                ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (widget.headerRightText != null &&
+                      widget.onHeaderRightTap != null)
+                    TextButton(
+                      onPressed: widget.onHeaderRightTap,
+                      child: Text(widget.headerRightText!),
+                    ),
+                ],
+              ),
+              SizedBox(height: 4),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      '$displayedCount itens • $favCount favoritos',
+                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (widget.enableOnlyFavsToggle)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Somente favoritos',
+                          style: AppTheme.darkTheme.textTheme.bodySmall,
+                        ),
+                        SizedBox(width: 2.w),
+                        Switch(
+                          value: _onlyFavs,
+                          onChanged: (v) => setState(() => _onlyFavs = v),
+                          activeColor: AppTheme.premiumGold,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        if (_onlyFavs) ...[
+                          SizedBox(width: 1.w),
+                          TextButton(
+                            onPressed: () => setState(() => _onlyFavs = false),
+                            child: const Text('Limpar'),
+                          ),
+                        ],
+                      ],
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -195,8 +218,10 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
             itemCount: effectiveList.length,
             itemBuilder: (context, index) {
               final food = effectiveList[index];
+              final int kcal = _perServing(food)['cal'] ?? 0;
               return Dismissible(
                 key: Key('${food['id']}_$index'),
+                direction: DismissDirection.none,
                 background: Container(
                   margin: EdgeInsets.only(bottom: 1.2.h),
                   decoration: BoxDecoration(
@@ -262,145 +287,63 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                 child: GestureDetector(
                   onTap: () => widget.onFoodTap(food),
                   child: Container(
-                    margin: EdgeInsets.only(bottom: 1.2.h),
-                    padding: EdgeInsets.all(4.w),
+                    margin: EdgeInsets.only(bottom: 0.8.h),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.secondaryBackgroundDark,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: AppTheme.dividerGray.withValues(alpha: 0.6),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.shadowDark,
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: Row(
                       children: [
                         _leadingThumb(food),
-                        SizedBox(width: 3.w),
+                        SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 food['name'] as String,
-                                style: AppTheme.darkTheme.textTheme.bodyLarge
-                                    ?.copyWith(
+                                style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              SizedBox(height: 0.5.h),
+                              const SizedBox(height: 2),
                               _brandRow(food),
-                              SizedBox(height: 1.h),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 6,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  ..._macroChipsFor(food),
-                                  FutureBuilder<bool>(
-                                    future: FavoritesStorage.isFavorite(
-                                        (food['name'] as String?) ?? ''),
-                                    builder: (context, snap) {
-                                      final isFav = snap.data ?? false;
-                                      return InkWell(
-                                        borderRadius: BorderRadius.circular(16),
-                                        onTap: () async {
-                                          HapticFeedback.selectionClick();
-                                          await FavoritesStorage.toggleFavorite(
-                                              food);
-                                          if (!mounted) return;
-                                          if (widget.onFavoritesChanged !=
-                                              null) {
-                                            await widget.onFavoritesChanged!();
-                                          }
-                                          await _refreshFavs();
-                                          setState(() {});
-                                          Fluttertoast.showToast(
-                                            msg: isFav
-                                                ? 'Removido dos favoritos'
-                                                : 'Adicionado aos favoritos',
-                                            backgroundColor: isFav
-                                                ? AppTheme.errorRed
-                                                : AppTheme.successGreen,
-                                            textColor: AppTheme.textPrimary,
-                                          );
-                                        },
-                                        child: Chip(
-                                          label: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              CustomIconWidget(
-                                                iconName: isFav
-                                                    ? 'star'
-                                                    : 'star_border',
-                                                color: AppTheme.premiumGold,
-                                                size: 4.w,
-                                              ),
-                                              SizedBox(width: 1.w),
-                                              const Text('Fav'),
-                                            ],
-                                          ),
-                                          visualDensity: VisualDensity.compact,
-                                          backgroundColor:
-                                              AppTheme.secondaryBackgroundDark,
-                                          shape: StadiumBorder(
-                                            side: BorderSide(
-                                                color: AppTheme.premiumGold
-                                                    .withValues(alpha: 0.6)),
-                                          ),
-                                          labelStyle: AppTheme
-                                              .darkTheme.textTheme.bodySmall
-                                              ?.copyWith(
-                                            color: AppTheme.premiumGold,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  if (widget.onQuickAddWithGrams != null)
-                                    _QuickAddChips(
-                                      caloriesPerGram:
-                                          _calcCaloriesPerGram(food),
-                                      onTap: (g) =>
-                                          widget.onQuickAddWithGrams!(food, g),
-                                    ),
-                                ],
-                              ),
+                              // Simplified cell: keep clean, no macro chips here
                             ],
                           ),
                         ),
-                        if (widget.onQuickSaveRequested != null)
-                          TextButton.icon(
-                            onPressed: () => widget.onQuickSaveRequested!(food),
-                            icon: const Icon(Icons.playlist_add, size: 18),
-                            label: Text(
-                              widget.quickSaveMealLabel != null
-                                  ? 'Salvar — ${widget.quickSaveMealLabel}'
-                                  : 'Salvar no diário',
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '$kcal kcal',
                               style: AppTheme.darkTheme.textTheme.bodySmall,
                             ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppTheme.successGreen,
-                              padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
-                              minimumSize: const Size(0, 0),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          )
-                        else
-                          CustomIconWidget(
-                            iconName: 'chevron_right',
-                            color:
-                                AppTheme.darkTheme.colorScheme.onSurfaceVariant,
-                            size: 5.w,
-                          ),
+                            const SizedBox(height: 0),
+                            if (widget.onQuickSaveRequested != null)
+                              IconButton(
+                                tooltip: widget.quickSaveMealLabel != null
+                                    ? 'Adicionar — ${widget.quickSaveMealLabel}'
+                                    : 'Adicionar',
+                                onPressed: () =>
+                                    widget.onQuickSaveRequested!(food),
+                                icon: const Icon(Icons.add_circle_outline),
+                                color: AppTheme.activeBlue,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                iconSize: 20,
+                              )
+                            else
+                              const SizedBox.shrink(),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -418,16 +361,16 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          width: 14.w,
-          height: 14.w,
+          width: 12.w,
+          height: 12.w,
           color: AppTheme.darkTheme.colorScheme.outline.withValues(alpha: 0.08),
           child: Image.network(url, fit: BoxFit.cover),
         ),
       );
     }
     return Container(
-      width: 14.w,
-      height: 14.w,
+      width: 12.w,
+      height: 12.w,
       decoration: BoxDecoration(
         color: AppTheme.activeBlue.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(8),
@@ -435,7 +378,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
       child: CustomIconWidget(
         iconName: 'restaurant',
         color: AppTheme.activeBlue,
-        size: 7.w,
+        size: 6.w,
       ),
     );
   }
@@ -450,10 +393,12 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
   Widget _brandRow(Map<String, dynamic> food) {
     final brand = (food['brand'] as String?) ?? 'Genérico';
     final verified = _isVerified(food);
+    final source = (food['source'] as String?)?.toUpperCase() ?? '';
     final style = AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
       color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
     );
-    if (!verified) {
+    final hasKnownSource = widget.showSourceBadges && (source == 'NLQ' || source == 'OFF' || source == 'FDC');
+    if (!verified && !hasKnownSource) {
       return Text(
         brand,
         style: style,
@@ -461,7 +406,9 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
         overflow: TextOverflow.ellipsis,
       );
     }
+    // Show brand + optional verified icon and source badge
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Expanded(
           child: Text(
@@ -472,15 +419,63 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
           ),
         ),
         SizedBox(width: 1.w),
-        Tooltip(
-          message: 'Dados verificados (código de barras)',
-          child: Icon(
-            Icons.verified,
-            size: 16,
-            color: AppTheme.premiumGold,
+        if (verified)
+          Tooltip(
+            message: 'Dados verificados (código de barras)',
+            child: Icon(
+              Icons.verified,
+              size: 16,
+              color: AppTheme.premiumGold,
+            ),
           ),
-        ),
+        if (widget.showSourceBadges && hasKnownSource) ...[
+          SizedBox(width: 1.w),
+          _sourceBadge(source),
+        ],
       ],
+    );
+  }
+
+  Widget _sourceBadge(String source) {
+    final cs = AppTheme.darkTheme.colorScheme;
+    IconData icon;
+    String label;
+    switch (source) {
+      case 'OFF':
+        icon = Icons.public;
+        label = 'Fonte: OFF';
+        break;
+      case 'FDC':
+        icon = Icons.storage;
+        label = 'Fonte: FDC';
+        break;
+      case 'NLQ':
+      default:
+        icon = Icons.auto_awesome;
+        label = 'Fonte: NLQ';
+        break;
+    }
+    return Tooltip(
+      message: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: AppTheme.darkTheme.textTheme.labelSmall,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -577,7 +572,10 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
 class _QuickAddChips extends StatefulWidget {
   final void Function(double grams) onTap;
   final double caloriesPerGram; // for preview kcal
-  const _QuickAddChips({required this.onTap, this.caloriesPerGram = 0});
+  const _QuickAddChips({
+    required this.onTap,
+    this.caloriesPerGram = 0,
+  });
 
   @override
   State<_QuickAddChips> createState() => _QuickAddChipsState();
@@ -661,3 +659,6 @@ class _QuickAddChipsState extends State<_QuickAddChips> {
     );
   }
 }
+
+
+

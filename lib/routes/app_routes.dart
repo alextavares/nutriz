@@ -17,6 +17,11 @@ import '../presentation/design_preview/design_preview_screen.dart';
 import '../presentation/progress_overview/progress_overview.dart';
 import '../presentation/goals_wizard/goals_wizard.dart';
 import '../presentation/exercise_logging_screen/exercise_logging_screen.dart';
+import '../presentation/achievements/all_achievements_screen.dart';
+import '../presentation/onboarding/onboarding_flow.dart';
+import '../presentation/streaks/streak_overview_screen.dart';
+import '../presentation/ai_coach_chat/ai_coach_chat_screen.dart';
+import '../presentation/pro_subscription/pro_subscription_screen.dart';
 
 class AppRoutes {
   // TODO: Add your routes here
@@ -32,6 +37,7 @@ class AppRoutes {
   static const String detailedMealTrackingScreen =
       '/detailed-meal-tracking-screen';
   static const String aiFoodDetection = '/ai-food-detection-screen';
+  static const String aiCoachChat = '/ai-coach-chat';
   static const String profile = '/profile-screen';
   static const String weeklyProgress = '/weekly-progress-screen';
   static const String designPreview = '/design-preview';
@@ -41,6 +47,10 @@ class AppRoutes {
   static const String bodyMetrics = '/body-metrics';
   static const String notes = '/notes';
   static const String addFoodEntry = '/add-food-entry';
+  static const String achievements = '/achievements';
+  static const String onboarding = '/onboarding';
+  static const String streakOverview = '/streak-overview';
+  static const String proSubscription = '/pro-subscription';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
@@ -53,6 +63,7 @@ class AppRoutes {
     intermittentFastingTracker: (context) => const IntermittentFastingTracker(),
     detailedMealTrackingScreen: (context) => const DetailedMealTrackingScreen(),
     aiFoodDetection: (context) => const AiFoodDetectionScreen(),
+    aiCoachChat: (context) => const AiCoachChatScreen(),
     profile: (context) => const ProfileScreen(),
     weeklyProgress: (context) => const WeeklyProgressScreen(),
     designPreview: (context) => const DesignPreviewScreen(),
@@ -62,6 +73,10 @@ class AppRoutes {
     bodyMetrics: (context) => const BodyMetricsScreen(),
     notes: (context) => const NotesScreen(),
     addFoodEntry: (context) => const AddFoodEntryScreen(),
+    achievements: (context) => const AllAchievementsScreen(),
+    onboarding: (context) => const OnboardingFlow(),
+    streakOverview: (context) => const StreakOverviewScreen(),
+    proSubscription: (context) => const ProSubscriptionScreen(),
     // TODO: Add your other routes here
   };
 }

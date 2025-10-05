@@ -35,7 +35,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       shape: StadiumBorder(
         side: BorderSide(color: color.withValues(alpha: 0.6)),
       ),
-      labelStyle: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+      labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
         color: color,
         fontWeight: FontWeight.w700,
       ),
@@ -57,7 +57,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final fPer = (r['fat'] as num?)?.toInt() ?? 0;
     final totalKcal = kcalPerPortion * portions;
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(r['name'] as String? ?? 'Receita'),
       ),
@@ -90,9 +90,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     children: [
                       _pill(Icons.access_time, '${r['prepTime']}min'),
                       SizedBox(width: 2.w),
-                      _pill(Icons.local_fire_department,
-                          '${kcalPerPortion} kcal/porção',
-                          color: AppTheme.warningAmber),
+                      _pill(
+                        Icons.local_fire_department,
+                        '${kcalPerPortion} kcal/porção',
+                        color: context.semanticColors.warning,
+                      ),
                     ],
                   ),
                 )
@@ -107,17 +109,21 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 children: [
                   Text(
                     r['name'] as String,
-                    style: AppTheme.darkTheme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   SizedBox(height: 0.6.h),
                   if (r['description'] != null)
                     Text(
                       r['description'] as String,
-                      style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                     ),
                   SizedBox(height: 1.2.h),
                   // Macros per portion (and total by portions)
@@ -132,7 +138,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         if (portions > 1)
                           _macroChip(
                               'Total: C ${cPer * portions}g • P ${pPer * portions}g • G ${fPer * portions}g',
-                              AppTheme.textSecondary),
+                              Theme.of(context).colorScheme.onSurfaceVariant),
                       ],
                     ),
                     SizedBox(height: 1.2.h),
@@ -150,7 +156,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   ),
                   SizedBox(height: 2.h),
                   Text('Porções',
-                      style: AppTheme.darkTheme.textTheme.titleMedium),
+                      style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 0.8.h),
                   Row(
                     children: [
@@ -159,26 +165,29 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       }),
                       SizedBox(width: 4.w),
                       Text('$portions',
-                          style: AppTheme.darkTheme.textTheme.titleLarge),
+                          style: Theme.of(context).textTheme.titleLarge),
                       SizedBox(width: 4.w),
                       _stepperButton(
                           Icons.add, () => setState(() => portions++)),
                       const Spacer(),
                       Text('Total: $totalKcal kcal',
-                          style: AppTheme.darkTheme.textTheme.titleMedium
-                              ?.copyWith(
-                                  color: AppTheme.activeBlue,
-                                  fontWeight: FontWeight.w700)),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              )),
                     ],
                   ),
                   SizedBox(height: 2.h),
                   Text('Modo de preparo',
-                      style: AppTheme.darkTheme.textTheme.titleMedium),
+                      style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 0.6.h),
                   Text(
-                      'Detalhes de preparo não disponíveis nesta versão (mock).',
-                      style: AppTheme.darkTheme.textTheme.bodyMedium
-                          ?.copyWith(color: AppTheme.textSecondary)),
+                    'Detalhes de preparo não disponíveis nesta versão (mock).',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
                 ],
               ),
             ),
@@ -215,19 +224,24 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.6.h),
       decoration: BoxDecoration(
-        color: AppTheme.primaryBackgroundDark.withValues(alpha: 0.6),
+        color:
+            Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-            color: (color ?? AppTheme.textSecondary).withValues(alpha: 0.6)),
+            color: (color ?? Theme.of(context).colorScheme.onSurfaceVariant)
+                .withValues(alpha: 0.6)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color ?? AppTheme.textSecondary),
+          Icon(icon,
+              size: 16,
+              color: color ?? Theme.of(context).colorScheme.onSurfaceVariant),
           SizedBox(width: 1.w),
           Text(text,
-              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                  color: color ?? AppTheme.textSecondary,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color ??
+                      Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600)),
         ],
       ),
@@ -238,10 +252,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     return Chip(
       label: Text(text),
       visualDensity: VisualDensity.compact,
-      backgroundColor: AppTheme.secondaryBackgroundDark,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: StadiumBorder(
-          side: BorderSide(color: AppTheme.dividerGray.withValues(alpha: 0.6))),
-      labelStyle: AppTheme.darkTheme.textTheme.bodySmall,
+          side: BorderSide(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outline
+                  .withValues(alpha: 0.6))),
+      labelStyle: Theme.of(context).textTheme.bodySmall,
     );
   }
 
@@ -252,10 +270,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       child: Container(
         padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(
-          color: AppTheme.secondaryBackgroundDark,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
-          border:
-              Border.all(color: AppTheme.dividerGray.withValues(alpha: 0.6)),
+          border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .outline
+                  .withValues(alpha: 0.6)),
         ),
         child: Icon(icon, size: 18),
       ),
@@ -265,7 +286,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   void _openAddToDiary() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.secondaryBackgroundDark,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -317,7 +338,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               data: Theme.of(context).copyWith(
                                 colorScheme: Theme.of(context)
                                     .colorScheme
-                                    .copyWith(primary: AppTheme.activeBlue),
+                                    .copyWith(
+                                        primary: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                               ),
                               child: child!,
                             );
@@ -379,7 +403,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Receita adicionada ao diário'),
-        backgroundColor: AppTheme.successGreen,
+        backgroundColor: context.semanticColors.success,
       ),
     );
   }

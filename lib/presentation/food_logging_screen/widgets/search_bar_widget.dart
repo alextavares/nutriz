@@ -6,21 +6,23 @@ import '../../../core/app_export.dart';
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
   final Function(String) onChanged;
-  final VoidCallback onBarcodePressed;
+  final VoidCallback? onBarcodePressed;
   final VoidCallback? onDuplicateLastMeal;
   final VoidCallback? onOpenFilters;
   final ValueChanged<String>? onSubmitted;
   final FocusNode? focusNode;
+  final String? hintText;
 
   const SearchBarWidget({
     Key? key,
     required this.controller,
     required this.onChanged,
-    required this.onBarcodePressed,
+    this.onBarcodePressed,
     this.onDuplicateLastMeal,
     this.onOpenFilters,
     this.onSubmitted,
     this.focusNode,
+    this.hintText,
   }) : super(key: key);
 
   @override
@@ -33,13 +35,7 @@ class SearchBarWidget extends StatelessWidget {
         border: Border.all(
           color: AppTheme.dividerGray.withValues(alpha: 0.6),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.shadowDark,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // Sem sombra para visual mais limpo
       ),
       child: TextField(
         focusNode: focusNode,
@@ -48,7 +44,7 @@ class SearchBarWidget extends StatelessWidget {
         onSubmitted: onSubmitted,
         style: AppTheme.darkTheme.textTheme.bodyLarge,
         decoration: InputDecoration(
-          hintText: 'Buscar por nome, marca ou código de barras',
+          hintText: hintText ?? 'Buscar por nome, marca ou código de barras',
           hintStyle: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(
             color: AppTheme.darkTheme.colorScheme.onSurfaceVariant,
           ),
@@ -132,29 +128,30 @@ class SearchBarWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-              Tooltip(
-                message: 'Abrir scanner de código de barras',
-                child: Semantics(
-                  button: true,
-                  label: 'Abrir scanner de código de barras',
-                  child: GestureDetector(
-                    onTap: onBarcodePressed,
-                    child: Container(
-                      margin: EdgeInsets.all(2.w),
-                      padding: EdgeInsets.all(2.w),
-                      decoration: BoxDecoration(
-                        color: AppTheme.activeBlue,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: CustomIconWidget(
-                        iconName: 'qr_code_scanner',
-                        color: AppTheme.textPrimary,
-                        size: 5.w,
+              if (onBarcodePressed != null)
+                Tooltip(
+                  message: 'Abrir scanner de código de barras',
+                  child: Semantics(
+                    button: true,
+                    label: 'Abrir scanner de código de barras',
+                    child: GestureDetector(
+                      onTap: onBarcodePressed,
+                      child: Container(
+                        margin: EdgeInsets.all(2.w),
+                        padding: EdgeInsets.all(2.w),
+                        decoration: BoxDecoration(
+                          color: AppTheme.activeBlue,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: CustomIconWidget(
+                          iconName: 'qr_code_scanner',
+                          color: AppTheme.textPrimary,
+                          size: 5.w,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
           border: InputBorder.none,

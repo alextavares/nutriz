@@ -1,0 +1,134 @@
+Objective (Phase 1)
+
+- Remove dead code in awards.
+- Streak Overview: thresholds [3, 5, 7, 14, 30] and make weekly dots tappable (deep-link).
+- Daily Dashboard: accept date deep-link.
+- Achievements: ensure "Food" (food_log) tab.
+
+1) Remove dead code in NutritionStorage
+
+- File: lib/services/nutrition_storage.dart
+- In addEntry(...): remove the old award block guarded with if (false) { ... }. Keep only the cumulative/deduped version.
+
+2) Streak Overview — thresholds 3/5/7/14/30
+
+- File: lib/presentation/streaks/streak_overview_screen.dart
+- In _challengeCard(): set const thresholds = [3, 5, 7, 14, 30];
+
+3) Streak Overview — tappable weekly dots (deep-link)
+
+- File: lib/presentation/streaks/streak_overview_screen.dart
+- In _weekOverview(), where it currently has:
+  - dots.add(Column(...))
+- Replace with:
+
+`dots.add(GestureDetector(
+    onTap: () {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.dailyTrackingDashboard,
+        arguments: {'date': DateTime(d.year, d.month, d.day).toIso8601String()},
+      );
+    },
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: has ? AppTheme.activeBlue : AppTheme.dividerGray,
+            border: isToday ? Border.all(color: AppTheme.activeBlue, width: 2.0) : null,
+          ),
+        ),
+        SizedBox(height: 0.8.h),
+        Text(
+          labels[i],
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+));`
+
+4) Daily Dashboard — date deep-link
+
+- File: lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart
+- Near _selectedDate, add: bool _initArgsHandled = false;
+- In didChangeDependencies():
+
+`@override
+void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initArgsHandled) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map) {
+        final s = args['date']?.toString();
+        if (s != null && s.isNotEmpty) {
+          try {
+            final d = DateTime.parse(s);
+            _selectedDate = DateTime(d.year, d.month, d.day);
+            _loadToday();
+            _loadWeek();
+          } catch (_) {}
+        }
+      }
+      _initArgsHandled = true;
+    }
+    _refreshGamificationRow();
+}`
+
+5) Achievements — ensure "Food" tab
+
+- File: lib/presentation/achievements/all_achievements_screen.dart
+- TabController: TabController(length: 8, vsync: this);
+- Tabs (include "Food" before "Test"):
+  - const [ Tab(text: 'All'), Tab(text: 'Water'), Tab(text: 'Fasting'), Tab(text: 'Calories'), Tab(text: 'Protein'), Tab(text: 'Food'), Tab(text: 'Test'), Tab(text: 'Favorites'), ]
+- Tab listener mapping:
+  - if (_tab.index <= 6) { _filterMeta = const ['all','water','fasting','calories','protein','food_log','test'][_tab.index]; } else { _filterMeta = 'all'; }
+- Meta dropdown: DropdownMenuItem(value: 'food_log', child: Text('Food'))
+
+Validation
+
+- VS Code terminal (project root):
+  - flutter analyze
+  - flutter test
+- Manual:
+  - App → "Daily actions" → "Streak overview"
+  - See chips 3/5/7/14/30
+  - Tap a weekly dot → opens Dashboard on that date
+  - Achievements → "Food" tab
+
+When Codex finishes, please send back the output of flutter analyze/flutter test. Then we can proceed with Phase 2 (NUX + localization).
+
+Notes
+
+- Tab labels language: the project currently uses PT-BR (e.g., "Todas", "Água", "Jejum", "Calorias", "Proteína"). If you prefer English ("All", "Water", ... "Food"), make sure all tabs are consistently labeled in the same language.
+- After removing the old if (false) award block in NutritionStorage, run flutter analyze to catch any dead-code warnings.
+
+What To Do Now
+
+- Paste this text into Codex chat (from the project root).
+- Ask it to apply Phase 1 changes and then run:
+  - flutter analyze
+  - flutter test
+- Send back the analyze/test output here for quick validation.
+
+Quick Post-Apply Checks
+
+- Streak Overview:
+  - Chips show 3/5/7/14/30.
+  - Tapping a weekly dot opens the Dashboard on that day.
+- Dashboard:
+  - Date deep-link works (navigating from the streak screen).
+- Achievements:
+  - "Food" tab (or "Alimentos" if keeping PT-BR) appears and filters meta 'food_log'.
+
+Short Note
+
+- Text uses copyWith correctly. Just ensure all Achievements tab labels use a consistent language (PT-BR or EN) for visual consistency.
+
+Once Phase 1 is green (analyze/test), we can proceed to Phase 2 (NUX + localization) with similarly concise instructions.

@@ -54,8 +54,6 @@ class _ExerciseLoggingScreenState extends State<ExerciseLoggingScreen> {
       // Optional preset: open editor directly
       if (!_openedPreset) {
         final name = args['activityName'] as String?;
-        final minutes = (args['minutes'] as num?)?.toDouble();
-        final intensity = (args['intensity'] as int?);
         if (name != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final match = _all.firstWhere(
@@ -82,7 +80,9 @@ class _ExerciseLoggingScreenState extends State<ExerciseLoggingScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.secondaryBackgroundDark,
+      // Use themed elevated surface for YAZIO-like sheet appearance
+      backgroundColor:
+          Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -99,7 +99,7 @@ class _ExerciseLoggingScreenState extends State<ExerciseLoggingScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Exercício registrado: +$kcal kcal'),
-              backgroundColor: AppTheme.successGreen,
+              backgroundColor: context.semanticColors.success,
             ),
           );
         },
@@ -162,13 +162,16 @@ class _ExerciseLoggingScreenState extends State<ExerciseLoggingScreen> {
                       borderRadius: BorderRadius.circular(12),
                       onTap: () => _openActivity(a),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              backgroundColor: AppTheme.successGreen.withValues(alpha: 0.12),
-                              child: Icon(a.icon, color: AppTheme.successGreen, size: 18),
+                              backgroundColor: context.semanticColors.success
+                                  .withValues(alpha: 0.12),
+                              child: Icon(a.icon,
+                                  color: context.semanticColors.success, size: 18),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -176,7 +179,10 @@ class _ExerciseLoggingScreenState extends State<ExerciseLoggingScreen> {
                                 a.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
@@ -226,7 +232,8 @@ class _ActivityEditorState extends State<_ActivityEditor> {
   @override
   void initState() {
     super.initState();
-    weightCtl = TextEditingController(text: widget.initialWeight.toStringAsFixed(0));
+    weightCtl =
+        TextEditingController(text: widget.initialWeight.toStringAsFixed(0));
   }
 
   double _met() {
@@ -270,7 +277,7 @@ class _ActivityEditorState extends State<_ActivityEditor> {
                 width: 12.w,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.dividerGray,
+                  color: Theme.of(context).colorScheme.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -280,8 +287,10 @@ class _ActivityEditorState extends State<_ActivityEditor> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: AppTheme.successGreen.withValues(alpha: 0.12),
-                  child: Icon(widget.activity.icon, color: AppTheme.successGreen, size: 18),
+                  backgroundColor:
+                      context.semanticColors.success.withValues(alpha: 0.12),
+                  child: Icon(widget.activity.icon,
+                      color: context.semanticColors.success, size: 18),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -348,7 +357,8 @@ class _ActivityEditorState extends State<_ActivityEditor> {
                     'name': widget.activity.name,
                     'minutes': minutes.round(),
                     'intensity': intensity,
-                    'weightKg': double.tryParse(weightCtl.text.trim()) ?? widget.initialWeight,
+                    'weightKg': double.tryParse(weightCtl.text.trim()) ??
+                        widget.initialWeight,
                     'kcal': kcal,
                     'savedAt': DateTime.now().toIso8601String(),
                   };
@@ -356,9 +366,10 @@ class _ActivityEditorState extends State<_ActivityEditor> {
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Salvar exercício'),
+                // Rely on theme’s ElevatedButtonTheme (mapped to preset)
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.activeBlue,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
             ),

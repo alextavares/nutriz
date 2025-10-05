@@ -10,7 +10,7 @@ AVD2 ?=
 
 .PHONY: analyze apk-debug apk-release build-and-install build-and-install-release test \
         emu-list emu-start-two app-run-one app-run-one-fast app-stop app-stop-both \
-        compare-all
+        compare-all crawl-yazio crawl-nutri flow-graphs flow-compare
 
 analyze:
 	./scripts/flutter_invoke.sh analyze
@@ -106,3 +106,32 @@ app-stop:
 app-stop-both:
 	@adb -s "$(RUN_SERIAL)"  shell am force-stop "$(APP_ID)" >/dev/null 2>&1 || true
 	@adb -s "$(IDLE_SERIAL)" shell am force-stop "$(APP_ID)" >/dev/null 2>&1 || true
+
+# ---- Flow crawler helpers ----
+YAZIO_SERIAL ?= emulator-5556
+NUTRI_SERIAL ?= emulator-5558
+
+crawl-yazio:
+	@echo "==> Crawling YAZIO on $(YAZIO_SERIAL)"; \
+	python3 scripts/yazio_flowmap.py --device $(YAZIO_SERIAL) --pkg de.yazio.android \
+	  --out data/yazio_flow --max-steps 25 --max-depth 3 --top-k 3 \
+	  --prefer "continue,next,skip,allow,permita,prosseguir" \
+	  --avoid "buy,subscribe,trial,share,premium,pro,restore,facebook,twitter,terms,privacy" \
+	  --per-screen-limit 4 --auto-allow --detect-tabbar-stop || true
+
+crawl-nutri:
+	@echo "==> Crawling NutriTracker on $(NUTRI_SERIAL)"; \
+	python3 scripts/yazio_flowmap.py --device $(NUTRI_SERIAL) --pkg $(APP_ID) \
+	  --out data/nutritracker_flow --max-steps 25 --max-depth 3 --top-k 3 \
+	  --prefer "continue,next,skip,allow,permita,prosseguir" \
+	  --avoid "buy,subscribe,trial,share,premium,pro,restore,facebook,twitter,terms,privacy" \
+	  --per-screen-limit 4 --auto-allow --detect-tabbar-stop || true
+
+flow-graphs:
+	@python3 scripts/flow_to_html.py --in data/yazio_flow/flow.json --out data/yazio_flow/flow.html || true
+	@python3 scripts/flow_to_dot.py  --in data/yazio_flow/flow.json --out data/yazio_flow/flow || true
+	@python3 scripts/flow_to_html.py --in data/nutritracker_flow/flow.json --out data/nutritracker_flow/flow.html || true
+	@python3 scripts/flow_to_dot.py  --in data/nutritracker_flow/flow.json --out data/nutritracker_flow/flow || true
+
+flow-compare:
+	@python3 scripts/compare_flows.py --a data/yazio_flow/flow.json --b data/nutritracker_flow/flow.json --out data/flow_compare/report.html || true

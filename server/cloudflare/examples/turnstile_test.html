@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teste Turnstile + NutriTracker</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    label { display:block; margin-top: 12px; }
+    input[type=text] { width: 480px; max-width: 100%; }
+    textarea { width: 100%; height: 180px; }
+    #cf { margin: 12px 0; }
+    .row { margin: 10px 0; }
+    button { padding: 8px 14px; }
+    pre { background:#111; color:#0f0; padding:12px; overflow:auto; }
+  </style>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+  <h1>Teste Turnstile + NutriTracker</h1>
+
+  <div class="row">
+    <label>Base da API (Worker):</label>
+    <input id="base" type="text" value="https://nutritracker-worker.alexandretmoraes110.workers.dev" />
+  </div>
+
+  <div class="row">
+    <label>X-App-Token (pegar no painel do Worker):</label>
+    <input id="apptoken" type="text" placeholder="cole aqui seu APP_TOKEN" />
+  </div>
+
+  <div class="row">
+    <label>Widget Turnstile (Site key pública):</label>
+    <div id="cf"></div>
+  </div>
+
+  <div class="row">
+    <label>Imagem (opcional, será convertida para base64 no navegador):</label>
+    <input id="file" type="file" accept="image/*" />
+  </div>
+
+  <div class="row">
+    <button onclick="sendVision()">Enviar /vision/analyze_food</button>
+  </div>
+
+  <h3>Resposta</h3>
+  <pre id="out">(aguardando)</pre>
+
+  <script>
+    const SITE_KEY = '0x4AAAAAAB3kSOYeyBR7GCpH'; // sua Site key (pública)
+    let cfToken = null;
+
+    window.addEventListener('load', () => {
+      turnstile.render('#cf', {
+        sitekey: SITE_KEY,
+        callback: (token) => { cfToken = token; },
+      });
+    });
+
+    async function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(String(fr.result).split(',').pop());
+        fr.onerror = reject;
+        fr.readAsDataURL(file);
+      });
+    }
+
+    async function sendVision() {
+      const base = document.getElementById('base').value.trim();
+      const appToken = document.getElementById('apptoken').value.trim();
+      const file = document.getElementById('file').files[0];
+      const out = document.getElementById('out');
+
+      if (!appToken) {
+        alert('Informe seu X-App-Token');
+        return;
+      }
+      if (!cfToken) {
+        alert('Gere o token do Turnstile (aguarde o widget carregar)');
+        return;
+      }
+
+      let image_base64 = 'dGVzdA=='; // padrão de teste (causa 502 do OpenAI)
+      if (file) {
+        try { image_base64 = await fileToBase64(file); } catch (e) { console.error(e); }
+      }
+
+      const resp = await fetch(base + '/vision/analyze_food', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'X-App-Token': appToken,
+          'X-Turnstile-Token': cfToken,
+        },
+        body: JSON.stringify({ image_base64 })
+      });
+
+      const text = await resp.text();
+      out.textContent = `HTTP ${resp.status}\n\n` + text;
+
+      try { turnstile.reset('#cf'); cfToken = null; } catch (_) {}
+    }
+  </script>
+</body>
+</html>

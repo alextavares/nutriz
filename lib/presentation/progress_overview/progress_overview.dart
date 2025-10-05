@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'dart:io';
 
 import '../../core/app_export.dart';
+import '../../theme/design_tokens.dart';
 import '../../services/nutrition_storage.dart';
 import '../daily_tracking_dashboard/widgets/weekly_progress_widget.dart';
 import '../../services/user_preferences.dart';
@@ -46,6 +47,8 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
   Map<String, double> _macroGoalDaily = const {'Carb': 0, 'Prot': 0, 'Gord': 0};
   int _weeklySum = 0;
   int _monthSum = 0;
+  bool _isPremiumUser = false;
+  late final VoidCallback _prefsListener;
 
   // Helpers for weekly chart Y-axis
   double _calcWeekYMax() {
@@ -77,6 +80,15 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
         DateUtils.getDaysInMonth(_month.year, _month.month), 0);
     _weekMonday = now.subtract(Duration(days: now.weekday - 1));
     _loadGoalsAndData();
+    _prefsListener = () => _loadPremiumStatus();
+    UserPreferences.changes.addListener(_prefsListener);
+    _loadPremiumStatus();
+  }
+
+  @override
+  void dispose() {
+    UserPreferences.changes.removeListener(_prefsListener);
+    super.dispose();
   }
 
   Future<void> _loadGoalsAndData() async {
@@ -94,6 +106,19 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
     }
     await _loadWeek(_weekMonday);
     await _loadMonth(_month);
+  }
+
+  Future<void> _loadPremiumStatus() async {
+    final status = await UserPreferences.getPremiumStatus();
+    if (!mounted) return;
+    if (status != _isPremiumUser || (!status && _range == 'month')) {
+      setState(() {
+        _isPremiumUser = status;
+        if (!status && _range == 'month') {
+          _range = 'week';
+        }
+      });
+    }
   }
 
   List<int> _genMonthCalories(DateTime month) {
@@ -193,11 +218,14 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: colors.surface,
       appBar: AppBar(
         title: Builder(builder: (context) {
-          final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+          final lang =
+              Localizations.localeOf(context).languageCode.toLowerCase();
           final label = lang == 'pt' ? 'Progresso' : 'Progress';
           return Text(label);
         }),
@@ -207,11 +235,16 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
             icon: Icon(
               Icons.ios_share,
               size: 22,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: colors.onSurfaceVariant,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 4),
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            onPressed: _exportProgress,
+            onPressed: () {
+              if (!_ensurePremiumAccess('Exportar relatórios avançados')) {
+                return;
+              }
+              _exportProgress();
+            },
           ),
         ],
       ),
@@ -230,10 +263,17 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
                     spacing: 8,
                     children: [
                       _rangeChip('week', 'Semana'),
-                      _rangeChip('month', 'Mês'),
+                      _rangeChip('month', 'Mês', premiumOnly: true),
                     ],
                   ),
                 ),
+
+                if (!_isPremiumUser)
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
+                    child: _buildProAnalyticsCard(),
+                  ),
 
                 // Weekly/Monthly progress
                 if (_range == 'week')
@@ -253,13 +293,13 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
                               },
                               icon: const Icon(Icons.chevron_left),
                             ),
-              Text(
-                _formatWeek(_weekMonday),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+                            Text(
+                              _formatWeek(_weekMonday),
+                              style: textStyles.titleMedium?.copyWith(
+                                color: colors.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             IconButton(
                               onPressed: _canGoNextWeek()
                                   ? () {
@@ -288,13 +328,329 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
                         icon: Icons.calendar_view_day,
                         child: SizedBox(
                           height: 20.h,
-                          child: BarChart(
-                            BarChartData(
+                          child: Builder(builder: (context) {
+                            final colors = context.colors;
+                            final textStyles = context.textStyles;
+                            return BarChart(
+                              BarChartData(
+                                gridData: FlGridData(
+                                  show: true,
+                                  drawVerticalLine: false,
+                                  getDrawingHorizontalLine: (v) => FlLine(
+                                    color: colors.outlineVariant
+                                        .withValues(alpha: 0.4),
+                                    strokeWidth: 1,
+                                  ),
+                                ),
+                                titlesData: FlTitlesData(
+                                  leftTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 36,
+                                      interval: _calcWeekYStep(),
+                                      getTitlesWidget: (v, meta) => Text(
+                                        '${v.toInt()}',
+                                        style: textStyles.labelSmall
+                                            ?.copyWith(
+                                                color:
+                                                    colors.onSurfaceVariant),
+                                      ),
+                                    ),
+                                  ),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      getTitlesWidget: (v, meta) {
+                                        const labels = [
+                                          'S',
+                                          'T',
+                                          'Q',
+                                          'Q',
+                                          'S',
+                                          'S',
+                                          'D'
+                                        ];
+                                        final i = v.toInt();
+                                        return i >= 0 && i < labels.length
+                                            ? Text(
+                                                labels[i],
+                                                style: textStyles.bodySmall
+                                                    ?.copyWith(
+                                                  color: colors
+                                                      .onSurfaceVariant,
+                                                ),
+                                              )
+                                            : const SizedBox.shrink();
+                                      },
+                                    ),
+                                  ),
+                                  rightTitles: const AxisTitles(
+                                      sideTitles:
+                                          SideTitles(showTitles: false)),
+                                  topTitles: const AxisTitles(
+                                      sideTitles:
+                                          SideTitles(showTitles: false)),
+                                ),
+                                borderData: FlBorderData(show: false),
+                                barGroups: List.generate(7, (i) {
+                                  final v = (_weeklyCalories.length > i
+                                          ? _weeklyCalories[i]
+                                          : 0)
+                                      .toDouble();
+                                  final exceeded = v > _dailyGoal.toDouble();
+                                  return BarChartGroupData(
+                                    x: i,
+                                    barRods: [
+                                      BarChartRodData(
+                                        toY: v,
+                                        color: exceeded
+                                            ? colors.error
+                                            : colors.primary,
+                                        width: 10,
+                                        borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(6),
+                                          topRight: Radius.circular(6),
+                                        ),
+                                        backDrawRodData:
+                                            BackgroundBarChartRodData(
+                                          show: true,
+                                          toY: _dailyGoal.toDouble(),
+                                          color: colors.primary
+                                              .withValues(alpha: 0.12),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                                alignment: BarChartAlignment.spaceAround,
+                                barTouchData: BarTouchData(
+                                  enabled: true,
+                                  touchTooltipData: BarTouchTooltipData(
+                                    tooltipBgColor: colors.surface
+                                        .withValues(alpha: 0.95),
+                                    getTooltipItem:
+                                        (group, groupIndex, rod, rodIndex) {
+                                      const labels = [
+                                        'S',
+                                        'T',
+                                        'Q',
+                                        'Q',
+                                        'S',
+                                        'S',
+                                        'D'
+                                      ];
+                                      final day = (group.x >= 0 &&
+                                              group.x < labels.length)
+                                          ? labels[group.x]
+                                          : 'Dia';
+                                      return BarTooltipItem(
+                                        '$day\n',
+                                        textStyles.labelLarge!
+                                            .copyWith(
+                                                color: colors.onSurface,
+                                                fontWeight: FontWeight.w700),
+                                        children: [
+                                          TextSpan(
+                                            text:
+                                                '${rod.toY.toInt()} kcal',
+                                            style: textStyles.bodySmall!
+                                                .copyWith(
+                                              color: colors.primary,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      SizedBox(height: 1.0.h),
+                      _sectionCard(
+                        title: 'Resumo (semana)',
+                        icon: Icons.calendar_today_outlined,
+                        child: Builder(builder: (context) {
+                          final weekGoal = _dailyGoal * 7;
+                          final remain = weekGoal - _weeklySum;
+                          final exceeded = remain < 0;
+                          final colors = context.colors;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _summaryChip(
+                                label: 'Meta diária',
+                                value: '$_dailyGoal kcal',
+                                color: colors.onSurfaceVariant,
+                              ),
+                              _summaryChip(
+                                label: 'Semana',
+                                value: '$_weeklySum/$weekGoal kcal',
+                                color:
+                                    exceeded ? colors.error : colors.primary,
+                              ),
+                              _summaryChip(
+                                label: exceeded ? 'Excesso' : 'Restante',
+                                value: exceeded
+                                    ? '${(_weeklySum - weekGoal)} kcal'
+                                    : '${remain} kcal',
+                                color: exceeded
+                                    ? colors.error
+                                    : colors.onSurfaceVariant,
+                              ),
+                              if (exceeded) _exceededBadge(),
+                            ],
+                          );
+                        }),
+                      ),
+                      SizedBox(height: 1.2.h),
+                      _sectionCard(
+                        title: 'Distribuição de Macros (semana)',
+                        icon: Icons.pie_chart_outline,
+                      child: SizedBox(
+                        height: 22.h,
+                        child: Builder(builder: (context) {
+                          final colors = context.colors;
+                          final semantics = context.semanticColors;
+                          final textStyles = context.textStyles;
+                          final palette = <String, Color>{
+                            'Carb': semantics.warning,
+                            'Prot': semantics.success,
+                            'Gord': colors.primary,
+                          };
+
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: PieChart(
+                                  PieChartData(
+                                    sectionsSpace: 0,
+                                    centerSpaceRadius: 28,
+                                    pieTouchData: PieTouchData(
+                                      touchCallback: (event, resp) {
+                                        setState(() => _weekPieTouched = resp
+                                            ?.touchedSection
+                                            ?.touchedSectionIndex);
+                                      },
+                                    ),
+                                    sections: List.generate(3, (i) {
+                                      final keys = ['Carb', 'Prot', 'Gord'];
+                                      final val = _weekMacros[keys[i]] ?? 0;
+                                      final isTouched = _weekPieTouched == i;
+                                      final sliceColor = palette[keys[i]];
+                                      return PieChartSectionData(
+                                        value: val,
+                                        color: sliceColor,
+                                        radius: isTouched ? 44 : 38,
+                                        title: '${val.toStringAsFixed(0)}% ',
+                                        titleStyle: textStyles.labelSmall?.copyWith(
+                                          color: colors.onSurface,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 3.w),
+                              _macroLegend(
+                                dataPct: _weekMacros,
+                                dataGrams: _weekMacroGrams,
+                                goalGrams: _goalGramsForDays(7),
+                                palette: palette,
+                              ),
+                            ],
+                          );
+                        }),
+                      ),
+                    ),
+                    ],
+                  )
+                else
+                  _monthlySection(),
+
+                SizedBox(height: 1.6.h),
+
+                // Line chart for calories trend
+                _sectionCard(
+                  title: 'Tendência de Calorias',
+                  icon: Icons.show_chart,
+                  child: Builder(builder: (context) {
+                    final colors = context.colors;
+                    final textStyles = context.textStyles;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Chip(
+                            label: Text('Meta diária: $_dailyGoal kcal'),
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: colors.surfaceContainerHighest,
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                color:
+                                    colors.outlineVariant.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            labelStyle: textStyles.bodySmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 22.h,
+                          child: LineChart(
+                            LineChartData(
+                              lineTouchData: LineTouchData(
+                                enabled: true,
+                                touchTooltipData: LineTouchTooltipData(
+                                  tooltipBgColor:
+                                      colors.surface.withValues(alpha: 0.9),
+                                  getTooltipItems: (touchedSpots) =>
+                                      touchedSpots.map((s) {
+                                    final x = s.x.toInt();
+                                    final kcal = s.y.toInt();
+                                    const labels = [
+                                      'S',
+                                      'T',
+                                      'Q',
+                                      'Q',
+                                      'S',
+                                      'S',
+                                      'D'
+                                    ];
+                                    final day = (x >= 0 && x < labels.length)
+                                        ? labels[x]
+                                        : 'Dia';
+                                    return LineTooltipItem(
+                                      '$day\n',
+                                      textStyles.labelLarge!
+                                          .copyWith(
+                                              color: colors.onSurface,
+                                              fontWeight: FontWeight.w700),
+                                      children: [
+                                        TextSpan(
+                                          text: '$kcal kcal',
+                                          style: textStyles.bodySmall!
+                                              .copyWith(
+                                                  color: colors.primary,
+                                                  fontWeight: FontWeight.w700),
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: false,
+                                horizontalInterval: 200,
                                 getDrawingHorizontalLine: (v) => FlLine(
-                                  color: Theme.of(context).colorScheme.outlineVariant
+                                  color: colors.outlineVariant
                                       .withValues(alpha: 0.4),
                                   strokeWidth: 1,
                                 ),
@@ -303,14 +659,13 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
+                                    interval: 200,
                                     reservedSize: 36,
-                                    interval: _calcWeekYStep(),
                                     getTitlesWidget: (v, meta) => Text(
                                       '${v.toInt()}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      style: textStyles.labelSmall?.copyWith(
+                                        color: colors.onSurfaceVariant,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -327,380 +682,78 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
                                         'S',
                                         'D'
                                       ];
-                                      final i = v.toInt();
-                                      return i >= 0 && i < labels.length
-                                          ? Text(labels[i],
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))
+                                      final idx = v.toInt();
+                                      return idx >= 0 && idx < labels.length
+                                          ? Text(
+                                              labels[idx],
+                                              style: textStyles.bodySmall?.copyWith(
+                                                color: colors.onSurfaceVariant,
+                                              ),
+                                            )
                                           : const SizedBox.shrink();
                                     },
                                   ),
                                 ),
                                 rightTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false)),
+                                    sideTitles:
+                                        SideTitles(showTitles: false)),
                                 topTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false)),
+                                    sideTitles:
+                                        SideTitles(showTitles: false)),
                               ),
                               borderData: FlBorderData(show: false),
-                              barGroups: List.generate(7, (i) {
-                                final v = (_weeklyCalories.length > i
-                                        ? _weeklyCalories[i]
-                                        : 0)
-                                    .toDouble();
-                                final exceeded = v > _dailyGoal.toDouble();
-                                return BarChartGroupData(
-                                  x: i,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: v,
-                                      color: exceeded
-                                          ? AppTheme.errorRed
-                                          : Theme.of(context).colorScheme.primary,
-                                      width: 10,
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(6),
-                                        topRight: Radius.circular(6),
-                                      ),
-                                      backDrawRodData:
-                                          BackgroundBarChartRodData(
-                                        show: true,
-                                        toY: _dailyGoal.toDouble(),
-                                        color: Theme.of(context).colorScheme.primary
-                                            .withValues(alpha: 0.12),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }),
-                              alignment: BarChartAlignment.spaceAround,
-                              barTouchData: BarTouchData(
-                                enabled: true,
-                                touchTooltipData: BarTouchTooltipData(
-                                  tooltipBgColor: Theme.of(context)
-                                      .colorScheme
-                                      .surface
-                                      .withValues(alpha: 0.95),
-                                  getTooltipItem:
-                                      (group, groupIndex, rod, rodIndex) {
-                                    const labels = [
-                                      'S',
-                                      'T',
-                                      'Q',
-                                      'Q',
-                                      'S',
-                                      'S',
-                                      'D'
-                                    ];
-                                    final day = (group.x >= 0 &&
-                                            group.x < labels.length)
-                                        ? labels[group.x]
-                                        : 'Dia';
-                                    return BarTooltipItem(
-                                      '$day\n',
-                                      Theme.of(context)
-                                          .textTheme
-                                          .labelLarge!
-                                          .copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface,
-                                              fontWeight: FontWeight.w700),
-                                      children: [
-                                        TextSpan(
-                                          text: '${rod.toY.toInt()} kcal',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall!
-                                              .copyWith(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                  fontWeight:
-                                                      FontWeight.w700),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 1.0.h),
-                      _sectionCard(
-                        title: 'Resumo (semana)',
-                        icon: Icons.calendar_today_outlined,
-                        child: Builder(builder: (context) {
-                          final weekGoal = _dailyGoal * 7;
-                          final remain = weekGoal - _weeklySum;
-                          final exceeded = remain < 0;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _summaryChip(
-                                label: 'Meta diária',
-                                value: '$_dailyGoal kcal',
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                              _summaryChip(
-                                label: 'Semana',
-                                value: '$_weeklySum/$weekGoal kcal',
-                                color: exceeded
-                                    ? AppTheme.errorRed
-                                    : Theme.of(context).colorScheme.primary,
-                              ),
-                              _summaryChip(
-                                label: exceeded ? 'Excesso' : 'Restante',
-                                value: exceeded
-                                    ? '${(_weeklySum - weekGoal)} kcal'
-                                    : '${remain} kcal',
-                                color: exceeded
-                                    ? AppTheme.errorRed
-                                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                              if (exceeded) _exceededBadge(),
-                            ],
-                          );
-                        }),
-                      ),
-                      SizedBox(height: 1.2.h),
-                      _sectionCard(
-                        title: 'Distribuição de Macros (semana)',
-                        icon: Icons.pie_chart_outline,
-                        child: SizedBox(
-                          height: 22.h,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: PieChart(
-                                  PieChartData(
-                                    sectionsSpace: 0,
-                                    centerSpaceRadius: 28,
-                                    pieTouchData: PieTouchData(
-                                      touchCallback: (event, resp) {
-                                        setState(() => _weekPieTouched = resp
-                                            ?.touchedSection
-                                            ?.touchedSectionIndex);
-                                      },
-                                    ),
-                                    sections: List.generate(3, (i) {
-                                      final keys = ['Carb', 'Prot', 'Gord'];
-                                      final colors = [
-                                        AppTheme.warningAmber,
-                                        AppTheme.successGreen,
-                                        AppTheme.activeBlue
-                                      ];
-                                      final val = _weekMacros[keys[i]] ?? 0;
-                                      final isTouched = _weekPieTouched == i;
-                                      return PieChartSectionData(
-                                        value: val,
-                                        color: colors[i],
-                                        radius: isTouched ? 44 : 38,
-                                        title: '${val.toStringAsFixed(0)}% ',
-                                        titleStyle: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                                fontWeight: FontWeight.w700),
+                              minX: 0,
+                              maxX: 6,
+                              minY: _calcWeekYMin(),
+                              maxY: _calcWeekYMax(),
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: List.generate(
+                                      _weeklyCalories.length,
+                                      (i) => FlSpot(
+                                          i.toDouble(),
+                                          _weeklyCalories[i].toDouble())),
+                                  isCurved: true,
+                                  color: colors.primary,
+                                  barWidth: 3,
+                                  dotData: FlDotData(
+                                    show: true,
+                                    getDotPainter:
+                                        (spot, percent, barData, index) {
+                                      final above = spot.y > _dailyGoal;
+                                      return FlDotCirclePainter(
+                                        radius: 3,
+                                        color:
+                                            above ? colors.error : colors.primary,
+                                        strokeWidth: 0,
                                       );
-                                    }),
+                                    },
+                                  ),
+                                  belowBarData: BarAreaData(
+                                    show: true,
+                                    color: colors.primary
+                                        .withValues(alpha: 0.12),
                                   ),
                                 ),
-                              ),
-                              SizedBox(width: 3.w),
-                              _macroLegend(
-                                dataPct: _weekMacros,
-                                dataGrams: _weekMacroGrams,
-                                goalGrams: _goalGramsForDays(7),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  _monthlySection(),
-
-                SizedBox(height: 1.6.h),
-
-                // Line chart for calories trend
-                _sectionCard(
-                  title: 'Tendência de Calorias',
-                  icon: Icons.show_chart,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Chip(
-                          label: Text('Meta diária: $_dailyGoal kcal'),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: AppTheme.secondaryBackgroundDark,
-                          shape: StadiumBorder(
-                            side: BorderSide(
-                                color: AppTheme.dividerGray
-                                    .withValues(alpha: 0.6)),
-                          ),
-                          labelStyle: AppTheme.darkTheme.textTheme.bodySmall
-                              ?.copyWith(color: AppTheme.textSecondary),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 22.h,
-                        child: LineChart(
-                          LineChartData(
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              touchTooltipData: LineTouchTooltipData(
-                                tooltipBgColor: AppTheme.primaryBackgroundDark
-                                    .withValues(alpha: 0.9),
-                                getTooltipItems: (touchedSpots) =>
-                                    touchedSpots.map((s) {
-                                  final x = s.x.toInt();
-                                  final kcal = s.y.toInt();
-                                  const labels = [
-                                    'S',
-                                    'T',
-                                    'Q',
-                                    'Q',
-                                    'S',
-                                    'S',
-                                    'D'
-                                  ];
-                                  final day = (x >= 0 && x < labels.length)
-                                      ? labels[x]
-                                      : 'Dia';
-                                  return LineTooltipItem(
-                                    '$day\n',
-                                    AppTheme.darkTheme.textTheme.labelLarge!
-                                        .copyWith(
-                                            color: AppTheme.textPrimary,
-                                            fontWeight: FontWeight.w700),
-                                    children: [
-                                      TextSpan(
-                                        text: '$kcal kcal',
-                                        style: AppTheme
-                                            .darkTheme.textTheme.bodySmall!
-                                            .copyWith(
-                                                color: AppTheme.activeBlue,
-                                                fontWeight: FontWeight.w700),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
+                                LineChartBarData(
+                                  spots: List.generate(
+                                      7,
+                                      (i) => FlSpot(i.toDouble(),
+                                          _dailyGoal.toDouble())),
+                                  isCurved: false,
+                                  color: colors.outlineVariant
+                                      .withValues(alpha: 0.6),
+                                  barWidth: 1.5,
+                                  dashArray: const [6, 4],
+                                  dotData: FlDotData(show: false),
+                                ),
+                              ],
                             ),
-                            gridData: FlGridData(
-                                show: true,
-                                drawVerticalLine: false,
-                                horizontalInterval: 200,
-                                getDrawingHorizontalLine: (v) => FlLine(
-                                      color: AppTheme.dividerGray
-                                          .withValues(alpha: 0.4),
-                                      strokeWidth: 1,
-                                    )),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  interval: 200,
-                                  reservedSize: 36,
-                                  getTitlesWidget: (v, meta) => Text(
-                                      '${v.toInt()}',
-                                      style: AppTheme
-                                          .darkTheme.textTheme.labelSmall
-                                          ?.copyWith(
-                                              color: AppTheme.textSecondary)),
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (v, meta) {
-                                    const labels = [
-                                      'S',
-                                      'T',
-                                      'Q',
-                                      'Q',
-                                      'S',
-                                      'S',
-                                      'D'
-                                    ];
-                                    final idx = v.toInt();
-                                    return idx >= 0 && idx < labels.length
-                                        ? Text(labels[idx],
-                                            style: AppTheme
-                                                .darkTheme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                    color:
-                                                        AppTheme.textSecondary))
-                                        : const SizedBox.shrink();
-                                  },
-                                ),
-                              ),
-                              rightTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false)),
-                              topTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: false),
-                            minX: 0,
-                            maxX: 6,
-                            minY: _calcWeekYMin(),
-                            maxY: _calcWeekYMax(),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: List.generate(
-                                    _weeklyCalories.length,
-                                    (i) => FlSpot(i.toDouble(),
-                                        _weeklyCalories[i].toDouble())),
-                                isCurved: true,
-                                color: AppTheme.activeBlue,
-                                barWidth: 3,
-                                dotData: FlDotData(
-                                  show: true,
-                                  getDotPainter:
-                                      (spot, percent, barData, index) {
-                                    final above = spot.y > _dailyGoal;
-                                    return FlDotCirclePainter(
-                                      radius: 3,
-                                      color: above
-                                          ? AppTheme.errorRed
-                                          : AppTheme.activeBlue,
-                                      strokeWidth: 0,
-                                    );
-                                  },
-                                ),
-                                belowBarData: BarAreaData(
-                                    show: true,
-                                    color: AppTheme.activeBlue
-                                        .withValues(alpha: 0.12)),
-                              ),
-                              LineChartBarData(
-                                spots: List.generate(
-                                    7,
-                                    (i) => FlSpot(
-                                        i.toDouble(), _dailyGoal.toDouble())),
-                                isCurved: false,
-                                color:
-                                    AppTheme.dividerGray.withValues(alpha: 0.6),
-                                barWidth: 1.5,
-                                dashArray: [6, 4],
-                                dotData: FlDotData(show: false),
-                              ),
-                            ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  }),
                 ),
 
                 SizedBox(height: 1.2.h),
@@ -714,22 +767,129 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
     );
   }
 
-  Widget _rangeChip(String key, String label) {
-    final selected = _range == key;
-    final cs = Theme.of(context).colorScheme;
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => setState(() => _range = key),
-      labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-        color: selected ? cs.primary : cs.onSurfaceVariant,
-        fontWeight: FontWeight.w600,
+  void _showProUpgradeMessage(String feature) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('$feature está disponível no NutriTracker PRO'),
+        action: SnackBarAction(
+          label: 'Ver planos',
+          onPressed: _openProPlans,
+        ),
       ),
-      backgroundColor: cs.surface,
-      selectedColor: cs.primary.withValues(alpha: 0.08),
+    );
+  }
+
+  void _openProPlans() {
+    Navigator.pushNamed(context, AppRoutes.proSubscription);
+  }
+
+  bool _ensurePremiumAccess(String feature) {
+    if (_isPremiumUser) {
+      return true;
+    }
+    _showProUpgradeMessage(feature);
+    return false;
+  }
+
+  Widget _buildProAnalyticsCard() {
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textStyles = context.textStyles;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 1.6.h),
+      decoration: BoxDecoration(
+        color: semantics.premiumContainer,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: semantics.premium.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.insights_outlined,
+                  size: 18, color: semantics.premium),
+              SizedBox(width: 2.w),
+              Text(
+                'Relatórios PRO',
+                style: textStyles.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: semantics.premium,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 0.8.h),
+          Text(
+            'Compare meses completos, exporte gráficos e receba projeções personalizadas com o NutriTracker PRO.',
+            style: textStyles.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+          SizedBox(height: 1.2.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _openProPlans,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: semantics.premium,
+                foregroundColor: semantics.onPremium,
+                padding: EdgeInsets.symmetric(vertical: 1.2.h),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Ver planos PRO'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rangeChip(String key, String label, {bool premiumOnly = false}) {
+    final selected = _range == key;
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+    final textStyles = context.textStyles;
+    final bool locked = premiumOnly && !_isPremiumUser;
+    return ChoiceChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          if (premiumOnly)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Icon(
+                locked ? Icons.lock_outline : Icons.workspace_premium_outlined,
+                size: 16,
+                color: locked ? colors.onSurfaceVariant : semantics.premium,
+              ),
+            ),
+        ],
+      ),
+      selected: selected,
+      onSelected: (_) {
+        if (locked) {
+          _showProUpgradeMessage('Comparativo mensal');
+        } else {
+          setState(() => _range = key);
+        }
+      },
+      labelStyle: textStyles.bodySmall?.copyWith(
+            color: selected ? colors.onPrimary : colors.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
+      backgroundColor: colors.surface,
+      selectedColor: colors.primary.withValues(alpha: 0.08),
       shape: StadiumBorder(
         side: BorderSide(
-          color: (selected ? cs.primary : cs.outlineVariant)
+          color: (selected ? colors.primary : colors.outlineVariant)
               .withValues(alpha: 0.4),
         ),
       ),
@@ -758,9 +918,9 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
             ],
           ),
@@ -791,7 +951,8 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
               ),
               Text(
                 _formatMonth(_month),
-                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                style: context.textStyles.titleMedium?.copyWith(
+                  color: context.colors.onSurface,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -811,25 +972,27 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
             final goal = _dailyGoal * days;
             final remain = goal - _monthSum;
             final exceeded = remain < 0;
+            final colors = context.colors;
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _summaryChip(
                   label: 'Meta diária',
                   value: '$_dailyGoal kcal',
-                  color: AppTheme.textSecondary,
+                  color: colors.onSurfaceVariant,
                 ),
                 _summaryChip(
                   label: 'Mês',
                   value: '$_monthSum/$goal kcal',
-                  color: exceeded ? AppTheme.errorRed : AppTheme.activeBlue,
+                  color: exceeded ? colors.error : colors.primary,
                 ),
                 _summaryChip(
                   label: exceeded ? 'Excesso' : 'Restante',
                   value: exceeded
                       ? '${(_monthSum - goal)} kcal'
                       : '${remain} kcal',
-                  color: exceeded ? AppTheme.errorRed : AppTheme.textSecondary,
+                  color:
+                      exceeded ? colors.error : colors.onSurfaceVariant,
                 ),
                 if (exceeded) _exceededBadge(),
               ],
@@ -842,130 +1005,109 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
           icon: Icons.calendar_view_month,
           child: SizedBox(
             height: 22.h,
-            child: BarChart(
-              BarChartData(
-                gridData: FlGridData(
+            child: Builder(builder: (context) {
+              final colors = context.colors;
+              final textStyles = context.textStyles;
+              return BarChart(
+                BarChartData(
+                  gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
                     getDrawingHorizontalLine: (v) => FlLine(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outlineVariant
-                              .withValues(alpha: 0.4),
-                          strokeWidth: 1,
-                        )),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
+                      color: colors.outlineVariant.withValues(alpha: 0.4),
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 36,
                         interval: 500,
-                        getTitlesWidget: (v, meta) => Text('${v.toInt()}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant))),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
+                        getTitlesWidget: (v, meta) => Text(
+                          '${v.toInt()}',
+                          style: textStyles.labelSmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
                         showTitles: true,
                         interval: 7,
                         getTitlesWidget: (v, meta) {
                           final d = v.toInt() + 1;
-                          if (d == 1 ||
-                              d == 8 ||
-                              d == 15 ||
-                              d == 22 ||
-                              d == 29) {
-                            return Text('$d',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant));
+                          if (d == 1 || d == 8 || d == 15 || d == 22 || d == 29) {
+                            return Text(
+                              '$d',
+                              style: textStyles.labelSmall
+                                  ?.copyWith(color: colors.onSurfaceVariant),
+                            );
                           }
                           return const SizedBox.shrink();
-                        }),
-                  ),
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                ),
-                borderData: FlBorderData(show: false),
-                barGroups: List.generate(_monthCalories.length, (i) {
-                  final v = _monthCalories[i].toDouble();
-                  final exceeded = v > _dailyGoal.toDouble();
-                  return BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: v,
-                        color: exceeded
-                            ? AppTheme.errorRed
-                            : Theme.of(context).colorScheme.primary,
-                        width: 6,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(6),
-                          topRight: Radius.circular(6),
-                        ),
-                        rodStackItems: [],
-                        backDrawRodData: BackgroundBarChartRodData(
-                          show: true,
-                          toY: _dailyGoal.toDouble(),
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.12),
-                        ),
+                        },
                       ),
-                    ],
-                  );
-                }),
-                alignment: BarChartAlignment.spaceBetween,
-                barTouchData: BarTouchData(
-                  enabled: true,
-                  touchTooltipData: BarTouchTooltipData(
-                    tooltipBgColor: Theme.of(context)
-                        .colorScheme
-                        .surface
-                        .withValues(alpha: 0.95),
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final day = group.x + 1;
-                      return BarTooltipItem(
-                        'Dia $day\n',
-                        Theme.of(context)
-                            .textTheme
-                            .labelLarge!
-                            .copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface,
-                                fontWeight: FontWeight.w700),
-                        children: [
-                          TextSpan(
-                            text: '${rod.toY.toInt()} kcal',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall!
-                                .copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary,
-                                    fontWeight: FontWeight.w700),
+                    ),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: List.generate(_monthCalories.length, (i) {
+                    final v = _monthCalories[i].toDouble();
+                    final exceeded = v > _dailyGoal.toDouble();
+                    return BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: v,
+                          color: exceeded ? colors.error : colors.primary,
+                          width: 6,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(6),
+                            topRight: Radius.circular(6),
                           ),
-                        ],
-                      );
-                    },
+                          rodStackItems: const [],
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: _dailyGoal.toDouble(),
+                            color: colors.primary.withValues(alpha: 0.12),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                  alignment: BarChartAlignment.spaceBetween,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipBgColor:
+                          colors.surface.withValues(alpha: 0.95),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final day = group.x + 1;
+                        return BarTooltipItem(
+                          'Dia $day\n',
+                          textStyles.labelLarge!
+                              .copyWith(
+                                  color: colors.onSurface,
+                                  fontWeight: FontWeight.w700),
+                          children: [
+                            TextSpan(
+                              text: '${rod.toY.toInt()} kcal',
+                              style: textStyles.bodySmall!
+                                  .copyWith(
+                                      color: colors.primary,
+                                      fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         ),
 
@@ -976,60 +1118,70 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
           icon: Icons.pie_chart_outline,
           child: SizedBox(
             height: 22.h,
-            child: Row(
-              children: [
-                Expanded(
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 0,
-                      centerSpaceRadius: 28,
-                      pieTouchData: PieTouchData(
-                        touchCallback: (event, resp) {
-                          setState(() => _monthPieTouched =
-                              resp?.touchedSection?.touchedSectionIndex);
-                        },
-                      ),
-                      sections: [
-                        PieChartSectionData(
+            child: Builder(builder: (context) {
+              final colors = context.colors;
+              final semantics = context.semanticColors;
+              final textStyles = context.textStyles;
+              final palette = <String, Color>{
+                'Carb': semantics.warning,
+                'Prot': semantics.success,
+                'Gord': colors.primary,
+              };
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: PieChart(
+                      PieChartData(
+                        sectionsSpace: 0,
+                        centerSpaceRadius: 28,
+                        pieTouchData: PieTouchData(
+                          touchCallback: (event, resp) {
+                            setState(() => _monthPieTouched =
+                                resp?.touchedSection?.touchedSectionIndex);
+                          },
+                        ),
+                        sections: [
+                          PieChartSectionData(
                             value: _monthMacros['Carb'] ?? 0,
-                            color: AppTheme.warningAmber,
+                            color: palette['Carb'],
                             title:
                                 '${(_monthMacros['Carb'] ?? 0).toStringAsFixed(0)}%',
-                            titleStyle: Theme.of(context)
-                                .textTheme
-                                .labelSmall,
-                            radius: _monthPieTouched == 0 ? 44 : 38),
-                        PieChartSectionData(
+                            titleStyle: textStyles.labelSmall,
+                            radius: _monthPieTouched == 0 ? 44 : 38,
+                          ),
+                          PieChartSectionData(
                             value: _monthMacros['Prot'] ?? 0,
-                            color: AppTheme.successGreen,
+                            color: palette['Prot'],
                             title:
                                 '${(_monthMacros['Prot'] ?? 0).toStringAsFixed(0)}%',
-                            titleStyle: Theme.of(context)
-                                .textTheme
-                                .labelSmall,
-                            radius: _monthPieTouched == 1 ? 44 : 38),
-                        PieChartSectionData(
+                            titleStyle: textStyles.labelSmall,
+                            radius: _monthPieTouched == 1 ? 44 : 38,
+                          ),
+                          PieChartSectionData(
                             value: _monthMacros['Gord'] ?? 0,
-                            color: AppTheme.activeBlue,
+                            color: palette['Gord'],
                             title:
                                 '${(_monthMacros['Gord'] ?? 0).toStringAsFixed(0)}%',
-                            titleStyle: Theme.of(context)
-                                .textTheme
-                                .labelSmall,
-                            radius: _monthPieTouched == 2 ? 44 : 38),
-                      ],
+                            titleStyle: textStyles.labelSmall,
+                            radius: _monthPieTouched == 2 ? 44 : 38,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 3.w),
-                _macroLegend(
-                  dataPct: _monthMacros,
-                  dataGrams: _monthMacroGrams,
-                  goalGrams: _goalGramsForDays(
-                      DateUtils.getDaysInMonth(_month.year, _month.month)),
-                ),
-              ],
-            ),
+                  SizedBox(width: 3.w),
+                  _macroLegend(
+                    dataPct: _monthMacros,
+                    dataGrams: _monthMacroGrams,
+                    goalGrams: _goalGramsForDays(
+                      DateUtils.getDaysInMonth(_month.year, _month.month),
+                    ),
+                    palette: palette,
+                  ),
+                ],
+              );
+            }),
           ),
         ),
       ],
@@ -1103,36 +1255,34 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
 
   Widget _summaryChip(
       {required String label, required String value, required Color color}) {
-    final cs = Theme.of(context).colorScheme;
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: cs.onSurfaceVariant)),
+            style:
+                textStyles.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
         const SizedBox(height: 4),
         Text(value,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
+            style: textStyles.bodySmall
                 ?.copyWith(color: color, fontWeight: FontWeight.w700)),
       ],
     );
   }
 
   Widget _exceededBadge() {
-    final cs = Theme.of(context).colorScheme;
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Chip(
       label: const Text('Excedeu'),
       visualDensity: VisualDensity.compact,
-      backgroundColor: cs.surface,
+      backgroundColor: colors.surface,
       shape: StadiumBorder(
-        side: BorderSide(color: AppTheme.errorRed.withValues(alpha: 0.7)),
+        side: BorderSide(color: colors.error.withValues(alpha: 0.7)),
       ),
-      labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-        color: AppTheme.errorRed,
+      labelStyle: textStyles.bodySmall?.copyWith(
+        color: colors.error,
         fontWeight: FontWeight.w700,
       ),
     );
@@ -1148,9 +1298,11 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
     required Map<String, double> dataPct,
     required Map<String, double> dataGrams,
     Map<String, double>? goalGrams,
+    required Map<String, Color> palette,
   }) {
-    final cs = Theme.of(context).colorScheme;
-    TextStyle label = Theme.of(context).textTheme.bodySmall!;
+    final colors = context.colors;
+    final textStyles = context.textStyles;
+    final baseLabel = textStyles.bodySmall ?? const TextStyle();
     Widget row(Color color, String name) {
       final pct = (dataPct[name] ?? 0).toStringAsFixed(0);
       final grams = dataGrams[name] ?? 0;
@@ -1171,14 +1323,17 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
                 decoration: BoxDecoration(
                     color: color, borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),
-            Text('$name', style: label.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              name,
+              style: baseLabel.copyWith(color: colors.onSurfaceVariant),
+            ),
             const SizedBox(width: 6),
             Text('$pct%',
-                style:
-                    label.copyWith(color: color, fontWeight: FontWeight.w700)),
+                style: baseLabel.copyWith(
+                    color: color, fontWeight: FontWeight.w700)),
             Text(gramsStr,
-                style: label.copyWith(
-                    color: exceeded ? AppTheme.errorRed : cs.onSurfaceVariant)),
+                style: baseLabel.copyWith(
+                    color: exceeded ? colors.error : colors.onSurfaceVariant)),
             if (exceeded) ...[
               const SizedBox(width: 6),
               _exceededBadge(),
@@ -1192,9 +1347,9 @@ class _ProgressOverviewScreenState extends State<ProgressOverviewScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        row(AppTheme.warningAmber, 'Carb'),
-        row(AppTheme.successGreen, 'Prot'),
-        row(AppTheme.activeBlue, 'Gord'),
+        row(palette['Carb'] ?? colors.tertiary, 'Carb'),
+        row(palette['Prot'] ?? colors.secondary, 'Prot'),
+        row(palette['Gord'] ?? colors.primary, 'Gord'),
       ],
     );
   }

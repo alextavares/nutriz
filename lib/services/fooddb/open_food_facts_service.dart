@@ -10,6 +10,10 @@ class OpenFoodFactsService {
           baseUrl: 'https://world.openfoodfacts.org',
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
+          headers: {
+            // Identify the app per OFF best practices
+            'User-Agent': 'NutriTracker/0.1 (+app)'
+          },
         ));
 
   Future<List<FoodDbItem>> search(String query) async {

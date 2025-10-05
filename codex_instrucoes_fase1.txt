@@ -1,0 +1,105 @@
+Objetivo (Fase 1)
+
+- Remover código morto no awards.
+- Streak Overview: thresholds [3, 5, 7, 14, 30] e pontos semanais “tocáveis” (deep-link).
+- Daily Dashboard: aceitar deep-link de data.
+- Achievements: garantir aba “Alimentos” (food_log).
+
+1. Remover código morto em NutritionStorage
+
+- Arquivo: lib/services/nutrition_storage.dart
+- Em addEntry(...): remova o bloco antigo guardado com if (false) { ... }. Deixe apenas a versão cumulativa/deduped.
+
+2. Streak Overview — thresholds 3/5/7/14/30
+
+- Arquivo: lib/presentation/streaks/streak_overview_screen.dart
+- Em _challengeCard(): const thresholds = [3, 5, 7, 14, 30];
+
+3. Streak Overview — pontos semanais “tocáveis”
+
+- Arquivo: lib/presentation/streaks/streak_overview_screen.dart
+- Em _weekOverview(), onde hoje tem:
+  - dots.add(Column(...))
+- Substitua por:
+
+`dots.add(GestureDetector(
+    onTap: () {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.dailyTrackingDashboard,
+        arguments: {'date': DateTime(d.year, d.month, d.day).toIso8601String()},
+      );
+    },
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: has ? AppTheme.activeBlue : AppTheme.dividerGray,
+            border: isToday ? Border.all(color: AppTheme.activeBlue, width: 2.0) : null,
+          ),
+        ),
+        SizedBox(height: 0.8.h),
+        Text(
+          labels[i],
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+));`
+
+4. Daily Dashboard — deep-link de data
+
+- Arquivo: lib/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart
+- Perto de _selectedDate, adicione: bool _initArgsHandled = false;
+- Em didChangeDependencies():
+
+`@override
+void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initArgsHandled) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map) {
+        final s = args['date']?.toString();
+        if (s != null && s.isNotEmpty) {
+          try {
+            final d = DateTime.parse(s);
+            _selectedDate = DateTime(d.year, d.month, d.day);
+            _loadToday();
+            _loadWeek();
+          } catch (_) {}
+        }
+      }
+      _initArgsHandled = true;
+    }
+    _refreshGamificationRow();
+}`
+
+5. Achievements — garantir aba “Alimentos”
+
+- Arquivo: lib/presentation/achievements/all_achievements_screen.dart
+- TabController: TabController(length: 8, vsync: this);
+- Tabs (inclua “Alimentos” antes de “Teste”):
+  - const [ Tab(text: 'Todas'), Tab(text: 'Água'), Tab(text: 'Jejum'), Tab(text: 'Calorias'), Tab(text: 'Proteína'), Tab(text: 'Alimentos'), Tab(text: 'Teste'), Tab(text: 'Favoritos'), ]
+- Mapeamento meta (listener):
+  - if (_tab.index <= 6) { _filterMeta = const ['all','water','fasting','calories','protein','food_log','test'][_tab.index]; } else { _filterMeta = 'all'; }
+- Filtro meta (dropdown): DropdownMenuItem(value: 'food_log', child: Text('Alimentos'))
+
+Validação
+
+- Terminal do VS Code (raiz do projeto):
+  - flutter analyze
+  - flutter test
+- Manual:
+  - App → “Ações do dia” → “Visão geral da sequência”
+  - Ver chips 3/5/7/14/30
+  - Tocar um ponto semanal → abre Dashboard naquele dia
+  - Conquistas → aba “Alimentos”
+
+Quando o Codex concluir, me envie o resultado do flutter analyze/flutter test. Em seguida aplicamos a Fase 2 (NUX + localização).

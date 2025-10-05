@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class AchievementBadgesWidget extends StatelessWidget {
   final List<Map<String, dynamic>> achievements;
@@ -15,6 +16,10 @@ class AchievementBadgesWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final colors = context.colors;
+    final semantics = context.semanticColors;
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
       child: Column(
@@ -24,8 +29,8 @@ class AchievementBadgesWidget extends StatelessWidget {
             children: [
               Text(
                 'Conquistas Recentes',
-                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textPrimary,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: colors.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -35,7 +40,7 @@ class AchievementBadgesWidget extends StatelessWidget {
                     'Beba a meta de água por 3/5/7 dias seguidos para ganhar faixas',
                 child: CustomIconWidget(
                   iconName: 'water_drop',
-                  color: AppTheme.activeBlue,
+                  color: colors.primary,
                   size: 18,
                 ),
               ),
@@ -59,11 +64,14 @@ class AchievementBadgesWidget extends StatelessWidget {
                       horizontal: 2.w,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.secondaryBackgroundDark,
+                      color: colors.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: _getBadgeColor(achievement['type'] as String)
-                            .withValues(alpha: 0.3),
+                        color: _getBadgeColor(
+                          semantics,
+                          colors,
+                          achievement['type'] as String,
+                        ).withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -84,24 +92,28 @@ class AchievementBadgesWidget extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: _getBadgeColor(
-                                        achievement['type'] as String)
-                                    .withValues(alpha: 0.1),
+                                  semantics,
+                                  colors,
+                                  achievement['type'] as String,
+                                ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: CustomIconWidget(
                                 iconName: _getBadgeIcon(
                                     achievement['type'] as String),
                                 color: _getBadgeColor(
-                                    achievement['type'] as String),
+                                  semantics,
+                                  colors,
+                                  achievement['type'] as String,
+                                ),
                                 size: iconSize,
                               ),
                             ),
                             SizedBox(height: 0.4.h),
                             Text(
                               achievement['title'] as String,
-                              style: AppTheme.darkTheme.textTheme.bodySmall
-                                  ?.copyWith(
-                                color: AppTheme.textPrimary,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colors.onSurface,
                                 fontWeight: FontWeight.w500,
                                 fontSize: computedFontSize,
                               ),
@@ -124,16 +136,20 @@ class AchievementBadgesWidget extends StatelessWidget {
     );
   }
 
-  Color _getBadgeColor(String type) {
+  Color _getBadgeColor(
+    AppSemanticColors semantic,
+    ColorScheme scheme,
+    String type,
+  ) {
     switch (type) {
       case 'diamond':
-        return AppTheme.premiumGold;
+        return semantic.premium;
       case 'flame':
-        return AppTheme.warningAmber;
+        return semantic.warning;
       case 'success':
-        return AppTheme.successGreen;
+        return semantic.success;
       default:
-        return AppTheme.activeBlue;
+        return scheme.primary;
     }
   }
 

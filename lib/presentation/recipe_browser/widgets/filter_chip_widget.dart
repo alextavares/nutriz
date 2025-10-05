@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class FilterChipWidget extends StatelessWidget {
   final String label;
@@ -17,14 +18,16 @@ class FilterChipWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
     return Container(
       margin: EdgeInsets.only(right: 2.w),
       padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.5.h),
       decoration: BoxDecoration(
-        color: AppTheme.activeBlue.withValues(alpha: 0.2),
+        color: colors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.activeBlue,
+          color: colors.primary,
           width: 1,
         ),
       ),
@@ -33,8 +36,8 @@ class FilterChipWidget extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.activeBlue,
+            style: textStyles.bodySmall?.copyWith(
+              color: colors.primary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -43,13 +46,13 @@ class FilterChipWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 1.5.w, vertical: 0.5.h),
               decoration: BoxDecoration(
-                color: AppTheme.activeBlue,
+                color: colors.primary,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 count.toString(),
-                style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textPrimary,
+                style: textStyles.bodySmall?.copyWith(
+                  color: colors.onPrimary,
                   fontSize: 10.sp,
                   fontWeight: FontWeight.w600,
                 ),
@@ -61,7 +64,7 @@ class FilterChipWidget extends StatelessWidget {
             onTap: onRemove,
             child: CustomIconWidget(
               iconName: 'close',
-              color: AppTheme.activeBlue,
+              color: colors.primary,
               size: 4.w,
             ),
           ),

@@ -3,21 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/design_tokens.dart';
 
 class CameraPreviewWidget extends StatelessWidget {
   final CameraController controller;
   final VoidCallback onCapture;
   final VoidCallback onClose;
+  final VoidCallback? onGallery;
 
   const CameraPreviewWidget({
     Key? key,
     required this.controller,
     required this.onCapture,
     required this.onClose,
+    this.onGallery,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
     return Container(
         margin: EdgeInsets.all(4.w),
         height: 60.h,
@@ -57,63 +62,83 @@ class CameraPreviewWidget extends StatelessWidget {
                           color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(20)),
                       child: CustomIconWidget(
-                          iconName: 'close',
-                          color: AppTheme.textPrimary,
-                          size: 6.w)))),
+                          iconName: 'close', color: Colors.white, size: 6.w)))),
 
           // Bottom controls
           Positioned(
-              bottom: 4.w,
-              left: 0,
-              right: 0,
-              child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                // Capture button
-                GestureDetector(
-                    onTap: onCapture,
-                    child: Container(
-                        width: 20.w,
-                        height: 20.w,
-                        decoration: BoxDecoration(
-                            color: AppTheme.activeBlue,
+            bottom: 4.w,
+            left: 0,
+            right: 0,
+            child: Builder(
+              builder: (_) {
+                final double captureSize = 23.w; // ~15% larger than 20.w
+                const double gapW = 18.0; // w units gap to the left of capture
+                return Stack(
+                  children: [
+                    // Capture centered
+                    Align(
+                      alignment: Alignment.center,
+                      child: GestureDetector(
+                        onTap: onCapture,
+                        child: Container(
+                          width: captureSize,
+                          height: captureSize,
+                          decoration: BoxDecoration(
+                            color: colors.primary,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                                color: AppTheme.textPrimary, width: 3),
+                            border: Border.all(color: Colors.white, width: 3),
                             boxShadow: [
                               BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 2)),
-                            ]),
-                        child: CustomIconWidget(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: CustomIconWidget(
                             iconName: 'camera_alt',
-                            color: AppTheme.textPrimary,
-                            size: 8.w))),
-              ])),
-
-          // Capture guidance
-          Positioned(
-              top: 30.h,
-              left: 0,
-              right: 0,
-              child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w),
-                  child: Column(children: [
-                    Icon(Icons.center_focus_strong,
-                        size: 15.w,
-                        color: AppTheme.activeBlue.withValues(alpha: 0.7)),
-                    SizedBox(height: 2.h),
-                    Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 4.w, vertical: 2.h),
-                        decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Text('Posicione o alimento no centro',
-                            style: AppTheme.darkTheme.textTheme.bodyMedium
-                                ?.copyWith(color: AppTheme.textPrimary),
-                            textAlign: TextAlign.center)),
-                  ]))),
+                            color: Colors.white,
+                            size: 9.w,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Gallery left of capture, vertically centered
+                    if (onGallery != null)
+                      Align(
+                        alignment: Alignment.center,
+                        child: Transform.translate(
+                          offset: Offset(-(captureSize / 2 + gapW.w), 0),
+                          child: GestureDetector(
+                            onTap: onGallery,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CustomIconWidget(
+                                  iconName: 'photo_library',
+                                  color: Colors.white,
+                                  size: 9.5.w,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Galeria',
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
         ]));
   }
 }
