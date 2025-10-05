@@ -955,6 +955,20 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
+  ButtonStyle _pillActionStyle(ColorScheme cs, {EdgeInsets? padding}) {
+    return _pillActionStyle(cs),
+      minimumSize: const Size(0, 0),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      shape: const StadiumBorder(),
+      side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
+      foregroundColor: cs.primary,
+      textStyle: Theme.of(context)
+          .textTheme
+          .labelSmall
+          ?.copyWith(fontWeight: FontWeight.w700),
+    );
+  }
+
   Widget _overallMacrosRow(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final double fsLabel = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
@@ -1286,10 +1300,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: padH, vertical: padV),
+                        style: _pillActionStyle(cs),
                         ),
                         child: const Text('1h'),
                       ),
@@ -1303,10 +1314,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: padH, vertical: padV),
+                        style: _pillActionStyle(cs),
                         ),
                         child: const Text('4h'),
                       ),
@@ -1320,10 +1328,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: padH, vertical: padV),
+                        style: _pillActionStyle(cs),
                         ),
                         child: const Text('24h'),
                       ),
@@ -1341,10 +1346,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: padH, vertical: padV),
+                        style: _pillActionStyle(cs),
                         ),
                         child: const Text('Amanhã 08:00'),
                       ),
@@ -1758,9 +1760,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       children: [
         OutlinedButton(
           onPressed: _removeWater,
-          style: OutlinedButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-            shape: const CircleBorder(),
+          style: _pillActionStyle(cs),
             padding: const EdgeInsets.all(6),
             side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
             foregroundColor: cs.primary,
@@ -1775,9 +1775,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ),
         OutlinedButton(
           onPressed: _addWater,
-          style: OutlinedButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-            shape: const CircleBorder(),
+          style: _pillActionStyle(cs),
             padding: const EdgeInsets.all(6),
             side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
             foregroundColor: cs.primary,
@@ -1987,9 +1985,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               onPressed: _addWater,
                               icon: const Icon(Icons.add, size: 16),
                               label: const Text('+250 ml'),
-                              style: OutlinedButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              style: _pillActionStyle(cs),
                                 minimumSize: const Size(0, 0),
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 shape: const StadiumBorder(),
@@ -2100,10 +2096,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   const SizedBox(width: 8),
                                   OutlinedButton(
                                     onPressed: _addWater,
-                                    style: OutlinedButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 2),
+                                    style: _pillActionStyle(cs),
                                       side: BorderSide(
                                           color: cs.primary
                                               .withValues(alpha: 0.6)),
@@ -5174,6 +5167,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 }
+
+
+
 
 
 
