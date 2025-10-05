@@ -2300,31 +2300,37 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     iconColor: cs.primary,
                                     title: 'Valores Corporais',
                                     actions: [
-                                      _circleActionBtn(
-                                        bg: AppTheme.activeBlue,
-                                        icon: Icons.open_in_new,
-                                        onTap: () {
+                                      OutlinedButton.icon(
+                                        onPressed: () {
                                           Navigator.pushNamed(
-                                              context, AppRoutes.bodyMetrics,
-                                              arguments: {
-                                                'date': _selectedDate
-                                                    .toIso8601String(),
-                                              });
+                                            context,
+                                            AppRoutes.bodyMetrics,
+                                            arguments: {
+                                              'date': _selectedDate
+                                                  .toIso8601String(),
+                                            },
+                                          );
                                         },
+                                        icon: const Icon(Icons.open_in_new, size: 16),
+                                        label: const Text('Abrir'),
+                                        style: _pillActionStyle(cs),
                                       ),
                                       const SizedBox(width: 6),
-                                      _circleActionBtn(
-                                        bg: AppTheme.successGreen,
-                                        icon: Icons.add,
-                                        onTap: () {
+                                      OutlinedButton.icon(
+                                        onPressed: () {
                                           Navigator.pushNamed(
-                                              context, AppRoutes.bodyMetrics,
-                                              arguments: {
-                                                'date': _selectedDate
-                                                    .toIso8601String(),
-                                                'openEditor': true,
-                                              });
+                                            context,
+                                            AppRoutes.bodyMetrics,
+                                            arguments: {
+                                              'date': _selectedDate
+                                                  .toIso8601String(),
+                                              'openEditor': true,
+                                            },
+                                          );
                                         },
+                                        icon: const Icon(Icons.add, size: 16),
+                                        label: const Text('Registrar'),
+                                        style: _pillActionStyle(cs),
                                       ),
                                     ],
                                   ),
