@@ -629,7 +629,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             Navigator.pushNamed(context, AppRoutes.achievements);
           }),
           if (!compact) ...[
-            action(Icons.accessibility_new_outlined, 'Valores corporais', () {
+            action(Icons.accessibility_new_outlined, 'Valores Corporais', () {
               Navigator.pushNamed(context, AppRoutes.bodyMetrics);
             }),
             action(Icons.sticky_note_2_outlined, 'Anotações', () {
@@ -645,7 +645,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 position: PopupMenuPosition.under,
                 itemBuilder: (context) => [
                   const PopupMenuItem<String>(
-                      value: 'metrics', child: Text('Valores corporais')),
+                      value: 'metrics', child: Text('Valores Corporais')),
                   const PopupMenuItem<String>(
                       value: 'notes', child: Text('Anotações')),
                   if (ultraCompact)
@@ -2298,7 +2298,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   _sectionHeader(
                                     icon: Icons.monitor_weight,
                                     iconColor: context.semanticColors.premium,
-                                    title: 'Valores corporais',
+                                    title: 'Valores Corporais',
                                     actions: [
                                       _circleActionBtn(
                                         bg: AppTheme.activeBlue,
