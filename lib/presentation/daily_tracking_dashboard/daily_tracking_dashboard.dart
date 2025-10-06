@@ -1995,10 +1995,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               ),
                             ),
                             SizedBox(width: 1.2.w),
-                            IconButton(
-                              tooltip: 'Editar meta',
-                              icon: Icon(Icons.edit_outlined, color: cs.onSurfaceVariant, size: 18),
+                            OutlinedButton.icon(
                               onPressed: _openEditWaterGoalDialog,
+                              icon: const Icon(Icons.edit_outlined, size: 16),
+                              label: const Text('Meta'),
+                              style: _pillActionStyle(cs),
                             ),
                           ],
                         ),
@@ -4266,7 +4267,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                             ),
                           );
                         },
-                        child: const Text('Meta Água'),
+                        child: const Text('Meta de água'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -5187,6 +5188,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 }
+
 
 
 
