@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui' show FontFeature;
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -956,16 +957,28 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   }
 
   ButtonStyle _pillActionStyle(ColorScheme cs, {EdgeInsets? padding}) {
-    return _pillActionStyle(cs),
+    final base = OutlinedButton.styleFrom(
+      visualDensity: VisualDensity.compact,
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       minimumSize: const Size(0, 0),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       shape: const StadiumBorder(),
-      side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
-      foregroundColor: cs.primary,
       textStyle: Theme.of(context)
           .textTheme
           .labelSmall
           ?.copyWith(fontWeight: FontWeight.w700),
+    );
+    return base.copyWith(
+      foregroundColor: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.disabled)) return cs.onSurfaceVariant;
+        return cs.primary;
+      }),
+      side: MaterialStateProperty.resolveWith((states) {
+        final color = states.contains(MaterialState.disabled)
+            ? cs.outlineVariant
+            : cs.primary.withValues(alpha: 0.5);
+        return BorderSide(color: color);
+      }),
     );
   }
 
@@ -1971,13 +1984,27 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                 final int current = _dailyData["waterMl"] as int;
                                 final int goal = _dailyData["waterGoalMl"] as int;
                                 if (current <= 0) {
-                                  return Text('0/$goal ml', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w700));
+                                  return Text(
+                                    '0/$goal ml',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.w700,
+                                          fontFeatures: const [FontFeature.tabularFigures()],
+                                        ),
+                                  );
                                 }
                                 final p = (v / current).clamp(0.0, 1.0);
                                 final delayed = p <= _kDelayRight ? 0.0 : (p - _kDelayRight) / (1.0 - _kDelayRight);
                                 final eased = _kAnimCurve.transform(delayed);
                                 final shown = (current * eased).toInt();
-                                return Text('$shown/$goal ml', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w700));
+                                return Text(
+                                  '$shown/$goal ml',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: cs.primary,
+                                        fontWeight: FontWeight.w700,
+                                        fontFeatures: const [FontFeature.tabularFigures()],
+                                      ),
+                                );
                               },
                             ),
                             const SizedBox(width: 8),
@@ -1986,13 +2013,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               icon: const Icon(Icons.add, size: 16),
                               label: const Text('+250 ml'),
                               style: _pillActionStyle(cs),
-                                minimumSize: const Size(0, 0),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: const StadiumBorder(),
-                                side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
-                                foregroundColor: cs.primary,
-                                textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
-                              ),
+                            ),
                             ),
                             SizedBox(width: 1.2.w),
                             OutlinedButton.icon(
