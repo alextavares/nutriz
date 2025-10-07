@@ -795,7 +795,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         color: cs.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
-        boxShadow: [],
+        boxShadow: const [],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
@@ -1678,7 +1678,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         color: cs.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-        boxShadow: [],
+        boxShadow: const [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1899,7 +1899,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                           color: cs.outlineVariant.withValues(alpha: 0.2)),
-                      boxShadow: [],
+                      boxShadow: const [],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -1965,7 +1965,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                           color: cs.outlineVariant.withValues(alpha: 0.2)),
-                      boxShadow: [],
+                      boxShadow: const [],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2965,8 +2965,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     decoration: BoxDecoration(
                       color: cs.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: cs.outlineVariant.withOpacity(0.3)),
-                      boxShadow: [],
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.3)),
+                      boxShadow: const [],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -5208,7 +5209,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 }
-
 
 
 
