@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui' show FontFeature;
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -630,7 +629,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             Navigator.pushNamed(context, AppRoutes.achievements);
           }),
           if (!compact) ...[
-            action(Icons.accessibility_new_outlined, 'Valores Corporais', () {
+            action(Icons.accessibility_new_outlined, 'Valores corporais', () {
               Navigator.pushNamed(context, AppRoutes.bodyMetrics);
             }),
             action(Icons.sticky_note_2_outlined, 'Anotações', () {
@@ -646,7 +645,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 position: PopupMenuPosition.under,
                 itemBuilder: (context) => [
                   const PopupMenuItem<String>(
-                      value: 'metrics', child: Text('Valores Corporais')),
+                      value: 'metrics', child: Text('Valores corporais')),
                   const PopupMenuItem<String>(
                       value: 'notes', child: Text('Anotações')),
                   if (ultraCompact)
@@ -929,7 +928,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ),
         SizedBox(width: 3.w),
         Expanded(
-          child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600, letterSpacing: -0.1)),
+          child: Text(title, style: titleStyle),
         ),
         if (actions.isNotEmpty) Row(children: actions),
       ],
@@ -953,32 +952,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           child: Icon(icon, size: 18, color: Colors.white),
         ),
       ),
-    );
-  }
-
-  ButtonStyle _pillActionStyle(ColorScheme cs, {EdgeInsets? padding}) {
-    final base = OutlinedButton.styleFrom(
-      visualDensity: VisualDensity.compact,
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      minimumSize: const Size(0, 0),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      shape: const StadiumBorder(),
-      textStyle: Theme.of(context)
-          .textTheme
-          .labelSmall
-          ?.copyWith(fontWeight: FontWeight.w700),
-    );
-    return base.copyWith(
-      foregroundColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.disabled)) return cs.onSurfaceVariant;
-        return cs.primary;
-      }),
-      side: MaterialStateProperty.resolveWith((states) {
-        final color = states.contains(MaterialState.disabled)
-            ? cs.outlineVariant
-            : cs.primary.withValues(alpha: 0.5);
-        return BorderSide(color: color);
-      }),
     );
   }
 
@@ -1313,7 +1286,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: _pillActionStyle(cs),
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
                         ),
                         child: const Text('1h'),
                       ),
@@ -1327,7 +1303,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: _pillActionStyle(cs),
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
                         ),
                         child: const Text('4h'),
                       ),
@@ -1341,7 +1320,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: _pillActionStyle(cs),
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
                         ),
                         child: const Text('24h'),
                       ),
@@ -1359,7 +1341,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           await NotificationsService.cancelFastingEnd();
                           _refreshFastingBanner();
                         },
-                        style: _pillActionStyle(cs),
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: padH, vertical: padV),
                         ),
                         child: const Text('Amanhã 08:00'),
                       ),
@@ -1684,14 +1669,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // YAZIO-like: no section header; list meals directly
-          _sectionHeader(
-            icon: Icons.restaurant_outlined,
-            iconColor: cs.primary,
-            title: 'Alimentação',
-          ),
           SizedBox(height: 0.6.h),
           row('Café da manhã', 'breakfast'),
           row('Almoço', 'lunch'),
+          row('Jantar', 'dinner'),
+          row('Lanches', 'snack'),
+        ],
+      ),
+    );
   }
 
   Widget _macroRow(String label, int value, int goal, Color baseColor) {
@@ -1773,7 +1758,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       children: [
         OutlinedButton(
           onPressed: _removeWater,
-          style: _pillActionStyle(cs),
+          style: OutlinedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            shape: const CircleBorder(),
             padding: const EdgeInsets.all(6),
             side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
             foregroundColor: cs.primary,
@@ -1788,7 +1775,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ),
         OutlinedButton(
           onPressed: _addWater,
-          style: _pillActionStyle(cs),
+          style: OutlinedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            shape: const CircleBorder(),
             padding: const EdgeInsets.all(6),
             side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
             foregroundColor: cs.primary,
@@ -1938,7 +1927,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 // Per-meal progress (kcal and macros) — aligns with YAZIO cards
                 SizedBox(height: 1.6.h),
                 _buildPerMealProgressSection(),
-                SizedBox(height: 1.0.h),
+                SizedBox(height: 1.2.h),
                 // Thin divider between meals and water
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.w),
@@ -1951,7 +1940,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         .withValues(alpha: 0.25),
                   ),
                 ),
-                SizedBox(height: 1.0.h),
+                SizedBox(height: 1.2.h),
 
                 // Water progress
                 Builder(builder: (context) {
@@ -1970,57 +1959,136 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _sectionHeader(
-                          icon: Icons.water_drop_outlined,
-                          iconColor: cs.primary,
-                          title: 'Água',
-                          actions: [
-                            TweenAnimationBuilder<double>(
-                              key: ValueKey(_dailyData["waterMl"] as int?),
-                              tween: Tween<double>(begin: 0, end: (_dailyData["waterMl"] as int).toDouble()),
-                              duration: _kAnimDuration,
-                              curve: Curves.linear,
-                              builder: (context, v, _) {
-                                final int current = _dailyData["waterMl"] as int;
-                                final int goal = _dailyData["waterGoalMl"] as int;
-                                if (current <= 0) {
-                                  return Text(
-                                    '0/$goal ml',
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                          color: cs.primary,
-                                          fontWeight: FontWeight.w700,
-                                          fontFeatures: const [FontFeature.tabularFigures()],
-                                        ),
-                                  );
-                                }
-                                final p = (v / current).clamp(0.0, 1.0);
-                                final delayed = p <= _kDelayRight ? 0.0 : (p - _kDelayRight) / (1.0 - _kDelayRight);
-                                final eased = _kAnimCurve.transform(delayed);
-                                final shown = (current * eased).toInt();
-                                return Text(
-                                  '$shown/$goal ml',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: cs.primary,
-                                        fontWeight: FontWeight.w700,
-                                        fontFeatures: const [FontFeature.tabularFigures()],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.water_drop_outlined,
+                                    color: cs.primary, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Água',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        color: cs.onSurface,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                );
-                              },
+                                ),
+                                const SizedBox(width: 10),
+                                if (_hydrationStreak > 0)
+                                  Builder(builder: (context) {
+                                    final w = MediaQuery.of(context).size.width;
+                                    final double fs = w < 340
+                                        ? 9.sp
+                                        : (w < 380 ? 10.sp : 11.sp);
+                                    final double padH = w < 360 ? 6 : 8;
+                                    final double padV = w < 360 ? 2 : 3;
+                                    return Chip(
+                                      label:
+                                          Text('Streak: ${_hydrationStreak}d'),
+                                      visualDensity: VisualDensity.compact,
+                                      backgroundColor:
+                                          cs.primary.withValues(alpha: 0.12),
+                                      side: BorderSide(
+                                          color: cs.primary
+                                              .withValues(alpha: 0.3)),
+                                      labelPadding: EdgeInsets.symmetric(
+                                          horizontal: padH, vertical: padV),
+                                      labelStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: fs,
+                                          ),
+                                    );
+                                  }),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            OutlinedButton.icon(
-                              onPressed: _addWater,
-                              icon: const Icon(Icons.add, size: 16),
-                              label: const Text('+250 ml'),
-                              style: _pillActionStyle(cs),
-                            ),
-                            ),
-                            SizedBox(width: 1.2.w),
-                            OutlinedButton.icon(
-                              onPressed: _openEditWaterGoalDialog,
-                              icon: const Icon(Icons.edit_outlined, size: 16),
-                              label: const Text('Meta'),
-                              style: _pillActionStyle(cs),
+                            Row(
+                              children: [
+                                TweenAnimationBuilder<double>(
+                                  key: ValueKey(_dailyData["waterMl"] as int?),
+                                  tween: Tween<double>(
+                                    begin: 0,
+                                    end: (_dailyData["waterMl"] as int)
+                                        .toDouble(),
+                                  ),
+                                  duration: _kAnimDuration,
+                                  curve: Curves.linear,
+                                  builder: (context, v, _) {
+                                    final int current =
+                                        _dailyData["waterMl"] as int;
+                                    final int goal =
+                                        _dailyData["waterGoalMl"] as int;
+                                    if (current <= 0) {
+                                      return Text(
+                                        '0/$goal ml',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: cs.primary,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      );
+                                    }
+                                    final p = (v / current).clamp(0.0, 1.0);
+                                    final delayed = p <= _kDelayRight
+                                        ? 0.0
+                                        : (p - _kDelayRight) /
+                                            (1.0 - _kDelayRight);
+                                    final eased =
+                                        _kAnimCurve.transform(delayed);
+                                    final shown = (current * eased).toInt();
+                                    return Text(
+                                      '$shown/$goal ml',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  onPressed: _addWater,
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('+250 ml'),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    minimumSize: const Size(0, 0),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    shape: const StadiumBorder(),
+                                    side: BorderSide(
+                                        color: cs.primary.withValues(alpha: 0.5)),
+                                    foregroundColor: cs.primary,
+                                    textStyle: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                SizedBox(width: 1.2.w),
+                                IconButton(
+                                  tooltip: 'Editar meta',
+                                  icon: Icon(Icons.edit_outlined,
+                                      color: cs.onSurfaceVariant, size: 18),
+                                  onPressed: _openEditWaterGoalDialog,
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -2118,7 +2186,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   const SizedBox(width: 8),
                                   OutlinedButton(
                                     onPressed: _addWater,
-                                    style: _pillActionStyle(cs),
+                                    style: OutlinedButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
                                       side: BorderSide(
                                           color: cs.primary
                                               .withValues(alpha: 0.6)),
@@ -2139,7 +2210,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 }),
 
                 // Thin divider between activities and notes
-                SizedBox(height: 1.0.h),
+                SizedBox(height: 1.2.h),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Divider(
@@ -2151,7 +2222,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         .withValues(alpha: 0.25),
                   ),
                 ),
-                SizedBox(height: 1.0.h),
+                SizedBox(height: 1.2.h),
 
                 // Notes card (link to Notes screen)
                 Builder(builder: (context) {
@@ -2170,45 +2241,31 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _sectionHeader(
-                        _sectionHeader(
                           icon: Icons.sticky_note_2_outlined,
                           iconColor: cs.primary,
                           title: 'Anotações',
                           actions: [
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.notes,
-                                  arguments: {'date': _selectedDate.toIso8601String()},
-                                );
+                            _circleActionBtn(
+                              bg: AppTheme.activeBlue,
+                              icon: Icons.open_in_new,
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.notes,
+                                    arguments: {
+                                      'date': _selectedDate.toIso8601String(),
+                                    });
                               },
-                              icon: const Icon(Icons.open_in_new, size: 16),
-                              label: const Text('Abrir'),
-                              style: _pillActionStyle(cs),
                             ),
                             const SizedBox(width: 6),
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.notes,
-                                  arguments: {
-                                    'date': _selectedDate.toIso8601String(),
-                                    'openEditor': true,
-                                  },
-                                );
+                            _circleActionBtn(
+                              bg: AppTheme.successGreen,
+                              icon: Icons.add,
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.notes,
+                                    arguments: {
+                                      'date': _selectedDate.toIso8601String(),
+                                      'openEditor': true,
+                                    });
                               },
-                              icon: const Icon(Icons.add, size: 16),
-                              label: const Text('Adicionar'),
-                              style: _pillActionStyle(cs),
-                            ),
-                          ],
-                        ),
-                              },
-                              icon: const Icon(Icons.add, size: 16),
-                              label: const Text('Adicionar'),
-                              style: _pillActionStyle(cs),
                             ),
                           ],
                         ),
@@ -2253,7 +2310,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Hoje: $countToday anotações',
+                                        'Hoje: $countToday anotação(ões)',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
@@ -2295,7 +2352,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 }),
 
                 // Body Metrics card (Valores corporais) — make it discoverable like YAZIO
-                SizedBox(height: 1.0.h),
+                SizedBox(height: 1.2.h),
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
                   double? _bmi(Map<String, dynamic> m) {
@@ -2333,40 +2390,34 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                 children: [
                                   _sectionHeader(
                                     icon: Icons.monitor_weight,
-                                    iconColor: cs.primary,
-                                    title: 'Valores Corporais',
+                                    iconColor: context.semanticColors.premium,
+                                    title: 'Valores corporais',
                                     actions: [
-                                      OutlinedButton.icon(
-                                        onPressed: () {
+                                      _circleActionBtn(
+                                        bg: AppTheme.activeBlue,
+                                        icon: Icons.open_in_new,
+                                        onTap: () {
                                           Navigator.pushNamed(
-                                            context,
-                                            AppRoutes.bodyMetrics,
-                                            arguments: {
-                                              'date': _selectedDate
-                                                  .toIso8601String(),
-                                            },
-                                          );
+                                              context, AppRoutes.bodyMetrics,
+                                              arguments: {
+                                                'date': _selectedDate
+                                                    .toIso8601String(),
+                                              });
                                         },
-                                        icon: const Icon(Icons.open_in_new, size: 16),
-                                        label: const Text('Abrir'),
-                                        style: _pillActionStyle(cs),
                                       ),
                                       const SizedBox(width: 6),
-                                      OutlinedButton.icon(
-                                        onPressed: () {
+                                      _circleActionBtn(
+                                        bg: AppTheme.successGreen,
+                                        icon: Icons.add,
+                                        onTap: () {
                                           Navigator.pushNamed(
-                                            context,
-                                            AppRoutes.bodyMetrics,
-                                            arguments: {
-                                              'date': _selectedDate
-                                                  .toIso8601String(),
-                                              'openEditor': true,
-                                            },
-                                          );
+                                              context, AppRoutes.bodyMetrics,
+                                              arguments: {
+                                                'date': _selectedDate
+                                                    .toIso8601String(),
+                                                'openEditor': true,
+                                              });
                                         },
-                                        icon: const Icon(Icons.add, size: 16),
-                                        label: const Text('Registrar'),
-                                        style: _pillActionStyle(cs),
                                       ),
                                     ],
                                   ),
@@ -2414,7 +2465,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 }),
 
                 // Thin divider between water and activities
-                SizedBox(height: 1.0.h),
+                SizedBox(height: 1.2.h),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Divider(
@@ -4288,7 +4339,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                             ),
                           );
                         },
-                        child: const Text('Meta de água'),
+                        child: const Text('Meta Água'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -5209,16 +5260,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
