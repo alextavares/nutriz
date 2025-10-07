@@ -2066,7 +2066,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                 ),
                                 const SizedBox(width: 8),
                                 OutlinedButton.icon(
-                                  onPressed: _addWater,
+                                  onPressed: ((_dailyData["waterMl"] as int? ?? 0) >= (_dailyData["waterGoalMl"] as int? ?? 0)) ? null : _addWater,
                                   icon: const Icon(Icons.add, size: 16),
                                   label: const Text('+250 ml'),
                                   style: OutlinedButton.styleFrom(
@@ -2192,7 +2192,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   ),
                                   const SizedBox(width: 8),
                                   OutlinedButton(
-                                    onPressed: _addWater,
+                                    onPressed: remain > 0 ? _addWater : null,
                                     style: OutlinedButton.styleFrom(
                                       visualDensity: VisualDensity.compact,
                                       padding: const EdgeInsets.symmetric(
