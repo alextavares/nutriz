@@ -3043,11 +3043,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
-                            IconButton(
-                              tooltip: 'Editar metas de macros',
+                            OutlinedButton.icon(
                               onPressed: _openEditMacroGoalsDialog,
-                              icon: Icon(Icons.edit_outlined,
-                                  color: cs.onSurfaceVariant, size: 18),
+                              icon: const Icon(Icons.edit_outlined, size: 16),
+                              label: const Text('Metas'),
+                              style: _pillActionStyle(cs),
                             ),
                           ],
                         ),
