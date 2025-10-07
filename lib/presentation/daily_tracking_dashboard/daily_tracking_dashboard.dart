@@ -928,7 +928,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ),
         SizedBox(width: 3.w),
         Expanded(
-          child: Text(title, style: titleStyle),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.1,
+                ),
+          ),
         ),
         if (actions.isNotEmpty) Row(children: actions),
       ],
