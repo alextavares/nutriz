@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nutritracker/theme/design_tokens.dart';
+import 'package:nutriz/theme/design_tokens.dart';
 
 class StepsConnectCardWidget extends StatelessWidget {
   final VoidCallback onConnect;

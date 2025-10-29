@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:math' as math;
 
 import '../../../theme/design_tokens.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class CircularProgressChartWidget extends StatefulWidget {
   final int consumedCalories;
@@ -67,19 +68,16 @@ class _CircularProgressChartWidgetState
     }
 
     String _tConsumed() {
-      final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-      return lang == 'pt' ? 'Consumidas' : 'Eaten';
+      return AppLocalizations.of(context)!.eaten;
     }
 
     String _tBurned() {
-      final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-      return lang == 'pt' ? 'Queimadas' : 'Burned';
+      return AppLocalizations.of(context)!.burned;
     }
 
     String _tRemaining(bool exceeded) {
-      final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-      if (lang == 'pt') return exceeded ? 'Excedeu' : 'Restantes';
-      return exceeded ? 'Exceeded' : 'Remaining';
+      if (exceeded) return AppLocalizations.of(context)!.overGoal;
+      return AppLocalizations.of(context)!.remaining;
     }
 
     final colorScheme = context.colors;
@@ -293,9 +291,7 @@ class _CircularProgressChartWidgetState
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          width: sideW,
-                          // allow height to grow with larger text scale
+                        Expanded(
                           child: Align(
                             alignment: Alignment.center,
                             child: sideStat(
@@ -308,11 +304,13 @@ class _CircularProgressChartWidgetState
                           ),
                         ),
                         const SizedBox(width: gap),
-                        Center(child: ringBox),
-                        const SizedBox(width: gap),
                         SizedBox(
-                          width: sideW,
-                          // allow height to grow with larger text scale
+                          width: ringW,
+                          height: ringW,
+                          child: ringBox,
+                        ),
+                        const SizedBox(width: gap),
+                        Expanded(
                           child: Align(
                             alignment: Alignment.center,
                             child: sideStat(

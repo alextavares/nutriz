@@ -3,6 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class CameraControlsWidget extends StatelessWidget {
   final VoidCallback onCameraPressed;
@@ -46,7 +47,7 @@ class CameraControlsWidget extends StatelessWidget {
                 ),
                 SizedBox(height: 3.h),
                 Text(
-                  'Detectar Alimentos com IA',
+                  AppLocalizations.of(context)!.detectFoodHeadline,
                   style: textTheme.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
@@ -54,7 +55,7 @@ class CameraControlsWidget extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8.w),
                   child: Text(
-                    'Capture uma foto ou selecione da galeria para identificar automaticamente os alimentos e suas informações nutricionais',
+                    AppLocalizations.of(context)!.detectFoodSubtitle,
                     style: textTheme.bodyMedium?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
@@ -79,7 +80,7 @@ class CameraControlsWidget extends StatelessWidget {
                     color: colors.onPrimary,
                     size: 6.w,
                   ),
-                  label: Text('Tirar Foto'),
+                  label: Text(AppLocalizations.of(context)!.takePhoto),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isCameraInitialized
                         ? colors.primary
@@ -104,7 +105,7 @@ class CameraControlsWidget extends StatelessWidget {
                     color: colors.primary,
                     size: 6.w,
                   ),
-                  label: Text('Galeria'),
+                  label: Text(AppLocalizations.of(context)!.gallery),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colors.primary,
                     padding: EdgeInsets.symmetric(vertical: 3.h),
@@ -140,7 +141,7 @@ class CameraControlsWidget extends StatelessWidget {
                   SizedBox(width: 3.w),
                   Expanded(
                     child: Text(
-                      'Inicializando câmera...',
+                      AppLocalizations.of(context)!.initializingCamera,
                       style: textTheme.bodyMedium?.copyWith(
                         color: semantics.warning,
                       ),
@@ -171,7 +172,7 @@ class CameraControlsWidget extends StatelessWidget {
                     ),
                     SizedBox(width: 2.w),
                     Text(
-                      'Dicas para melhor detecção:',
+                      AppLocalizations.of(context)!.detectionTipsTitle,
                       style: textTheme.titleSmall?.copyWith(
                         color: semantics.premium,
                       ),
@@ -179,10 +180,10 @@ class CameraControlsWidget extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 2.h),
-                _buildTip(context, '• Certifique-se de ter boa iluminação'),
-                _buildTip(context, '• Fotografe os alimentos de perto'),
-                _buildTip(context, '• Evite sombras no prato'),
-                _buildTip(context, '• Um alimento por vez funciona melhor'),
+                _buildTip(context, '\u2022 ' + AppLocalizations.of(context)!.detectionTip1),
+                _buildTip(context, '\u2022 ' + AppLocalizations.of(context)!.detectionTip2),
+                _buildTip(context, '\u2022 ' + AppLocalizations.of(context)!.detectionTip3),
+                _buildTip(context, '\u2022 ' + AppLocalizations.of(context)!.detectionTip4),
               ],
             ),
           ),

@@ -83,7 +83,7 @@ class AchievementsWidget extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+              crossAxisCount: 2,
               crossAxisSpacing: 2.w,
               mainAxisSpacing: 2.h,
               childAspectRatio: 1.0,

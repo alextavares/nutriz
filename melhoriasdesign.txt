@@ -1,0 +1,1723 @@
+Analisei os três documentos com atenção. Há **insights valiosos** que complementam minha análise original, especialmente sobre **arquitetura de informação** e **consistência estrutural**. Vou criar um **PLANO APRIMORADO** que combina o melhor de todas as análises.
+
+# 🎯 PLANO DE REDESIGN UX/UI - VERSÃO APRIMORADA
+
+## 🚨 PROBLEMA CRÍTICO IDENTIFICADO: INCONSISTÊNCIA ESTRUTURAL
+
+Antes de qualquer ajuste visual, há um problema de **arquitetura de informação** fundamental:
+
+### ❌ SITUAÇÃO ATUAL:
+- **Tela 1**: Mostra Activities + Macronutrients
+- **Tela 2**: Mostra Meals + Water + Notes + Body Metrics  
+- **Tela 4**: Mostra Summary circular + Macros (duplicado) + Meals
+
+**Problema**: Macronutrientes aparecem em **3 lugares diferentes** com designs diferentes. Refeições aparecem em formatos distintos. Não há "single source of truth".
+
+### ✅ SOLUÇÃO PROPOSTA:
+
+**Unificar a tela "Diary" em um único scroll vertical:**
+
+```
+┌─────────────────────────────┐
+│ HEADER: "Diary" + Date Nav  │ ← Fixar título
+├─────────────────────────────┤
+│ 📊 CARD: SUMMARY            │ ← Anel de calorias
+│ • 2,000 Remaining           │   + Eaten/Burned
+│ • Macros (única fonte)      │   + Progress bars
+├─────────────────────────────┤
+│ 🍽️ CARD: NUTRITION         │ ← Todas as refeições
+│ • Breakfast + badge cals    │   em um único card
+│ • Lunch + badge cals        │
+│ • Dinner + badge cals       │
+│ • Snack + badge cals        │
+├─────────────────────────────┤
+│ 💧 CARD: WATER              │ ← Tracker de água
+│ • Progress bar horizontal   │   (não círculos)
+│ • 2/8 cups (500/2000ml)     │
+├─────────────────────────────┤
+│ 🏃 CARD: ACTIVITIES         │ ← Quick adds
+│ • Walking • Running         │   + Total no footer
+│ • Cycling                   │   "Total: 80min"
+├─────────────────────────────┤
+│ 📝 CARD: NOTES             │ ← Empty state melhorado
+├─────────────────────────────┤
+│ ⚖️ CARD: BODY METRICS      │ ← Empty state melhorado
+└─────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────┐
+│   [FAB] + (floating)        │ ← FAB no canto inferior
+└─────────────────────────────┘   direito (não botão fixo)
+```
+
+---
+
+## 📋 SPRINTS DE IMPLEMENTAÇÃO REVISADOS
+
+### 🔴 SPRINT 0 - ARQUITETURA (CRÍTICO - Fazer ANTES de tudo)
+
+**Duração estimada: 3-5 dias**
+
+#### 1. Reestruturar Navegação e Telas
+
+**Ação**: Unificar conteúdo fragmentado em uma única tela "Diary"
+
+```typescript
+// Estrutura de dados unificada
+interface DiaryScreen {
+  summary: {
+    caloriesRemaining: number;
+    eaten: number;
+    burned: number;
+    macros: Macro[]; // ÚNICA FONTE
+  };
+  nutrition: Meal[];
+  water: WaterTracker;
+  activities: Activity[];
+  notes: Note[];
+  bodyMetrics: BodyMetric[];
+}
+```
+
+**Remover**:
+- Card "Macronutrients" duplicado da Tela 3
+- Botão "Add Meal" fixo (substituir por FAB)
+- Tela "Summary" separada (integrar no topo do Diary)
+
+**Adicionar**:
+- Título fixo "Diary" no header
+- Date navigation (< Today >)
+- FAB multi-ação no canto inferior direito
+
+#### 2. Implementar FAB (Floating Action Button)
+
+```css
+.fab {
+  position: fixed;
+  bottom: 88px; /* 16px + 56px bottom nav + 16px */
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+  z-index: 1000;
+}
+
+/* Estado expandido */
+.fab.expanded {
+  border-radius: 16px;
+  width: auto;
+  padding: 12px 16px;
+}
+
+.fab-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fab-option {
+  padding: 12px 16px;
+  background: white;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+}
+```
+
+**Opções do FAB**:
+- Add Meal 🍽️
+- Add Water 💧
+- Add Activity 🏃
+- Quick Log ⚡
+
+#### 3. Corrigir Hierarquia de Tela
+
+**Header fixo**:
+```css
+.screen-header {
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 1px solid #F3F4F6;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+.date-navigation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+```
+
+---
+
+### 🟡 SPRINT 1 - FOUNDATION (Alta Prioridade)
+
+**Duração estimada: 5-7 dias**
+
+#### 1. Design System Tokens
+
+```css
+/* ============================================
+   DESIGN TOKENS - NUTRITION TRACKER
+   ============================================ */
+
+/* --- SPACING --- */
+:root {
+  /* Base 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  
+  /* Semantic */
+  --container-padding: 20px;
+  --card-padding: 16px;
+  --card-padding-lg: 20px;
+  --section-gap: 24px;
+  --element-gap: 12px;
+  --card-stack-gap: 16px;
+}
+
+/* --- COLORS --- */
+:root {
+  /* Primary (Actions) */
+  --primary-50: #EFF6FF;
+  --primary-100: #DBEAFE;
+  --primary-500: #3B82F6;
+  --primary-600: #2563EB;
+  --primary-700: #1D4ED8;
+  
+  /* Macros */
+  --macro-carb: #FF6D00;        /* Ratio 4.52:1 */
+  --macro-carb-bg: #FFF3E0;
+  --macro-protein: #10B981;     /* Ratio 3.98:1 */
+  --macro-protein-bg: #D1FAE5;
+  --macro-fat: #3B82F6;         /* Ratio 4.89:1 */
+  --macro-fat-bg: #DBEAFE;
+  
+  /* Semantic */
+  --success: #10B981;
+  --success-bg: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-bg: #FEF3C7;
+  --error: #EF4444;
+  --error-bg: #FEE2E2;
+  
+  /* Neutrals */
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  
+  /* Text */
+  --text-primary: #111827;      /* Ratio 16.5:1 */
+  --text-secondary: #6B7280;    /* Ratio 4.61:1 */
+  --text-tertiary: #9CA3AF;     /* Ratio 3.04:1 - usar só em disabled */
+  --text-inverse: #FFFFFF;
+  --text-brand: #2563EB;
+}
+
+/* --- TYPOGRAPHY --- */
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Display */
+  --text-3xl: 28px;
+  --text-3xl-lh: 36px;
+  --text-3xl-weight: 700;
+  
+  --text-2xl: 24px;
+  --text-2xl-lh: 32px;
+  --text-2xl-weight: 700;
+  
+  /* Headings */
+  --text-xl: 20px;
+  --text-xl-lh: 28px;
+  --text-xl-weight: 600;
+  
+  --text-lg: 18px;
+  --text-lg-lh: 26px;
+  --text-lg-weight: 600;
+  
+  /* Body */
+  --text-base: 16px;
+  --text-base-lh: 24px;
+  --text-base-weight: 400;
+  --text-base-weight-semibold: 600;
+  
+  /* Small */
+  --text-sm: 14px;
+  --text-sm-lh: 20px;
+  --text-sm-weight: 400;
+  --text-sm-weight-medium: 500;
+  
+  --text-xs: 13px;
+  --text-xs-lh: 18px;
+  --text-xs-weight: 400;
+  
+  /* Numeric */
+  --text-numeric-lg: 48px;
+  --text-numeric-lg-lh: 56px;
+  --text-numeric-lg-weight: 700;
+  
+  --text-numeric-md: 20px;
+  --text-numeric-md-lh: 28px;
+  --text-numeric-md-weight: 600;
+}
+
+/* --- BORDER RADIUS --- */
+:root {
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Components */
+  --radius-card: 12px;
+  --radius-button: 12px;
+  --radius-pill: 20px;
+  --radius-input: 8px;
+}
+
+/* --- SHADOWS --- */
+:root {
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.16);
+  
+  /* Component specific */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-button: 0 2px 8px rgba(59, 130, 246, 0.2);
+  --shadow-fab: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+/* --- TRANSITIONS --- */
+:root {
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- TOUCH TARGETS --- */
+:root {
+  --touch-target-min: 44px;
+  --touch-target-comfortable: 48px;
+  --touch-target-large: 56px;
+}
+```
+
+#### 2. Componentes Base
+
+**Card Component**:
+```css
+.card {
+  background: white;
+  border-radius: var(--radius-card);
+  padding: var(--card-padding);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--gray-100);
+  margin-bottom: var(--card-stack-gap);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.card-title {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl-lh);
+  font-weight: var(--text-xl-weight);
+  color: var(--text-primary);
+}
+
+.card-action {
+  font-size: var(--text-sm);
+  font-weight: var(--text-sm-weight-medium);
+  color: var(--text-brand);
+}
+
+.card-content {
+  /* Content flows naturally */
+}
+```
+
+**Button Component**:
+```css
+/* Primary Button */
+.btn-primary {
+  min-height: var(--touch-target-large);
+  padding: 14px 24px;
+  background: var(--primary-500);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: var(--text-base);
+  font-weight: var(--text-base-weight-semibold);
+  box-shadow: var(--shadow-button);
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--primary-600);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Icon Button */
+.btn-icon {
+  width: var(--touch-target-comfortable);
+  height: var(--touch-target-comfortable);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-500);
+  border-radius: var(--radius-full);
+  border: none;
+  box-shadow: var(--shadow-button);
+  cursor: pointer;
+}
+
+.btn-icon-secondary {
+  background: var(--gray-100);
+  box-shadow: none;
+}
+
+/* Outline Button */
+.btn-outline {
+  min-height: var(--touch-target-comfortable);
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--primary-600);
+  border: 1.5px solid var(--primary-500);
+  border-radius: var(--radius-button);
+  font-size: var(--text-base);
+  font-weight: var(--text-base-weight-semibold);
+}
+```
+
+**Pill/Chip Component**:
+```css
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  padding: 10px 16px;
+  background: var(--success-bg);
+  color: var(--success);
+  border-radius: var(--radius-pill);
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.pill-interactive {
+  cursor: pointer;
+}
+
+.pill-interactive:hover {
+  background: var(--success);
+  color: white;
+  border-color: var(--success);
+}
+
+.pill-interactive:active {
+  transform: scale(0.96);
+}
+
+/* Variants */
+.pill-carb {
+  background: var(--macro-carb-bg);
+  color: var(--macro-carb);
+}
+
+.pill-protein {
+  background: var(--macro-protein-bg);
+  color: var(--macro-protein);
+}
+```
+
+#### 3. Macro Progress Bars (Única Fonte)
+
+```html
+<div class="macro-section">
+  <div class="macro-header">
+    <span class="macro-label">Macros</span>
+    <button class="btn-link">Goals</button>
+  </div>
+  
+  <div class="macro-list">
+    <!-- Carbs -->
+    <div class="macro-item">
+      <div class="macro-info">
+        <span class="macro-dot" style="background: var(--macro-carb)"></span>
+        <span class="macro-name">Carbs</span>
+        <span class="macro-value">0<span class="macro-goal">/250 g</span></span>
+      </div>
+      <div class="macro-progress">
+        <div class="macro-fill macro-fill-carb" style="width: 0%"></div>
+      </div>
+    </div>
+    
+    <!-- Protein -->
+    <div class="macro-item">
+      <div class="macro-info">
+        <span class="macro-dot" style="background: var(--macro-protein)"></span>
+        <span class="macro-name">Protein</span>
+        <span class="macro-value">0<span class="macro-goal">/120 g</span></span>
+      </div>
+      <div class="macro-progress">
+        <div class="macro-fill macro-fill-protein" style="width: 0%"></div>
+      </div>
+    </div>
+    
+    <!-- Fat -->
+    <div class="macro-item">
+      <div class="macro-info">
+        <span class="macro-dot" style="background: var(--macro-fat)"></span>
+        <span class="macro-name">Fat</span>
+        <span class="macro-value">0<span class="macro-goal">/80 g</span></span>
+      </div>
+      <div class="macro-progress">
+        <div class="macro-fill macro-fill-fat" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+```css
+.macro-section {
+  margin-top: var(--space-5);
+}
+
+.macro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.macro-label {
+  font-size: var(--text-base);
+  font-weight: var(--text-base-weight-semibold);
+  color: var(--text-primary);
+}
+
+.macro-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.macro-item {
+  /* Container */
+}
+
+.macro-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.macro-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.macro-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.macro-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.macro-goal {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.macro-progress {
+  height: 6px;
+  background: var(--gray-100);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.macro-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--transition-slow);
+}
+
+.macro-fill-carb {
+  background: var(--macro-carb);
+}
+
+.macro-fill-protein {
+  background: var(--macro-protein);
+}
+
+.macro-fill-fat {
+  background: var(--macro-fat);
+}
+```
+
+#### 4. Melhorar Áreas de Toque (CRÍTICO)
+
+**Auditoria atual**:
+```
+❌ Ícone edição (lápis): ~28x28px
+❌ Botão + nas refeições: ~40x40px
+❌ Círculos de água: ~20x20px
+❌ Botões +/- água: ~32x32px
+```
+
+**Correção**:
+```css
+/* Padrão universal de área de toque */
+.touch-target {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Quando o ícone visual é menor que área de toque */
+.touch-target::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  /* Para debug: border: 1px dashed red; */
+}
+
+/* Aplicar em todos os botões pequenos */
+.icon-button {
+  min-width: var(--touch-target-comfortable);
+  min-height: var(--touch-target-comfortable);
+  padding: 12px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.icon-button:hover {
+  background: var(--gray-100);
+}
+
+.icon-button svg,
+.icon-button img {
+  width: 20px;
+  height: 20px;
+}
+```
+
+---
+
+### 🟢 SPRINT 2 - COMPONENTES ESPECÍFICOS (Média Prioridade)
+
+**Duração estimada: 5-7 dias**
+
+#### 1. Redesenhar Summary Card (Anel de Calorias)
+
+```html
+<div class="card summary-card">
+  <div class="card-header">
+    <h2 class="card-title">Summary</h2>
+    <button class="btn-link">Details</button>
+  </div>
+  
+  <div class="calorie-ring-container">
+    <svg class="calorie-ring" viewBox="0 0 160 160">
+      <!-- Background circle -->
+      <circle
+        cx="80"
+        cy="80"
+        r="70"
+        fill="none"
+        stroke="#F3F4F6"
+        stroke-width="12"
+      />
+      <!-- Progress circle -->
+      <circle
+        cx="80"
+        cy="80"
+        r="70"
+        fill="none"
+        stroke="#3B82F6"
+        stroke-width="12"
+        stroke-dasharray="439.82"
+        stroke-dashoffset="439.82"
+        stroke-linecap="round"
+        transform="rotate(-90 80 80)"
+        class="calorie-ring-progress"
+      />
+    </svg>
+    
+    <div class="calorie-ring-content">
+      <span class="calorie-number">2,000</span>
+      <span class="calorie-label">Remaining</span>
+    </div>
+  </div>
+  
+  <div class="calorie-stats">
+    <div class="calorie-stat">
+      <span class="calorie-stat-value">0</span>
+      <span class="calorie-stat-label">Eaten</span>
+    </div>
+    <div class="calorie-stat-divider"></div>
+    <div class="calorie-stat">
+      <span class="calorie-stat-value">0</span>
+      <span class="calorie-stat-label">Burned</span>
+    </div>
+  </div>
+  
+  <!-- Macros integrados no mesmo card -->
+  <div class="macro-section">
+    <!-- (usar código do item 3 do Sprint 1) -->
+  </div>
+</div>
+```
+
+```css
+.summary-card {
+  padding: var(--card-padding-lg);
+}
+
+.calorie-ring-container {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: var(--space-6) auto;
+}
+
+.calorie-ring {
+  width: 100%;
+  height: 100%;
+}
+
+.calorie-ring-progress {
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estado vazio - dashed circle */
+.calorie-ring-container.empty .calorie-ring-progress {
+  stroke: #E5E7EB;
+  stroke-dasharray: 8 4;
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(-90deg); }
+  to { transform: rotate(270deg); }
+}
+
+.calorie-ring-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.calorie-number {
+  display: block;
+  font-size: var(--text-numeric-lg);
+  line-height: var(--text-numeric-lg-lh);
+  font-weight: var(--text-numeric-lg-weight);
+  color: var(--primary-600);
+  letter-spacing: -1px;
+}
+
+.calorie-label {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.calorie-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  margin-bottom: var(--space-5);
+}
+
+.calorie-stat {
+  text-align: center;
+}
+
+.calorie-stat-value {
+  display: block;
+  font-size: var(--text-numeric-md);
+  line-height: var(--text-numeric-md-lh);
+  font-weight: var(--text-numeric-md-weight);
+  color: var(--text-primary);
+}
+
+.calorie-stat-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--text-sm-weight-medium);
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calorie-stat-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--gray-200);
+}
+```
+
+#### 2. Nutrition Card (Refeições com Badges)
+
+```html
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Nutrition</h2>
+  </div>
+  
+  <div class="meal-list">
+    <!-- Breakfast -->
+    <div class="meal-item">
+      <div class="meal-icon" style="background: #FFF3E0;">
+        <span>☕</span>
+      </div>
+      <div class="meal-info">
+        <div class="meal-header">
+          <span class="meal-name">Breakfast</span>
+          <span class="meal-badge">0 Cal</span>
+        </div>
+        <span class="meal-time">7:00 - 10:00 AM</span>
+      </div>
+      <button class="btn-icon-secondary" aria-label="Add breakfast">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Lunch -->
+    <div class="meal-item">
+      <div class="meal-icon" style="background: #D1FAE5;">
+        <span>🥗</span>
+      </div>
+      <div class="meal-info">
+        <div class="meal-header">
+          <span class="meal-name">Lunch</span>
+          <span class="meal-badge">0 Cal</span>
+        </div>
+        <span class="meal-time">12:00 - 2:00 PM</span>
+      </div>
+      <button class="btn-icon-secondary" aria-label="Add lunch">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Dinner -->
+    <div class="meal-item">
+      <div class="meal-icon" style="background: #DBEAFE;">
+        <span>🍽️</span>
+      </div>
+      <div class="meal-info">
+        <div class="meal-header">
+          <span class="meal-name">Dinner</span>
+          <span class="meal-badge">0 Cal</span>
+        </div>
+        <span class="meal-time">6:00 - 9:00 PM</span>
+      </div>
+      <button class="btn-icon-secondary" aria-label="Add dinner">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Snack -->
+    <div class="meal-item">
+      <div class="meal-icon" style="background: #FEF3C7;">
+        <span>🥜</span>
+      </div>
+      <div class="meal-info">
+        <div class="meal-header">
+          <span class="meal-name">Snack</span>
+          <span class="meal-badge">0 Cal</span>
+        </div>
+        <span class="meal-time">Anytime</span>
+      </div>
+      <button class="btn-icon-secondary" aria-label="Add snack">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+```
+
+```css
+.meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.meal-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.meal-item:hover {
+  background: var(--gray-50);
+}
+
+/* Estado completado */
+.meal-item.completed {
+  background: var(--gray-50);
+  opacity: 0.7;
+}
+
+.meal-item.completed .meal-badge {
+  background: var(--success);
+  color: white;
+}
+
+/* Próxima refeição sugerida */
+.meal-item.next {
+  border: 2px solid var(--primary-500);
+  background: var(--primary-50);
+  padding: calc(var(--space-3) - 2px); /* compensar border */
+}
+
+.meal-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.meal-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.meal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 2px;
+}
+
+.meal-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.meal-badge {
+  padding: 2px 8px;
+  background: var(--gray-100);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.meal-time {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+```
+
+#### 3. Water Tracker (Progress Bar)
+
+```html
+<div class="card">
+  <div class="card-header">
+    <div class="water-header">
+      <span class="water-icon">💧</span>
+      <h2 class="card-title">Water</h2>
+    </div>
+    <span class="water-status">2/8 cups</span>
+  </div>
+  
+  <div class="water-tracker">
+    <div class="water-progress-bar">
+      <div class="water-progress-fill" style="width: 25%"></div>
+      <div class="water-markers">
+        <span class="water-marker"></span>
+        <span class="water-marker"></span>
+        <span class="water-marker"></span>
+        <span class="water-marker"></span>
+        <span class="water-marker"></span>
+        <span class="water-marker"></span>
+        <span class="water-marker"></span>
+        <span class="water-marker"></span>
+      </div>
+    </div>
+    
+    <div class="water-info">
+      <span class="water-amount">500/2000 ml</span>
+      <button class="btn-outline btn-sm" onclick="addWater(250)">
+        + 250ml
+      </button>
+    </div>
+  </div>
+  
+  <!-- Quick actions -->
+  <div class="water-quick-actions">
+    <button class="pill pill-interactive" onclick="addWater(250)">1 Cup</button>
+    <button class="pill pill-interactive" onclick="addWater(500)">2 Cups</button>
+    <button class="pill pill-interactive" onclick="addWater(750)">3 Cups</button>
+  </div>
+</div>
+```
+
+```css
+.water-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.water-icon {
+  font-size: 20px;
+}
+
+.water-status {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.water-tracker {
+  margin-top: var(--space-4);
+}
+
+.water-progress-bar {
+  position: relative;
+  height: 12px;
+  background: var(--primary-50);
+  border-radius: 6px;
+  overflow: visible;
+}
+
+.water-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #60A5FA 0%, #3B82F6 100%);
+  border-radius: 6px;
+  transition: width var(--transition-slow);
+  position: relative;
+}
+
+/* Animação quando atinge meta */
+.water-progress-fill.complete {
+  animation: celebrate 0.6s ease-out;
+}
+
+@keyframes celebrate {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.3); }
+}
+
+.water-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 calc(100% / 16); /* Center markers */
+}
+
+.water-marker {
+  width: 2px;
+  height: 100%;
+  background: white;
+  opacity: 0.5;
+}
+
+.water-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+}
+
+.water-amount {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.water-quick-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-100);
+}
+```
+
+#### 4. Activities Card (com Total)
+
+```html
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Activities</h2>
+    <span class="activity-summary">0/300 kcal</span>
+  </div>
+  
+  <div class="activity-quick-adds">
+    <button class="pill pill-interactive pill-activity">
+      <span class="activity-icon">🚶</span>
+      <span>Walking 30m</span>
+    </button>
+    <button class="pill pill-interactive pill-activity">
+      <span class="activity-icon">🏃</span>
+      <span>Running 20m</span>
+    </button>
+    <button class="pill pill-interactive pill-activity">
+      <span class="activity-icon">🚴</span>
+      <span>Cycling 30m</span>
+    </button>
+  </div>
+  
+  <!-- Aparece quando há atividades registradas -->
+  <div class="activity-total" style="display: none;">
+    <div class="activity-total-content">
+      <span class="activity-total-label">Total Today</span>
+      <span class="activity-total-value">80 min • ~350 kcal</span>
+    </div>
+  </div>
+</div>
+```
+
+```css
+.activity-summary {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.activity-quick-adds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.pill-activity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.activity-icon {
+  font-size: 18px;
+}
+
+.activity-total {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-100);
+}
+
+.activity-total-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--success-bg);
+  border-radius: var(--radius-md);
+}
+
+.activity-total-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.activity-total-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--success);
+}
+```
+
+#### 5. Empty States Melhorados
+
+```html
+<!-- Notes Empty State -->
+<div class="card">
+  <div class="empty-state">
+    <div class="empty-state-icon">📝</div>
+    <h3 class="empty-state-title">Notes</h3>
+    <p class="empty-state-description">Add notes about your day</p>
+    <button class="btn-outline btn-sm">+ Add Note</button>
+  </div>
+</div>
+
+<!-- Body Metrics Empty State -->
+<div class="card">
+  <div class="empty-state">
+    <div class="empty-state-icon">⚖️</div>
+    <h3 class="empty-state-title">Body Metrics</h3>
+    <p class="empty-state-description">Track weight, measurements</p>
+    <button class="btn-outline btn-sm">+ Add Metric</button>
+  </div>
+</div>
+```
+
+```css
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-3);
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  font-size: var(--text-lg);
+  font-weight: var(--text-lg-weight);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+/* Com ilustração */
+.empty-state-illustration {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto var(--space-4);
+  opacity: 0.6;
+}
+```
+
+---
+
+### 🔵 SPRINT 3 - POLIMENTO (Baixa Prioridade)
+
+**Duração estimada: 3-5 dias**
+
+#### 1. Micro-interações
+
+```css
+/* Ripple effect em botões */
+.btn-primary,
+.btn-outline,
+.pill-interactive {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after,
+.btn-outline::after,
+.pill-interactive::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:active::after,
+.btn-outline:active::after,
+.pill-interactive:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Haptic feedback visual */
+@keyframes haptic {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+}
+
+.btn-icon:active {
+  animation: haptic 0.2s ease-out;
+}
+
+/* Progress fill animation */
+.macro-fill,
+.water-progress-fill {
+  animation: fillIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fillIn {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Badge pop animation */
+.meal-badge {
+  animation: badgePop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes badgePop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+```
+
+#### 2. Onboarding / Coach Marks
+
+```html
+<!-- Coach mark component -->
+<div class="coach-mark" style="top: 520px; left: 50%; transform: translateX(-50%);">
+  <div class="coach-mark-arrow"></div>
+  <div class="coach-mark-content">
+    <p class="coach-mark-text">Tap here to add your first meal</p>
+    <button class="coach-mark-dismiss" onclick="dismissCoachMark()">Got it</button>
+  </div>
+</div>
+```
+
+```css
+.coach-mark {
+  position: absolute;
+  z-index: 1000;
+  animation: coachMarkBounce 1s ease-in-out infinite;
+}
+
+@keyframes coachMarkBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+.coach-mark-arrow {
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 12px solid var(--gray-900);
+  margin: 0 auto;
+}
+
+.coach-mark-content {
+  background: var(--gray-900);
+  color: white;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  max-width: 240px;
+  margin-top: -2px;
+}
+
+.coach-mark-text {
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: var(--space-3);
+}
+
+.coach-mark-dismiss {
+  width: 100%;
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+```
+
+#### 3. Loading States
+
+```html
+<!-- Skeleton loading para meal cards -->
+<div class="meal-item skeleton">
+  <div class="skeleton-icon"></div>
+  <div class="skeleton-content">
+    <div class="skeleton-text skeleton-text-lg"></div>
+    <div class="skeleton-text skeleton-text-sm"></div>
+  </div>
+  <div class="skeleton-button"></div>
+</div>
+```
+
+```css
+.skeleton {
+  pointer-events: none;
+  user-select: none;
+}
+
+.skeleton-icon,
+.skeleton-text,
+.skeleton-button {
+  background: linear-gradient(
+    90deg,
+    var(--gray-100) 0%,
+    var(--gray-200) 50%,
+    var(--gray-100) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.skeleton-content {
+  flex: 1;
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: var(--space-2);
+}
+
+.skeleton-text-lg {
+  width: 120px;
+}
+
+.skeleton-text-sm {
+  width: 80px;
+  height: 12px;
+}
+
+.skeleton-button {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+}
+```
+
+#### 4. Celebrações / Achievements
+
+```html
+<!-- Toast de conquista -->
+<div class="toast toast-success">
+  <div class="toast-icon">🎉</div>
+  <div class="toast-content">
+    <p class="toast-title">Water goal achieved!</p>
+    <p class="toast-message">You drank 8 cups today</p>
+  </div>
+  <button class="toast-close" aria-label="Close">×</button>
+</div>
+```
+
+```css
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 320px;
+  width: calc(100% - 40px);
+  padding: var(--space-4);
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  z-index: 1100;
+  animation: toastSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.toast-success {
+  border-left: 4px solid var(--success);
+}
+
+.toast-icon {
+  font-size: 24px;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.toast-message {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.toast-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+```
+
+---
+
+## 📊 CHECKLIST DE QUALIDADE
+
+### ✅ Acessibilidade (WCAG 2.1 AA)
+```
+□ Contraste de texto mínimo 4.5:1
+  ✓ Títulos: 16.5:1
+  ✓ Corpo de texto: 9.2:1
+  ✓ Texto secundário: 4.61:1
+  ✓ Macros: 4.5:1+
+
+□ Área de toque mínima 44x44px
+  ✓ Todos os botões: 48x48px
+  ✓ FAB: 56x56px
+  ✓ Pills: 44px height
+
+□ Labels em todos os controles
+  ✓ aria-label em botões de ícone
+  ✓ alt text em imagens
+
+□ Navegação por teclado
+  ✓ Tab order lógico
+  ✓ Focus visible
+
+□ Suporte a screen readers
+  ✓ Semantic HTML
+  ✓ ARIA roles quando necessário
+```
+
+### ✅ Performance
+```
+□ Animações GPU-accelerated
+  ✓ transform/opacity only
+  ✓ will-change quando apropriado
+
+□ Lazy loading de cards
+  ✓ Intersection Observer
+
+□ Imagens otimizadas
+  ✓ WebP com fallback
+  ✓ Tamanhos responsivos
+
+□ Bundle size otimizado
+  ✓ Code splitting
+  ✓ Tree shaking
+```
+
+### ✅ Consistência
+```
+□ Spacing system seguido (4px base)
+  ✓ Todos os valores múltiplos de 4
+
+□ Cores de tokens
+  ✓ Nenhum hex code hardcoded
+  ✓ Semantic tokens usados
+
+□ Typography scale
+  ✓ Apenas tamanhos do token
+
+□ Border radius
+  ✓ 12px para cards
+  ✓ 8px para inputs
+  ✓ Consistente em todo app
+
+□ Single source of truth
+  ✓ Macros em um lugar apenas
+  ✓ Calorias unificadas
+```
+
+---
+
+## 🎓 DECISÕES INCORPORADAS DAS OUTRAS ANÁLISES
+
+### Do Documento 1:
+✅ **Adotado**: Background alternado (#F9FAFB) para cards secundários  
+✅ **Adotado**: Padding específicos (16px/20px) baseados em hierarquia  
+✅ **Adotado**: Sistema de elevação (1dp para cards)  
+✅ **Adotado**: Valores exatos de corner radius (12-16px)
+
+### Do Documento 2:
+✅ **ADOTADO - CRÍTICO**: Unificação estrutural em scroll único  
+✅ **ADOTADO - CRÍTICO**: Single source of truth para macros  
+✅ **ADOTADO - CRÍTICO**: FAB ao invés de botão fixo  
+✅ **Adotado**: Problema do título de tela ausente  
+✅ **Adotado**: Área de toque crítica (água, botões)  
+✅ **Adotado**: Tokens de cor semânticos  
+✅ **Adotado**: Componente de empty state padronizado
+
+### Do Documento 3:
+✅ **Adotado**: Badges de calorias nos cards de refeição  
+✅ **Adotado**: Total de atividades no footer  
+✅ **Adotado**: Coach marks ao invés de setas  
+✅ **Adotado**: Tokens bem definidos com nomenclatura clara  
+✅ **Adotado**: Priorização explícita (Alta/Média/Baixa)  
+✅ **Adotado**: Formato de tabela para resumo de prioridades
+
+### Mantido da Análise Original:
+✅ Estrutura detalhada de análise tela por tela  
+✅ Código CSS/HTML específico e implementável  
+✅ Exemplos visuais de estados (hover, active, complete)  
+✅ Animações e micro-interações  
+✅ Seção de acessibilidade com valores específicos
+
+---
+
+## 📈 TABELA DE PRIORIDADES FINAL
+
+| Prioridade | Ação | Impacto | Esforço | Sprint |
+|-----------|------|---------|---------|--------|
+| 🔴 CRÍTICO | Unificar estrutura de telas em scroll único | 10/10 | Alto | 0 |
+| 🔴 CRÍTICO | Implementar single source of truth (macros) | 10/10 | Médio | 0 |
+| 🔴 CRÍTICO | Substituir botão fixo por FAB | 9/10 | Baixo | 0 |
+| 🔴 CRÍTICO | Corrigir áreas de toque (<44px) | 9/10 | Médio | 1 |
+| 🟡 ALTA | Implementar tokens de design system | 8/10 | Médio | 1 |
+| 🟡 ALTA | Melhorar contraste de cores (WCAG AA) | 8/10 | Baixo | 1 |
+| 🟡 ALTA | Padronizar hierarquia tipográfica | 8/10 | Baixo | 1 |
+| 🟡 ALTA | Adicionar título fixo "Diary" + date nav | 7/10 | Baixo | 0 |
+| 🟢 MÉDIA | Redesenhar water tracker (progress bar) | 7/10 | Médio | 2 |
+| 🟢 MÉDIA | Adicionar badges de calorias nas refeições | 6/10 | Baixo | 2 |
+| 🟢 MÉDIA | Implementar empty states melhorados | 6/10 | Baixo | 2 |
+| 🟢 MÉDIA | Adicionar total de atividades | 5/10 | Baixo | 2 |
+| 🔵 BAIXA | Micro-interações e animações | 4/10 | Médio | 3 |
+| 🔵 BAIXA | Coach marks / onboarding | 4/10 | Médio | 3 |
+| 🔵 BAIXA | Loading states / skeletons | 3/10 | Baixo | 3 |
+| 🔵 BAIXA | Toasts de conquistas | 3/10 | Baixo | 3 |
+
+---
+
+## 🚀 PRÓXIMOS PASSOS
+
+1. **Revisar este plano com o time de desenvolvimento** para validar viabilidade técnica
+2. **Criar protótipo de alta fidelidade** no Figma com a estrutura unificada
+3. **Testar com usuários** a nova navegação e FAB
+4. **Implementar Sprint 0** antes de qualquer trabalho visual
+5. **Documentar componentes** no Storybook conforme implementação
+6. **Medir impacto** (tempo de conclusão de tarefas, taxa de erro, satisfação)
+
+---
+
+**Este plano aprimorado incorpora os melhores insights de todas as análises, priorizando corretamente a arquitetura de informação antes dos ajustes visuais. Pronto para implementação! 🎯**

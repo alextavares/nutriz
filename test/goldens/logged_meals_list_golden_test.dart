@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:nutritracker/presentation/daily_tracking_dashboard/widgets/logged_meals_list_widget.dart';
+import 'package:nutriz/presentation/daily_tracking_dashboard/widgets/logged_meals_list_widget.dart';
 import 'helpers.dart';
 
 void main() {

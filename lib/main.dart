@@ -4,7 +4,7 @@ import 'package:sizer/sizer.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/app_export.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'widgets/custom_error_widget.dart';
 

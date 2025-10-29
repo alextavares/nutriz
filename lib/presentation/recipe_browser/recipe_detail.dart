@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import '../../services/nutrition_storage.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
@@ -178,11 +179,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ],
                   ),
                   SizedBox(height: 2.h),
-                  Text('Modo de preparo',
+                  Text(AppLocalizations.of(context)!.prepMode,
                       style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 0.6.h),
                   Text(
-                    'Detalhes de preparo não disponíveis nesta versão (mock).',
+                    AppLocalizations.of(context)!.prepDetailsUnavailable,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color:
                               Theme.of(context).colorScheme.onSurfaceVariant,
@@ -207,7 +208,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   children: [
                     const CustomIconWidget(iconName: 'playlist_add'),
                     SizedBox(width: 2.w),
-                    Text('Adicionar ao diário',
+                    Text(AppLocalizations.of(context)!.addToDiary,
                         style: AppTheme.darkTheme.textTheme.bodyLarge
                             ?.copyWith(fontWeight: FontWeight.w600)),
                   ],
@@ -364,7 +365,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _confirmAdd,
                     icon: const Icon(Icons.playlist_add),
-                    label: const Text('Adicionar'),
+                    label: Text(AppLocalizations.of(context)!.navAdd),
                     style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),

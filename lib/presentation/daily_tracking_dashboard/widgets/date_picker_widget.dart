@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class DatePickerWidget extends StatelessWidget {
   final DateTime selectedDate;
@@ -57,7 +58,7 @@ class DatePickerWidget extends StatelessWidget {
                   ),
                   SizedBox(width: 2.w),
                   Text(
-                    _formatDate(selectedDate),
+                    _formatDate(context, selectedDate),
                     style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
                       color: AppTheme.textPrimary,
                       fontWeight: FontWeight.w500,
@@ -110,16 +111,16 @@ class DatePickerWidget extends StatelessWidget {
     }
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final selectedDay = DateTime(date.year, date.month, date.day);
 
     if (selectedDay == today) {
-      return 'Hoje';
+      return AppLocalizations.of(context)!.appbarToday;
     } else if (selectedDay == yesterday) {
-      return 'Ontem';
+      return AppLocalizations.of(context)!.yesterday;
     } else {
       return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     }

@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/app_export.dart';
 import '../../theme/design_tokens.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
+import '../../components/app_card.dart';
+import '../../components/animated_scale_button.dart';
+import '../../components/pill_button.dart';
 import './widgets/circular_progress_chart_widget.dart';
+import './widgets/dashboard_ring_v2.dart';
 import './widgets/macronutrient_progress_widget.dart';
+import './widgets/water_tracker_card_v2.dart';
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -21,12 +29,21 @@ import '../../services/notifications_service.dart';
 import '../../services/weekly_goal_service.dart';
 import '../../services/daily_goal_service.dart';
 import '../common/celebration_overlay.dart';
-import 'package:nutritracker/util/download_stub.dart'
-    if (dart.library.html) 'package:nutritracker/util/download_web.dart';
-import 'package:nutritracker/util/upload_stub.dart'
-    if (dart.library.html) 'package:nutritracker/util/upload_web.dart';
+import 'package:nutriz/util/download_stub.dart'
+    if (dart.library.html) 'package:nutriz/util/download_web.dart';
+import 'package:nutriz/util/upload_stub.dart'
+    if (dart.library.html) 'package:nutriz/util/upload_web.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../components/multi_action_fab.dart';
+import '../../components/pressable_widget.dart';
+import '../../components/animated_card.dart';
+import '../../core/app_strings.dart';
+import '../../components/coach_mark.dart';
+import '../../components/meal_item_skeleton.dart';
+import '../../core/haptic_helper.dart';
+import '../../core/toast_manager.dart';
 
 class DailyTrackingDashboard extends StatefulWidget {
   const DailyTrackingDashboard({super.key});
@@ -39,6 +56,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   DateTime _selectedDate = DateTime.now();
   bool _initArgsHandled = false;
   int _currentWeek = 32;
+  bool _showOnboarding = false;
+  int _onboardingStep = 0;
+  bool _isLoadingMeals = false;
   // Removed old day/week toggle state — we follow YAZIO-like date nav
   final Set<String> _expandedMealKeys = <String>{};
   List<Map<String, dynamic>> _todayEntries = [];
@@ -95,6 +115,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   static const double _kDelayLeft = 0.03; // ~27ms
   static const double _kDelayCenter = 0.06; // ~54ms
   static const double _kDelayRight = 0.09; // ~81ms
+  // Toggle to draw extremely visible macro bars for debugging screenshots
+  static const bool _kMacroBarsDebug = false;
 
   // Mock data for daily tracking
   final Map<String, dynamic> _dailyData = {
@@ -165,7 +187,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           if (_showNextMilestoneCaptions && next != null) ...[
             const SizedBox(width: 6),
             Text(
-              'próx: ${next}d',
+              AppLocalizations.of(context) !.streakNext(next), 
               style: textTheme.labelSmall?.copyWith(
                 color: colors.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
@@ -174,6 +196,22 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           ],
         ],
       ),
+    );
+  }
+
+  ButtonStyle _pillActionStyle(ColorScheme cs) {
+    return OutlinedButton.styleFrom(
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      minimumSize: const Size(0, 0),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      shape: const StadiumBorder(),
+      side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
+      foregroundColor: cs.primary,
+      textStyle: Theme.of(context)
+          .textTheme
+          .labelSmall
+          ?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 
@@ -206,8 +244,21 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   // Achievements are loaded dynamically from AchievementService
 
   String _localizedTodayLabel(BuildContext context) {
+    return AppLocalizations.of(context)!.appbarToday;
+  }
+
+  String _localizedMacroLabel(BuildContext context, String macroType) {
     final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-    return lang == 'pt' ? 'Hoje' : 'Today';
+    switch (macroType) {
+      case 'carbs':
+        return lang == 'pt' ? 'Carboidratos' : 'Carbs';
+      case 'protein':
+        return lang == 'pt' ? 'Proteínas' : 'Protein';
+      case 'fat':
+        return lang == 'pt' ? 'Gorduras' : 'Fat';
+      default:
+        return macroType;
+    }
   }
 
   @override
@@ -230,6 +281,27 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       _initArgsHandled = true;
     }
     _refreshGamificationRow();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seen = prefs.getBool('has_seen_diary_onboarding') ?? false;
+    if (!seen && mounted) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) setState(() => _showOnboarding = true);
+      });
+    }
+  }
+
+  Future<void> _dismissOnboarding() async {
+    if (_onboardingStep < 2) {
+      setState(() => _onboardingStep++);
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_diary_onboarding', true);
+    if (mounted) setState(() => _showOnboarding = false);
   }
 
   Future<void> _refreshGamificationRow() async {
@@ -369,7 +441,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.successGreen,
                       foregroundColor: AppTheme.textPrimary),
-                  child: const Text('Fechar'),
+                  child: Text(AppLocalizations.of(context)!.close),
                 ),
               )
             ],
@@ -401,7 +473,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           letterSpacing: -0.1,
         );
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenHorizontal,
+          vertical: AppSpacing.cardInternal),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
@@ -528,154 +602,200 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     }
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
-      child: Row(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenHorizontal,
+          vertical: AppSpacing.cardInternal),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date navigation moved to the top actions row
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_left,
-                size: _iconSize, color: cs.onSurfaceVariant),
-            onPressed: () async {
-              setState(() => _selectedDate =
-                  _selectedDate.subtract(const Duration(days: 1)));
-              await _loadToday();
-              await _loadWeek();
-            },
-          ),
-          Flexible(
-            child: GestureDetector(
-              onTap: _pickDate,
-              child: Builder(builder: (context) {
-                final DateTime t = DateTime.now();
-                final today = DateTime(t.year, t.month, t.day);
-                final sel = DateTime(
-                    _selectedDate.year, _selectedDate.month, _selectedDate.day);
-                final isToday = sel == today;
-                // Formatação adaptativa para garantir legibilidade
-                // Requisito: mostrar dia+semana, sem ano
-                String label;
-                if (isToday) {
-                  label = _localizedTodayLabel(context);
-                } else {
-                  final lang = Localizations.localeOf(context)
-                      .languageCode
-                      .toLowerCase();
-                  final wdPt = const [
-                    'Seg',
-                    'Ter',
-                    'Qua',
-                    'Qui',
-                    'Sex',
-                    'Sáb',
-                    'Dom'
-                  ];
-                  final wdEn = const [
-                    'Mon',
-                    'Tue',
-                    'Wed',
-                    'Thu',
-                    'Fri',
-                    'Sat',
-                    'Sun'
-                  ];
-                  final wd = (lang == 'pt' ? wdPt : wdEn)[sel.weekday - 1];
-                  final dd = sel.day.toString().padLeft(2, '0');
-                  final mm = sel.month.toString().padLeft(2, '0');
-                  label = ultraCompact ? '$dd/$mm' : '$wd $dd/$mm';
-                }
-                return FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: cs.onSurface,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                        ),
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                );
-              }),
-            ),
-          ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_right,
-                size: _iconSize, color: cs.onSurfaceVariant),
-            onPressed: () async {
-              setState(() =>
-                  _selectedDate = _selectedDate.add(const Duration(days: 1)));
-              await _loadToday();
-              await _loadWeek();
-            },
-          ),
-          const Spacer(),
-          // Ações principais (estatísticas pode ocultar em telas muito estreitas)
-          if (!ultraCompact)
-            action(Icons.query_stats_outlined, 'Estatísticas', () {
-              Navigator.pushNamed(context, AppRoutes.progressOverview);
-            }),
-          action(Icons.calendar_today_outlined, 'Calendário', _pickDate),
-          action(Icons.smart_toy_outlined, 'Coach de IA', () {
-            Navigator.pushNamed(context, AppRoutes.aiCoachChat);
-          }),
-          // Ações do dia (abre bottom sheet com duplicar, templates e visão de streaks)
-          action(
-              Icons.local_fire_department, 'Ações do dia', _openDayActionsMenu),
-          action(Icons.emoji_events_outlined, 'Conquistas', () {
-            Navigator.pushNamed(context, AppRoutes.achievements);
-          }),
-          if (!compact) ...[
-            action(Icons.accessibility_new_outlined, 'Valores corporais', () {
-              Navigator.pushNamed(context, AppRoutes.bodyMetrics);
-            }),
-            action(Icons.sticky_note_2_outlined, 'Anotações', () {
-              Navigator.pushNamed(context, AppRoutes.notes, arguments: {
-                'date': _selectedDate.toIso8601String(),
-              });
-            }),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: PopupMenuButton<String>(
-                tooltip: 'Mais ações',
-                position: PopupMenuPosition.under,
-                itemBuilder: (context) => [
-                  const PopupMenuItem<String>(
-                      value: 'metrics', child: Text('Valores corporais')),
-                  const PopupMenuItem<String>(
-                      value: 'notes', child: Text('Anotações')),
-                  if (ultraCompact)
-                    const PopupMenuItem<String>(
-                        value: 'stats', child: Text('Estatísticas')),
-                  const PopupMenuItem<String>(
-                      value: 'coach', child: Text('Coach de IA')),
-                ],
-                onSelected: (v) {
-                  switch (v) {
-                    case 'metrics':
-                      Navigator.pushNamed(context, AppRoutes.bodyMetrics);
-                      break;
-                    case 'notes':
-                      Navigator.pushNamed(context, AppRoutes.notes, arguments: {
-                        'date': _selectedDate.toIso8601String(),
-                      });
-                      break;
-                    case 'stats':
-                      Navigator.pushNamed(context, AppRoutes.progressOverview);
-                      break;
-                    case 'coach':
-                      Navigator.pushNamed(context, AppRoutes.aiCoachChat);
-                      break;
-                  }
+          // First row: Date navigation and actions
+          Row(
+            children: [
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.chevron_left,
+                    size: _iconSize, color: cs.onSurfaceVariant),
+                onPressed: () async {
+                  setState(() => _selectedDate =
+                      _selectedDate.subtract(const Duration(days: 1)));
+                  await _loadToday();
+                  await _loadWeek();
                 },
-                icon: Icon(Icons.more_vert, size: _iconSize, color: iconColor),
               ),
-            ),
-          ],
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.chevron_right,
+                    size: _iconSize, color: cs.onSurfaceVariant),
+                onPressed: () async {
+                  setState(() =>
+                      _selectedDate = _selectedDate.add(const Duration(days: 1)));
+                  await _loadToday();
+                  await _loadWeek();
+                },
+              ),
+              const Spacer(),
+              // Ações principais - apenas as mais importantes visíveis
+              if (w >= 400) ...[
+                action(Icons.query_stats_outlined, AppLocalizations.of(context)!.statistics, () {
+                  Navigator.pushNamed(context, AppRoutes.progressOverview);
+                }),
+                action(Icons.calendar_today_outlined, AppLocalizations.of(context)!.appbarSelectDate, _pickDate),
+              ] else ...[
+                action(Icons.calendar_today_outlined, AppLocalizations.of(context)!.appbarSelectDate, _pickDate),
+              ],
+              if (w >= 420) ...[
+                action(Icons.local_fire_department, AppLocalizations.of(context)!.dayActions, _openDayActionsMenu),
+              ],
+              // Menu dropdown com ações secundárias - sempre visível
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: PopupMenuButton<String>(
+                  tooltip: AppLocalizations.of(context)!.moreActions,
+                  position: PopupMenuPosition.under,
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                        value: 'achievements', child: Text(AppLocalizations.of(context)!.achievementsTitle)),
+                    PopupMenuItem<String>(
+                        value: 'metrics', child: Text(AppLocalizations.of(context)!.bodyMetrics)),
+                    PopupMenuItem<String>(
+                        value: 'notes', child: Text(AppLocalizations.of(context)!.notesTitle)),
+                    if (w < 400)
+                      PopupMenuItem<String>(
+                          value: 'stats', child: Text(AppLocalizations.of(context)!.statistics)),
+                    PopupMenuItem<String>(
+                        value: 'coach', child: Text(AppLocalizations.of(context)!.navCoach)),
+                    if (w < 420)
+                      PopupMenuItem<String>(
+                          value: 'actions', child: Text(AppLocalizations.of(context)!.dayActions)),
+                  ],
+                  onSelected: (v) {
+                    switch (v) {
+                      case 'achievements':
+                        Navigator.pushNamed(context, AppRoutes.achievements);
+                        break;
+                      case 'metrics':
+                        Navigator.pushNamed(context, AppRoutes.bodyMetrics);
+                        break;
+                      case 'notes':
+                        Navigator.pushNamed(context, AppRoutes.notes, arguments: {
+                          'date': _selectedDate.toIso8601String(),
+                        });
+                        break;
+                      case 'stats':
+                        Navigator.pushNamed(context, AppRoutes.progressOverview);
+                        break;
+                      case 'coach':
+                        Navigator.pushNamed(context, AppRoutes.aiCoachChat);
+                        break;
+                      case 'actions':
+                        _openDayActionsMenu();
+                        break;
+                    }
+                  },
+                  icon: Icon(Icons.more_vert, size: _iconSize, color: iconColor),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Second row: Today, Week, Summary/Details
+          Builder(builder: (context) {
+            final DateTime t = DateTime.now();
+            final today = DateTime(t.year, t.month, t.day);
+            final sel = DateTime(
+                _selectedDate.year, _selectedDate.month, _selectedDate.day);
+            final isToday = sel == today;
+            final weekNumber = _computeIsoWeekNumber(sel);
+            final lang = Localizations.localeOf(context)
+                .languageCode
+                .toLowerCase();
+
+            String label;
+            if (isToday) {
+              label = _localizedTodayLabel(context);
+            } else {
+              final wdPt = const [
+                'Seg',
+                'Ter',
+                'Qua',
+                'Qui',
+                'Sex',
+                'Sáb',
+                'Dom'
+              ];
+              final wdEn = const [
+                'Mon',
+                'Tue',
+                'Wed',
+                'Thu',
+                'Fri',
+                'Sat',
+                'Sun'
+              ];
+              final wd = (lang == 'pt' ? wdPt : wdEn)[sel.weekday - 1];
+              final dd = sel.day.toString().padLeft(2, '0');
+              final mm = sel.month.toString().padLeft(2, '0');
+              label = '$wd $dd/$mm';
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // "Today" text - larger size like YAZIO
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 28,
+                        letterSpacing: -0.5,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.visible,
+                ),
+                const SizedBox(height: 4),
+                // "Week 158" text
+                Text(
+                  '${AppLocalizations.of(context)!.dashboardWeek} $weekNumber',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                // "Summary" with "Details" link
+                Row(
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.dashboardSummary,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: cs.onSurface,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to details page
+                        Navigator.pushNamed(context, AppRoutes.progressOverview);
+                      },
+                      child: Text(
+                        AppLocalizations.of(context)!.dashboardDetails,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: cs.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -754,7 +874,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       );
     }
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
       child: Row(children: items),
     );
   }
@@ -963,132 +1084,150 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   }
 
   Widget _overallMacrosRow(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final double fsLabel = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
-    final double fsValue = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
-    final double barH = w < 360 ? 3 : 4;
-    final double vspace = w < 360 ? 4 : 6;
-
-    Widget cell(String label, int consumed, int total, Color color) {
-      final ratio = total <= 0 ? 0.0 : (consumed / total).clamp(0.0, 1.0);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                  fontSize: fsLabel,
-                ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: vspace),
-          // Custom mini progress bar with a dot (YAZIO-like),
-          // always visible even at 0%.
-          LayoutBuilder(builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final dotSize = (barH + 3).clamp(4, 8).toDouble();
-            final trackColor = Theme.of(context)
-                .colorScheme
-                .outlineVariant
-                .withValues(alpha: 0.35);
-            final progressW = (width * ratio).clamp(0.0, width);
-            final dotX = (width * ratio).clamp(0.0, width - dotSize);
-            return SizedBox(
-              height: barH + 6,
-              child: Stack(
-                children: [
-                  // Track
-                  Positioned.fill(
-                    top: 3,
-                    bottom: 3,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: trackColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  // Fill
-                  Positioned(
-                    left: 0,
-                    top: 3,
-                    bottom: 3,
-                    child: Container(
-                      width: progressW,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  // Dot indicator (always visible)
-                  Positioned(
-                    left: dotX,
-                    top: (barH + 6 - dotSize) / 2,
-                    child: Container(
-                      width: dotSize,
-                      height: dotSize,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.35),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-          SizedBox(height: vspace),
-          Text(
-            '${consumed}/${total} g',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  fontSize: fsValue,
-                ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      );
-    }
-
-    final carbsC =
-        (_dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ??
-            0);
+    // Summary macros in stacked rows with thick progress bars
+    final carbsC = (_dailyData["macronutrients"]["carbohydrates"]["consumed"]
+            as int? ??
+        0);
     final carbsT =
         (_dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 0);
     final protC =
         (_dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0);
     final protT =
         (_dailyData["macronutrients"]["proteins"]["total"] as int? ?? 0);
-    final fatC =
-        (_dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0);
-    final fatT = (_dailyData["macronutrients"]["fats"]["total"] as int? ?? 0);
+    final fatC = (_dailyData["macronutrients"]["fats"]["consumed"] as int? ??
+        0);
+    final fatT =
+        (_dailyData["macronutrients"]["fats"]["total"] as int? ?? 0);
 
-    final double hgap = w < 360 ? 8 : 12;
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-            child: cell('Carboidratos', carbsC, carbsT, AppTheme.warningAmber)),
-        SizedBox(width: hgap),
-        Expanded(child: cell('Proteína', protC, protT, AppTheme.successGreen)),
-        SizedBox(width: hgap),
-        Expanded(child: cell('Gordura', fatC, fatT, AppTheme.activeBlue)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              AppLocalizations.of(context)?.macronutrients ?? 'Macros',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            OutlinedButton.icon(
+              onPressed: _openEditMacroGoalsDialog,
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: Text(AppLocalizations.of(context)?.goals ?? 'Goals'),
+              style: _pillActionStyle(Theme.of(context).colorScheme),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _buildMacroRow(
+          name: _localizedMacroLabel(context, 'carbs'),
+          color: AppColors.macroCarb,
+          consumed: carbsC.toDouble(),
+          goal: carbsT.toDouble(),
+        ),
+        const SizedBox(height: 16),
+        _buildMacroRow(
+          name: _localizedMacroLabel(context, 'protein'),
+          color: AppColors.macroProtein,
+          consumed: protC.toDouble(),
+          goal: protT.toDouble(),
+        ),
+        const SizedBox(height: 16),
+        _buildMacroRow(
+          name: _localizedMacroLabel(context, 'fat'),
+          color: AppColors.macroFat,
+          consumed: fatC.toDouble(),
+          goal: fatT.toDouble(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMacroRow({
+    required String name,
+    required Color color,
+    required double consumed,
+    required double goal,
+  }) {
+    final percentage = goal > 0 ? (consumed / goal).clamp(0.0, 1.0) : 0.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              name,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const Spacer(),
+            RichText(
+              text: TextSpan(
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                children: [
+                  TextSpan(text: consumed.toInt().toString()),
+                  TextSpan(
+                    text: '/${goal.toInt()} g',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w400,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (_kMacroBarsDebug)
+          // Loud, highly visible debug bars to confirm rendering on screenshots
+          Container(
+            height: 20,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.red,
+              border: Border.all(color: Colors.black, width: 2),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: const LinearProgressIndicator(
+                value: 0.5,
+                minHeight: 20,
+                backgroundColor: Colors.yellow,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            ),
+          )
+        else
+          Container(
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.gray200,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: percentage,
+                minHeight: 16,
+                backgroundColor: Colors.transparent,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -1161,7 +1300,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           ' • Romper: ${two(_eatStartH!)}:${two(_eatStartM!)} • Iniciar: ${two(_eatStopH!)}:${two(_eatStopM!)}';
     }
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
       child: Container(
         padding: EdgeInsets.symmetric(
             horizontal: 12, vertical: _bannerCollapsed ? 8 : 10),
@@ -1229,7 +1369,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       if (!mounted) return;
                       setState(() => _bannerDismissedOn = todayKey);
                     },
-                    child: const Text('Dispensar hoje'),
+                    child: Text(AppLocalizations.of(context)!.dismissToday),
                   ),
                 ],
               ),
@@ -1369,9 +1509,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         ),
                         child: const Text('Gerenciar'),
                       ),
-                    ],
-                  );
-                }),
+                      ],
+                    );
+                  }),
               if (!_bannerCollapsed) const SizedBox(height: 6),
               if (!_bannerCollapsed)
                 Row(
@@ -1451,6 +1591,24 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   }
 
   Widget _buildPerMealProgressSection() {
+    if (_isLoadingMeals) {
+      return AppCard(
+        margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenHorizontal),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            MealItemSkeleton(),
+            SizedBox(height: 8),
+            MealItemSkeleton(),
+            SizedBox(height: 8),
+            MealItemSkeleton(),
+            SizedBox(height: 8),
+            MealItemSkeleton(),
+          ],
+        ),
+      );
+    }
     List<Map<String, dynamic>> _mealPreview(String mealKey, int maxItems) {
       final entries = _todayEntries
           .where((e) => (e['mealTime'] as String?) == mealKey)
@@ -1521,61 +1679,65 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: _openMealDetails,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8), // Add vertical padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Row(
                 children: [
                   Builder(builder: (context) {
                     final ic = barColorFor(mealKey);
                     return CircleAvatar(
-                      radius: 16,
+                      radius: 24, // Increased from 18 to 24
                       backgroundColor: ic.withValues(alpha: 0.12),
                       child: Icon(
                         mealIconFor(mealKey),
                         color: ic,
-                        size: 18,
+                        size: 28, // Increased from 20 to 28
                       ),
                     );
                   }),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 16), // Increased from 12 to 16
                   Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 17, // Increased size
+                              ),
+                        ),
+                        const SizedBox(height: 4), // Increased from 2 to 4
+                        Text(
+                          '$value / $goal Cal',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 15, // Increased size
+                              ),
+                        ),
+                      ],
                     ),
                   ),
-                  Builder(
-                    builder: (context) {
-                      final bool over = goal > 0 && value > goal;
-                      final Color kcalColor = over
-                          ? AppTheme.errorRed
-                          : Theme.of(context).colorScheme.onSurfaceVariant;
-                      return Text(
-                        '$value/$goal kcal',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: kcalColor,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
-                            ),
-                      );
+                  const SizedBox(width: 12),
+                  PressableWidget(
+                    scale: 0.92,
+                    onPressed: () {
+                      HapticHelper.medium();
+                      _goToLoggingForMeal(mealKey);
                     },
-                  ),
-                  const SizedBox(width: 6),
-                  SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Material(
-                      color: AppTheme.activeBlue,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: () => _goToLoggingForMeal(mealKey),
+                    child: SizedBox(
+                      width: 44, // Increased from 40 to 44
+                      height: 44, // Increased from 40 to 44
+                      child: Material(
+                        color: AppTheme.activeBlue,
+                        shape: const CircleBorder(),
                         child: const Icon(Icons.add,
-                            size: 18, color: Colors.white),
+                            size: 24, color: Colors.white), // Increased from 22 to 24
                       ),
                     ),
                   ),
@@ -1652,10 +1814,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         child: Text(expanded ? 'Mostrar menos' : 'Ver todos'),
                       ),
                     ),
-                  SizedBox(height: 0.8.h),
+                  SizedBox(height: 2.4.h), // Increased spacing between meals (like YAZIO)
                 ];
               }()),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -1663,24 +1826,35 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final lang = Localizations.localeOf(context).languageCode.toLowerCase();
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 2.4.w),
+      margin:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+      padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
         boxShadow: const [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // YAZIO-like: no section header; list meals directly
-          SizedBox(height: 0.6.h),
-          row('Café da manhã', 'breakfast'),
-          row('Almoço', 'lunch'),
-          row('Jantar', 'dinner'),
-          row('Lanches', 'snack'),
+          // Add "Nutrition" header like YAZIO
+          Text(
+            AppLocalizations.of(context)!.dashboardNutrition,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          row(AppLocalizations.of(context)!.mealBreakfast, 'breakfast'),
+          row(AppLocalizations.of(context)!.mealLunch, 'lunch'),
+          row(AppLocalizations.of(context)!.mealDinner, 'dinner'),
+          row(AppLocalizations.of(context)!.mealSnack, 'snack'),
         ],
       ),
     );
@@ -1726,74 +1900,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
-  // Water cups row (YAZIO-like): 250 ml per cup, clickable
-  Widget _waterCupsRow(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const int cupSize = 250;
-    final int goal = (_dailyData["waterGoalMl"] as int);
-    final int current = (_dailyData["waterMl"] as int);
-    // UIv3: use fixed 8 cups for a consistent look (YAZIO-like)
-    const int totalCups = 8;
-    final int filled = (current / cupSize).floor().clamp(0, totalCups);
-
-    List<Widget> cups = [];
-    for (int i = 0; i < totalCups; i++) {
-      final bool isFilled = i < filled;
-      cups.add(GestureDetector(
-        onTap: () async {
-          // Tapping a cup sets to that count (i+1)
-          final targetMl = (i + 1) * cupSize;
-          final next = await NutritionStorage.addWaterMl(
-              _selectedDate, targetMl - current);
-          if (!mounted) return;
-          setState(() => _dailyData["waterMl"] = next);
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 0.8.w, vertical: 0.4.h),
-          child: Icon(
-            isFilled ? Icons.water_drop : Icons.water_drop_outlined,
-            size: 18,
-            color: isFilled
-                ? cs.primary.withValues(alpha: 0.92)
-                : cs.onSurfaceVariant.withValues(alpha: 0.65),
-          ),
-        ),
-      ));
-    }
-
-    return Row(
-      children: [
-        OutlinedButton(
-          onPressed: _removeWater,
-          style: OutlinedButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(6),
-            side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
-            foregroundColor: cs.primary,
-          ),
-          child: const Icon(Icons.remove, size: 16),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: cups),
-          ),
-        ),
-        OutlinedButton(
-          onPressed: _addWater,
-          style: OutlinedButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(6),
-            side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
-            foregroundColor: cs.primary,
-          ),
-          child: const Icon(Icons.add, size: 16),
-        ),
-      ],
-    );
-  }
+  // _waterCupsRow removed (replaced by horizontal bar + quick pill actions)
 
   // _editEntry: ver implementação abaixo (com duplicar e seleção de período)
 
@@ -1861,10 +1968,66 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       _loadWeek();
     }
 
+    void _goToday() {
+      final t = DateTime.now();
+      setState(() => _selectedDate = DateTime(t.year, t.month, t.day));
+      _loadToday();
+      _loadWeek();
+    }
+
     // Removed unused local helpers: _goToday, _openSearch
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          tooltip: AppLocalizations.of(context)?.appbarPrevDay ?? 'Previous day',
+          icon: const Icon(Icons.chevron_left),
+          onPressed: _prevDay,
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Diário',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              (() {
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                final selected =
+                    DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+                if (selected == today) {
+                  return AppLocalizations.of(context)?.appbarToday ?? 'Hoje';
+                }
+                return _fmtDate(_selectedDate);
+              })(),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: _goToday,
+            child: Text(AppLocalizations.of(context)?.appbarToday ?? 'Hoje'),
+          ),
+          IconButton(
+            tooltip: 'Next day',
+            icon: const Icon(Icons.chevron_right),
+            onPressed: _nextDay,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refreshData,
@@ -1875,9 +2038,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top actions (icons)
-                _topActionsRow(context),
-                SizedBox(height: 0.6.h),
+                // Header actions moved to AppBar (sticky). Keep banner below.
                 // Show fasting banner prominently below header/top actions
                 _fastingMuteBanner(context),
                 SizedBox(height: 0.6.h),
@@ -1887,12 +2048,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   final cs = Theme.of(context).colorScheme;
                   return Container(
                     width: double.infinity,
-                    margin: EdgeInsets.symmetric(horizontal: 4.w),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 1.0.h, horizontal: 4.w),
+                    // Reduce outer horizontal margin to widen the ring card on phones
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.all(AppSpacing.cardPadding),
                     decoration: BoxDecoration(
                       color: cs.surface,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.cardRadius),
                       border: Border.all(
                           color: cs.outlineVariant.withValues(alpha: 0.2)),
                       boxShadow: const [],
@@ -1904,14 +2067,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         const SizedBox.shrink(),
                         // Chip "Semana N" removido (YAZIO-like)
                         SizedBox(height: 0.2.h),
-                        CircularProgressChartWidget(
+                        // New ring per spec (provider-based, custom painter)
+                        DashboardRingV2(
                           consumedCalories: _dailyData["consumedCalories"],
-                          remainingCalories: remainingCalories +
-                              ((_dailyData["spentCalories"] as int?) ?? 0),
                           spentCalories: _dailyData["spentCalories"],
                           totalCalories: _dailyData["totalCalories"],
                           onTap: _showCalorieBreakdown,
-                          waterMl: _dailyData["waterMl"] as int,
                         ),
 
                         // Removed equation card under ring to match YAZIO (no text under the ring)
@@ -1932,12 +2093,33 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 const SizedBox.shrink(),
 
                 // Per-meal progress (kcal and macros) — aligns with YAZIO cards
-                SizedBox(height: 1.6.h),
+                const SizedBox(height: AppSpacing.md),
+
                 _buildPerMealProgressSection(),
-                SizedBox(height: 1.2.h),
-                // Thin divider between meals and water
+                const SizedBox(height: AppSpacing.md),
+                // Water tracker moved below Nutrition (under Snacks)
+                Builder(builder: (context) {
+                  return AnimatedCard(
+                    delay: 150,
+                    child: WaterTrackerCardV2(
+                      currentMl: _dailyData["waterMl"] as int,
+                      goalMl: _dailyData["waterGoalMl"] as int,
+                      onEditGoal: _openEditWaterGoalDialog,
+                      onChange: (delta) async {
+                        final ml = await NutritionStorage.addWaterMl(_selectedDate, delta);
+                        if (!mounted) return ml;
+                        setState(() => _dailyData["waterMl"] = ml);
+                        _updateHydrationAchievements();
+                        return ml;
+                      },
+                    ),
+                  );
+                }),
+                const SizedBox(height: AppSpacing.md),
+                // Thin divider after water card
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenHorizontal),
                   child: Divider(
                     height: 1,
                     thickness: 1,
@@ -1947,18 +2129,20 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         .withValues(alpha: 0.25),
                   ),
                 ),
-                SizedBox(height: 1.2.h),
-
-                // Water progress
-                Builder(builder: (context) {
+                const SizedBox(height: AppSpacing.md),
+                // [REMOVED] Legacy water progress card replaced by WaterTrackerCardV2
+                /*Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
-                  return Container(
-                    margin: EdgeInsets.symmetric(horizontal: 4.w),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 3.2.w, vertical: 1.4.w),
+                  return AnimatedCard(
+                    delay: 200,
+                    child: Container(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenHorizontal),
+                    padding: const EdgeInsets.all(AppSpacing.cardPadding),
                     decoration: BoxDecoration(
                       color: cs.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.cardRadius),
                       border: Border.all(
                           color: cs.outlineVariant.withValues(alpha: 0.2)),
                       boxShadow: const [],
@@ -1969,13 +2153,15 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Icon(Icons.water_drop_outlined,
                                     color: cs.primary, size: 18),
-                                const SizedBox(width: 8),
                                 Text(
-                                  'Água',
+                                  AppLocalizations.of(context)!.water,
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium
@@ -1984,7 +2170,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         fontWeight: FontWeight.w600,
                                       ),
                                 ),
-                                const SizedBox(width: 10),
                                 if (_hydrationStreak > 0)
                                   Builder(builder: (context) {
                                     final w = MediaQuery.of(context).size.width;
@@ -2016,7 +2201,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   }),
                               ],
                             ),
-                            Row(
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 TweenAnimationBuilder<double>(
                                   key: ValueKey(_dailyData["waterMl"] as int?),
@@ -2064,9 +2252,29 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     );
                                   },
                                 ),
-                                const SizedBox(width: 8),
+                                Builder(builder: (context) {
+                                  final int current = _dailyData["waterMl"] as int;
+                                  final int goal = _dailyData["waterGoalMl"] as int;
+                                  final int cups = (current / 250).floor();
+                                  final int totalCups = (goal / 250).floor();
+                                  return Text(
+                                    '$cups/$totalCups cups',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  );
+                                }),
                                 OutlinedButton.icon(
-                                  onPressed: ((_dailyData["waterMl"] as int? ?? 0) >= (_dailyData["waterGoalMl"] as int? ?? 0)) ? null : _addWater,
+                                  onPressed: ((_dailyData["waterMl"] as int? ??
+                                              0) >=
+                                          (_dailyData["waterGoalMl"] as int? ??
+                                              0))
+                                      ? null
+                                      : _addWater,
                                   icon: const Icon(Icons.add, size: 16),
                                   label: const Text('+250 ml'),
                                   style: OutlinedButton.styleFrom(
@@ -2080,7 +2288,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         MaterialTapTargetSize.shrinkWrap,
                                     shape: const StadiumBorder(),
                                     side: BorderSide(
-                                        color: cs.primary.withValues(alpha: 0.5)),
+                                        color:
+                                            cs.primary.withValues(alpha: 0.5)),
                                     foregroundColor: cs.primary,
                                     textStyle: Theme.of(context)
                                         .textTheme
@@ -2088,7 +2297,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
                                 ),
-                                SizedBox(width: 1.2.w),
                                 IconButton(
                                   tooltip: 'Editar meta',
                                   icon: Icon(Icons.edit_outlined,
@@ -2106,7 +2314,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           final int current = (_dailyData["waterMl"] as int);
                           final double ratio =
                               goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
-                          final int remain = (goal - current).clamp(0, goal);
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -2121,7 +2328,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     if (ratio <= 0) {
                                       return LinearProgressIndicator(
                                         value: 0,
-                                        minHeight: 6,
+                                        minHeight: 12,
                                         backgroundColor: cs.outlineVariant
                                             .withValues(alpha: 0.25),
                                         color: cs.primary,
@@ -2131,7 +2338,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     final eased = _kAnimCurve.transform(p);
                                     return LinearProgressIndicator(
                                       value: eased * ratio,
-                                      minHeight: 4,
+                                      minHeight: 12,
                                       backgroundColor: cs.outlineVariant
                                           .withValues(alpha: 0.20),
                                       color: cs.primary,
@@ -2139,87 +2346,68 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: remain > 0
-                                        ? TweenAnimationBuilder<double>(
-                                            key: ValueKey(remain),
-                                            tween: Tween<double>(
-                                                begin: 0,
-                                                end: remain.toDouble()),
-                                            duration: _kAnimDuration,
-                                            curve: Curves.linear,
-                                            builder: (context, v, _) {
-                                              final p =
-                                                  (v / remain).clamp(0.0, 1.0);
-                                              final delayed = p <= _kDelayCenter
-                                                  ? 0.0
-                                                  : (p - _kDelayCenter) /
-                                                      (1.0 - _kDelayCenter);
-                                              final eased = _kAnimCurve
-                                                  .transform(delayed);
-                                              final shown =
-                                                  (remain * eased).toInt();
-                                              return Text(
-                                                'Faltam ${shown} ml para a meta',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      color: cs.primary,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              );
-                                            },
-                                          )
-                                        : Text(
-                                            'Meta de água alcançada! 🎉',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  color: cs.primary,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton(
-                                    onPressed: remain > 0 ? _addWater : null,
-                                    style: OutlinedButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 2),
-                                      side: BorderSide(
-                                          color: cs.primary
-                                              .withValues(alpha: 0.6)),
-                                      foregroundColor: cs.primary,
-                                    ),
-                                    child: const Text('+250 ml'),
-                                  ),
-                                ],
-                              ),
                             ],
                           );
                         }),
-                        const SizedBox(height: 8),
-                        _waterCupsRow(context),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: PillButton(
+                                label: '1 Cup',
+                                backgroundColor: AppColors.primary50,
+                                color: AppColors.primary600,
+                                onTap: () async {
+                                  final ml = await NutritionStorage.addWaterMl(
+                                      _selectedDate, 250);
+                                  if (!mounted) return;
+                                  setState(() => _dailyData["waterMl"] = ml);
+                                  _updateHydrationAchievements();
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: PillButton(
+                                label: '2 Cups',
+                                backgroundColor: AppColors.primary50,
+                                color: AppColors.primary600,
+                                onTap: () async {
+                                  final ml = await NutritionStorage.addWaterMl(
+                                      _selectedDate, 500);
+                                  if (!mounted) return;
+                                  setState(() => _dailyData["waterMl"] = ml);
+                                  _updateHydrationAchievements();
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: PillButton(
+                                label: '3 Cups',
+                                backgroundColor: AppColors.primary50,
+                                color: AppColors.primary600,
+                                onTap: () async {
+                                  final ml = await NutritionStorage.addWaterMl(
+                                      _selectedDate, 750);
+                                  if (!mounted) return;
+                                  setState(() => _dailyData["waterMl"] = ml);
+                                  _updateHydrationAchievements();
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  );
-                }),
+                  ));
+                }),*/
 
                 // Thin divider between activities and notes
-                SizedBox(height: 1.2.h),
+                const SizedBox(height: AppSpacing.md),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenHorizontal),
                   child: Divider(
                     height: 1,
                     thickness: 1,
@@ -2229,137 +2417,132 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         .withValues(alpha: 0.25),
                   ),
                 ),
-                SizedBox(height: 1.2.h),
+                const SizedBox(height: AppSpacing.md),
 
                 // Notes card (link to Notes screen)
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
-                  return Container(
-                    margin: EdgeInsets.symmetric(horizontal: 4.w),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 3.2.w, vertical: 1.4.w),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: cs.outlineVariant.withValues(alpha: 0.2)),
-                    ),
+                  return AnimatedCard(
+                    delay: 300,
+                    child: FadeInWidget(
+                      delay: const Duration(milliseconds: 100),
+                      child: AppCard(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenHorizontal),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _sectionHeader(
-                          icon: Icons.sticky_note_2_outlined,
-                          iconColor: cs.primary,
-                          title: 'Anotações',
+                          icon: Icons.note_outlined,
+                          iconColor: AppIcons.standard(),
+                          title: AppLocalizations.of(context)!.notesTitle,
                           actions: [
-                            _circleActionBtn(
-                              bg: AppTheme.activeBlue,
-                              icon: Icons.open_in_new,
-                              onTap: () {
-                                Navigator.pushNamed(context, AppRoutes.notes,
-                                    arguments: {
-                                      'date': _selectedDate.toIso8601String(),
-                                    });
-                              },
-                            ),
-                            const SizedBox(width: 6),
-                            _circleActionBtn(
-                              bg: AppTheme.successGreen,
-                              icon: Icons.add,
-                              onTap: () {
-                                Navigator.pushNamed(context, AppRoutes.notes,
-                                    arguments: {
-                                      'date': _selectedDate.toIso8601String(),
-                                      'openEditor': true,
-                                    });
-                              },
+                            Semantics(
+                              label: AppLocalizations.of(context)!.addNote,
+                              button: true,
+                              hint: AppLocalizations.of(context)!.addNoteHint,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, AppRoutes.notes,
+                                      arguments: {
+                                        'date': _selectedDate.toIso8601String(),
+                                        'openEditor': true,
+                                      });
+                                },
+                                icon: Icon(Icons.add, size: AppIcons.sm),
+                                label: Text(AppLocalizations.of(context)!.navAdd),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  minimumSize: const Size(0, 36),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              FutureBuilder<List<Map<String, dynamic>>>(
-                                future: NotesStorage.getAll(),
-                                builder: (context, snap) {
-                                  final list = snap.data ?? const [];
-                                  // count notes for selected date
-                                  int countToday = 0;
-                                  final d = _selectedDate;
-                                  final today =
-                                      DateTime(d.year, d.month, d.day);
-                                  Map<String, dynamic>? last;
-                                  for (final n in list) {
-                                    final u = DateTime.tryParse(
-                                            (n['updatedAt'] ?? n['createdAt'])
-                                                    as String? ??
-                                                '') ??
-                                        DateTime(1970);
-                                    final dd = DateTime(u.year, u.month, u.day);
-                                    if (dd == today) {
-                                      countToday++;
-                                      if (last == null) {
-                                        last = n;
-                                      } else {
-                                        final lu = DateTime.tryParse(
-                                                (last['updatedAt'] ??
-                                                            last['createdAt'])
-                                                        as String? ??
-                                                    '') ??
-                                            DateTime(1970);
-                                        if (u.isAfter(lu)) last = n;
-                                      }
+                          children: [
+                            FutureBuilder<List<Map<String, dynamic>>>(
+                              future: NotesStorage.getAll(),
+                              builder: (context, snap) {
+                                final list = snap.data ?? const [];
+                                // count notes for selected date
+                                int countToday = 0;
+                                final d = _selectedDate;
+                                final today = DateTime(d.year, d.month, d.day);
+                                Map<String, dynamic>? last;
+                                for (final n in list) {
+                                  final u = DateTime.tryParse((n['updatedAt'] ??
+                                              n['createdAt']) as String? ??
+                                          '') ??
+                                      DateTime(1970);
+                                  final dd = DateTime(u.year, u.month, u.day);
+                                  if (dd == today) {
+                                    countToday++;
+                                    if (last == null) {
+                                      last = n;
+                                    } else {
+                                      final lu = DateTime.tryParse(
+                                              (last['updatedAt'] ??
+                                                          last['createdAt'])
+                                                      as String? ??
+                                                  '') ??
+                                          DateTime(1970);
+                                      if (u.isAfter(lu)) last = n;
                                     }
                                   }
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
+                                }
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      AppLocalizations.of(context)!.todayNotesCount(countToday),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                    if (last != null) ...[
+                                      const SizedBox(height: 2),
                                       Text(
-                                        'Hoje: $countToday anotação(ões)',
+                                        ((last['title'] as String?)
+                                                    ?.trim()
+                                                    .isNotEmpty ==
+                                                true)
+                                            ? (last['title'] as String)
+                                            : ((last['content'] as String?)
+                                                    ?.trim() ??
+                                                ''),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
                                             .textTheme
-                                            .bodySmall
+                                            .labelSmall
                                             ?.copyWith(
                                               color: cs.onSurfaceVariant,
-                                              fontWeight: FontWeight.w500,
                                             ),
                                       ),
-                                      if (last != null) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          ((last['title'] as String?)
-                                                      ?.trim()
-                                                      .isNotEmpty ==
-                                                  true)
-                                              ? (last['title'] as String)
-                                              : ((last['content'] as String?)
-                                                      ?.trim() ??
-                                                  ''),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelSmall
-                                              ?.copyWith(
-                                                color: cs.onSurfaceVariant,
-                                              ),
-                                        ),
-                                      ]
-                                    ],
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                                    ]
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                       ),
-                    );
+                    ),
+                  );
                 }),
 
                 // Body Metrics card (Valores corporais) — make it discoverable like YAZIO
-                SizedBox(height: 1.2.h),
+                const SizedBox(height: AppSpacing.md),
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
                   double? _bmi(Map<String, dynamic> m) {
@@ -2370,7 +2553,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     return w / (h * h);
                   }
 
-                  return FutureBuilder<Map<String, dynamic>>(
+                  return AnimatedCard(
+                    delay: 400,
+                    child: FutureBuilder<Map<String, dynamic>>(
                     future: BodyMetricsStorage.getForDate(_selectedDate),
                     builder: (context, snap) {
                       final m = snap.data ?? const {};
@@ -2379,16 +2564,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       final h = (m['heightCm'] as num?)?.toString();
                       final fat = (m['bodyFatPct'] as num?)?.toString();
                       final bmi = _bmi(m);
-                      return Container(
-                        margin: EdgeInsets.symmetric(horizontal: 4.w),
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 3.2.w, vertical: 1.4.w),
-                        decoration: BoxDecoration(
-                          color: cs.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: cs.outlineVariant.withValues(alpha: 0.2)),
-                        ),
+                      return FadeInWidget(
+                        delay: const Duration(milliseconds: 200),
+                        child: AppCard(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenHorizontal),
                         child: Row(
                           children: [
                             Expanded(
@@ -2396,35 +2576,32 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _sectionHeader(
-                                    icon: Icons.monitor_weight,
-                                    iconColor: context.semanticColors.premium,
-                                    title: 'Valores corporais',
+                                    icon: Icons.monitor_weight_outlined,
+                                    iconColor: AppIcons.standard(),
+                                    title: AppLocalizations.of(context)!.bodyMetrics,
                                     actions: [
-                                      _circleActionBtn(
-                                        bg: AppTheme.activeBlue,
-                                        icon: Icons.open_in_new,
-                                        onTap: () {
-                                          Navigator.pushNamed(
-                                              context, AppRoutes.bodyMetrics,
-                                              arguments: {
-                                                'date': _selectedDate
-                                                    .toIso8601String(),
-                                              });
-                                        },
-                                      ),
-                                      const SizedBox(width: 6),
-                                      _circleActionBtn(
-                                        bg: AppTheme.successGreen,
-                                        icon: Icons.add,
-                                        onTap: () {
-                                          Navigator.pushNamed(
-                                              context, AppRoutes.bodyMetrics,
-                                              arguments: {
-                                                'date': _selectedDate
-                                                    .toIso8601String(),
-                                                'openEditor': true,
-                                              });
-                                        },
+                                      Semantics(
+                                        label: AppLocalizations.of(context)!.addBodyMetrics,
+                                        button: true,
+                                        hint: 'Abre editor para registrar peso, altura, IMC e percentual de gordura',
+                                        child: OutlinedButton.icon(
+                                          onPressed: () {
+                                            Navigator.pushNamed(
+                                                context, AppRoutes.bodyMetrics,
+                                                arguments: {
+                                                  'date': _selectedDate
+                                                      .toIso8601String(),
+                                                  'openEditor': true,
+                                                });
+                                          },
+                                          icon: Icon(Icons.add, size: AppIcons.sm),
+                                          label: Text(AppLocalizations.of(context)!.navAdd),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 8),
+                                            minimumSize: const Size(0, 36),
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -2449,7 +2626,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     )
                                   else
                                     Text(
-                                      'Sem registro hoje — toque para registrar',
+                                      AppLocalizations.of(context)!.noEntryTodayTapToLog,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: Theme.of(context)
@@ -2466,15 +2643,18 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                             const SizedBox.shrink(),
                           ],
                         ),
+                      ),
                       );
                     },
+                  ),
                   );
                 }),
 
                 // Thin divider between water and activities
-                SizedBox(height: 1.2.h),
+                const SizedBox(height: AppSpacing.md),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenHorizontal),
                   child: Divider(
                     height: 1,
                     thickness: 1,
@@ -2484,41 +2664,30 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         .withValues(alpha: 0.25),
                   ),
                 ),
-                SizedBox(height: 1.2.h),
+                const SizedBox(height: AppSpacing.md),
 
                 // Exercise / Activities (simple)
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
                   final int spent = _dailyData["spentCalories"] as int? ?? 0;
-                  return Container(
-                    margin:
-                        EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 3.2.w, vertical: 1.6.w),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.successGreen.withValues(alpha: 0.10),
-                          cs.surface,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: cs.outlineVariant.withValues(alpha: 0.25)),
-                    ),
+                  return FadeInWidget(
+                    delay: const Duration(milliseconds: 300),
+                    child: AppCard(
+                    isHighlighted: false, // Mudado para false - melhor contraste com background claro
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenHorizontal,
+                        vertical: AppSpacing.md),
                     child: Stack(
                       children: [
-                        // Watermark icon
+                        // Watermark icon - aumentando opacity para melhor visibilidade
                         Positioned(
                           right: 6,
                           top: 6,
                           child: Icon(
-                            Icons.local_fire_department,
+                            Icons.fitness_center_outlined,
                             size: 42,
-                            color: context.semanticColors.success
-                                .withValues(alpha: 0.18),
+                            color: cs.primary
+                                .withValues(alpha: 0.08),
                           ),
                         ),
                         Row(
@@ -2526,11 +2695,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                           children: [
                             CircleAvatar(
                               radius: 18,
-                              backgroundColor: context.semanticColors.success
-                                  .withValues(alpha: 0.15),
+                              backgroundColor: cs.primary
+                                  .withValues(alpha: 0.12),
                               child: Icon(
-                                Icons.local_fire_department,
-                                color: context.semanticColors.success,
+                                Icons.fitness_center,
+                                color: cs.primary,
                                 size: 20,
                               ),
                             ),
@@ -2542,7 +2711,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                   Row(
                                     children: [
                                       Expanded(
-                                        child: Text('Atividades',
+                                        child: Text(AppLocalizations.of(context)!.activities,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodyLarge
@@ -2570,8 +2739,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                             backgroundColor: successColor
                                                 .withValues(alpha: 0.12),
                                             side: BorderSide(
-                                              color: successColor
-                                                  .withValues(alpha: 0.3),
+                                              color: successColor.withValues(
+                                                  alpha: 0.3),
                                             ),
                                             labelPadding: EdgeInsets.symmetric(
                                                 horizontal: padH,
@@ -2604,96 +2773,103 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                         children: [
                                           Row(
                                             children: [
-                                              TweenAnimationBuilder<double>(
-                                                key: ValueKey(spent),
-                                                tween: Tween(
-                                                    begin: 0.0,
-                                                    end: spent.toDouble()),
-                                                duration: _kAnimDuration,
-                                                curve: Curves.linear,
-                                                builder: (context, v, _) {
-                                                  if (spent <= 0) {
-                                                    return Text(
-                                                      '${_fmtInt(0)}/${_fmtInt(goal)} kcal',
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodyMedium
-                                                          ?.copyWith(
-                                                            color: AppTheme
-                                                                .successGreen,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                    );
-                                                  }
-                                                  final p = (v / spent)
-                                                      .clamp(0.0, 1.0);
-                                                  final delayed = p <=
-                                                          _kDelayLeft
-                                                      ? 0.0
-                                                      : (p - _kDelayLeft) /
-                                                          (1.0 - _kDelayLeft);
-                                                  final eased = _kAnimCurve
-                                                      .transform(delayed);
-                                                  final shown =
-                                                      (spent * eased).toInt();
-                                                  return Text(
-                                                    '${_fmtInt(shown)}/${_fmtInt(goal)} kcal',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium
-                                                        ?.copyWith(
-                                                          color: AppTheme
-                                                              .successGreen,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(width: 8),
-                                              if (remain > 0)
-                                                TweenAnimationBuilder<double>(
-                                                  key: ValueKey(remain),
-                                                  tween: Tween(
-                                                      begin: 0.0,
-                                                      end: remain.toDouble()),
-                                                  duration: _kAnimDuration,
-                                                  curve: Curves.linear,
-                                                  builder: (context, v, _) {
-                                                    final p = (v / remain)
-                                                        .clamp(0.0, 1.0);
-                                                    final delayed = p <=
-                                                            _kDelayCenter
-                                                        ? 0.0
-                                                        : (p - _kDelayCenter) /
-                                                            (1.0 -
-                                                                _kDelayCenter);
-                                                    final eased = _kAnimCurve
-                                                        .transform(delayed);
-                                                    final shown =
-                                                        (remain * eased)
-                                                            .toInt();
-                                                    return Text(
-                                                        'Faltam ${_fmtInt(shown)} kcal',
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .bodySmall
-                                                            ?.copyWith(
-                                                              color: cs
-                                                                  .onSurfaceVariant,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ));
-                                                  },
+                                              Expanded(
+                                                child: Wrap(
+                                                  spacing: 8,
+                                                  runSpacing: 4,
+                                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                                  children: [
+                                                    TweenAnimationBuilder<double>(
+                                                      key: ValueKey(spent),
+                                                      tween: Tween(
+                                                          begin: 0.0,
+                                                          end: spent.toDouble()),
+                                                      duration: _kAnimDuration,
+                                                      curve: Curves.linear,
+                                                      builder: (context, v, _) {
+                                                        if (spent <= 0) {
+                                                          return Text(
+                                                            '${_fmtInt(0)}/${_fmtInt(goal)} kcal',
+                                                            style: Theme.of(context)
+                                                                .textTheme
+                                                                .bodyMedium
+                                                                ?.copyWith(
+                                                                  color: context.semanticColors.success,
+                                                                  fontWeight:
+                                                                      FontWeight.w600,
+                                                                ),
+                                                          );
+                                                        }
+                                                        final p = (v / spent)
+                                                            .clamp(0.0, 1.0);
+                                                        final delayed = p <=
+                                                                _kDelayLeft
+                                                            ? 0.0
+                                                            : (p - _kDelayLeft) /
+                                                                (1.0 - _kDelayLeft);
+                                                        final eased = _kAnimCurve
+                                                            .transform(delayed);
+                                                        final shown =
+                                                            (spent * eased).toInt();
+                                                        return Text(
+                                                          '${_fmtInt(shown)}/${_fmtInt(goal)} kcal',
+                                                          style: Theme.of(context)
+                                                              .textTheme
+                                                              .bodyMedium
+                                                              ?.copyWith(
+                                                                color: context.semanticColors.success,
+                                                                fontWeight:
+                                                                    FontWeight.w600,
+                                                              ),
+                                                        );
+                                                      },
+                                                    ),
+                                                    if (remain > 0)
+                                                      TweenAnimationBuilder<double>(
+                                                        key: ValueKey(remain),
+                                                        tween: Tween(
+                                                            begin: 0.0,
+                                                            end: remain.toDouble()),
+                                                        duration: _kAnimDuration,
+                                                        curve: Curves.linear,
+                                                        builder: (context, v, _) {
+                                                          final p = (v / remain)
+                                                              .clamp(0.0, 1.0);
+                                                          final delayed = p <=
+                                                                  _kDelayCenter
+                                                              ? 0.0
+                                                              : (p - _kDelayCenter) /
+                                                                  (1.0 -
+                                                                      _kDelayCenter);
+                                                          final eased = _kAnimCurve
+                                                              .transform(delayed);
+                                                          final shown =
+                                                              (remain * eased)
+                                                                  .toInt();
+                                                          return Text(
+                                                              'Faltam ${_fmtInt(shown)} kcal',
+                                                              style: Theme.of(context)
+                                                                  .textTheme
+                                                                  .bodySmall
+                                                                  ?.copyWith(
+                                                                    color: cs
+                                                                        .onSurfaceVariant,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ));
+                                                        },
+                                                      ),
+                                                  ],
                                                 ),
-                                              const SizedBox(width: 6),
+                                              ),
                                               IconButton(
                                                 tooltip: 'Editar meta',
                                                 icon: Icon(Icons.edit_outlined,
                                                     size: 18,
                                                     color: cs.onSurfaceVariant),
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
                                                 onPressed: () =>
                                                     _openEditExerciseGoalDialog(
                                                         goal),
@@ -2941,34 +3117,34 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                               runSpacing: rspace,
                                               children: [
                                                 _quickActivityChip(
-                                                    'Caminhada 30m', () {
+                                                    AppLocalizations.of(context)!.walkingMinutes(30), () {
                                                   Navigator.pushNamed(context,
                                                       AppRoutes.exerciseLogging,
                                                       arguments: {
                                                         'date': _selectedDate
                                                             .toIso8601String(),
                                                         'activityName':
-                                                            'Caminhada',
+                                                            AppLocalizations.of(context)!.walking,
                                                         'minutes': 30,
                                                         'intensity': 1,
                                                       }).then(
                                                       (_) => _loadExercise());
                                                 }),
                                                 _quickActivityChip(
-                                                    'Corrida 20m', () {
+                                                    AppLocalizations.of(context)!.runningMinutes(20), () {
                                                   Navigator.pushNamed(context,
                                                       AppRoutes.exerciseLogging,
                                                       arguments: {
                                                         'date': _selectedDate
                                                             .toIso8601String(),
                                                         'activityName':
-                                                            'Corrida',
+                                                            AppLocalizations.of(context)!.running,
                                                         'minutes': 20,
                                                         'intensity': 2,
                                                       }).then(
                                                       (_) => _loadExercise());
                                                 }),
-                                                _quickActivityChip('Bike 30m',
+                                                _quickActivityChip(AppLocalizations.of(context)!.cyclingMinutes(30),
                                                     () {
                                                   Navigator.pushNamed(context,
                                                       AppRoutes.exerciseLogging,
@@ -2976,7 +3152,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                                         'date': _selectedDate
                                                             .toIso8601String(),
                                                         'activityName':
-                                                            'Ciclismo',
+                                                            AppLocalizations.of(context)!.cycling,
                                                         'minutes': 30,
                                                         'intensity': 1,
                                                       }).then(
@@ -2985,6 +3161,71 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                               ],
                                             );
                                           }),
+                                          if (_exerciseLogs.isNotEmpty) ...[
+                                            const SizedBox(height: 12),
+                                            Divider(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .outlineVariant
+                                                  .withValues(alpha: 0.2),
+                                              height: 1,
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Builder(builder: (context) {
+                                              final totalMinutes = _exerciseLogs
+                                                  .fold<int>(
+                                                      0,
+                                                      (sum, log) =>
+                                                          sum +
+                                                          (((log['minutes']
+                                                                      as num?)
+                                                                  ?.toInt() ??
+                                                              0)));
+                                              final totalKcal = _exerciseLogs
+                                                  .fold<int>(
+                                                      0,
+                                                      (sum, log) =>
+                                                          sum +
+                                                          (((log['kcal']
+                                                                      as num?)
+                                                                  ?.toInt() ??
+                                                              0)));
+                                              return Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    'Total Today',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: Theme.of(
+                                                                  context)
+                                                              .colorScheme
+                                                              .onSurfaceVariant,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                  ),
+                                                  Text(
+                                                    '$totalMinutes min • $totalKcal kcal',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          color: context
+                                                              .semanticColors
+                                                              .success,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                  ),
+                                                ],
+                                              );
+                                            }),
+                                          ],
                                         ],
                                       );
                                     },
@@ -3010,81 +3251,11 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         ),
                       ],
                     ),
-                  );
+                  ));
                 }),
 
-                // Macronutrient progress bars (compact)
-                Builder(builder: (context) {
-                  final cs = Theme.of(context).colorScheme;
-                  return Container(
-                    margin: EdgeInsets.symmetric(horizontal: 4.w),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 3.2.w, vertical: 2.4.w),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: cs.outlineVariant.withValues(alpha: 0.3)),
-                      boxShadow: const [],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Macronutrientes',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: cs.onSurface,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            OutlinedButton.icon(
-                              onPressed: _openEditMacroGoalsDialog,
-                              icon: const Icon(Icons.edit_outlined, size: 16),
-                              label: const Text('Metas'),
-                              style: _pillActionStyle(cs),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 1.2.h),
-                        MacronutrientProgressWidget(
-                          name: 'Carboidratos',
-                          consumed: (_dailyData["macronutrients"]
-                              ["carbohydrates"]["consumed"] as int),
-                          total: (_dailyData["macronutrients"]["carbohydrates"]
-                              ["total"] as int),
-                          color: AppTheme.warningAmber,
-                          onLongPress: () =>
-                              _showMacronutrientDetails('carbohydrates'),
-                        ),
-                        MacronutrientProgressWidget(
-                          name: 'Proteínas',
-                          consumed: (_dailyData["macronutrients"]["proteins"]
-                              ["consumed"] as int),
-                          total: (_dailyData["macronutrients"]["proteins"]
-                              ["total"] as int),
-                          color: AppTheme.successGreen,
-                          onLongPress: () =>
-                              _showMacronutrientDetails('proteins'),
-                        ),
-                        MacronutrientProgressWidget(
-                          name: 'Gorduras',
-                          consumed: (_dailyData["macronutrients"]["fats"]
-                              ["consumed"] as int),
-                          total: (_dailyData["macronutrients"]["fats"]["total"]
-                              as int),
-                          color: AppTheme.activeBlue,
-                          onLongPress: () => _showMacronutrientDetails('fats'),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                // Macronutrient progress bars removed to avoid duplication (summary already shows macros)
+                const SizedBox.shrink(),
 
                 // YAZIO-like: omit weekly progress and floating actions from top area
                 SizedBox(height: 0.6.h),
@@ -3093,9 +3264,85 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           ),
         ),
       ),
-      // FAB removido para layout mais próximo ao YAZIO
-      floatingActionButton: null,
+      // Multi-Action FAB - substitui botão fixo "Add Meal"
+      floatingActionButton: MultiActionFab(
+        onAddMeal: _showMealSelectionDialog,
+        onAddWater: () async {
+          final ml = await NutritionStorage.addWaterMl(_selectedDate, 250);
+          if (!mounted) return;
+          setState(() {
+            _dailyData["waterMl"] = ml;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Água registrada: +250ml (total ' + ml.toString() + 'ml)'),
+              backgroundColor: AppTheme.successGreen,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        onAddActivity: () async {
+          await Navigator.pushNamed(context, AppRoutes.exerciseLogging,
+              arguments: {'date': _selectedDate.toIso8601String()});
+          if (!mounted) return;
+          await _loadExercise();
+          await _loadToday();
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+
+    return Stack(
+      children: [
+        scaffold,
+        if (_showOnboarding) _buildOnboardingOverlay(),
+      ],
+    );
+  }
+
+  Widget _buildOnboardingOverlay() {
+    return Stack(
+      children: [
+        Container(color: Colors.black.withOpacity(0.6)),
+        if (_onboardingStep == 0)
+          CoachMark(
+            message:
+                'Use este botão para adicionar refeições, água e atividades rapidamente.',
+            buttonText: 'Próximo',
+            onDismiss: _dismissOnboarding,
+            targetPosition:
+                Offset(0, MediaQuery.of(context).size.height - 220),
+            direction: CoachMarkDirection.top,
+          ),
+        if (_onboardingStep == 1)
+          CoachMark(
+            message:
+                'Veja seu anel de calorias e macronutrientes no topo do Diário.',
+            buttonText: 'Próximo',
+            onDismiss: _dismissOnboarding,
+            targetPosition: const Offset(0, 140),
+            direction: CoachMarkDirection.bottom,
+          ),
+        if (_onboardingStep == 1)
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: false,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _dismissOnboarding,
+              ),
+            ),
+          ),
+        if (_onboardingStep == 2)
+          CoachMark(
+            message: 'Navegue entre os dias usando as setas do app bar.',
+            buttonText: 'Entendi',
+            onDismiss: _dismissOnboarding,
+            targetPosition: const Offset(0, 100),
+            direction: CoachMarkDirection.bottom,
+          ),
+      ],
     );
   }
 
@@ -3103,14 +3350,21 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final navBg = theme.bottomNavigationBarTheme.backgroundColor ?? cs.surface;
-    return Container(
-      decoration: BoxDecoration(
-        color: navBg,
-        border: Border(
-          top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3)),
-        ),
-      ),
-      child: BottomNavigationBar(
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Botão "Add Meal" removido conforme solicitado
+
+        // Bottom Navigation Bar
+        Container(
+          decoration: BoxDecoration(
+            color: navBg,
+            border: Border(
+              top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3)),
+            ),
+          ),
+          child: BottomNavigationBar(
         currentIndex: 0,
         onTap: (idx) {
           switch (idx) {
@@ -3133,27 +3387,99 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         },
         items: [
           BottomNavigationBarItem(
-            icon: const CustomIconWidget(iconName: 'today', size: 24),
-            label: 'Diário',
+            icon: Icon(Icons.calendar_today_outlined,
+                 size: AppIcons.md,
+                 color: AppIcons.standard()),
+            activeIcon: Icon(Icons.calendar_today,
+                 size: AppIcons.md,
+                 color: AppIcons.active()),
+            label: AppLocalizations.of(context)!.navDiary,
           ),
           BottomNavigationBarItem(
-            icon: const CustomIconWidget(iconName: 'schedule', size: 24),
-            label: 'Jejum',
+            icon: Icon(Icons.schedule_outlined,
+                 size: AppIcons.md,
+                 color: AppIcons.standard()),
+            activeIcon: Icon(Icons.schedule,
+                 size: AppIcons.md,
+                 color: AppIcons.active()),
+            label: AppLocalizations.of(context)!.navFasting,
           ),
           BottomNavigationBarItem(
-            icon:
-                const CustomIconWidget(iconName: 'restaurant_menu', size: 24),
-            label: 'Receitas',
+            icon: Icon(Icons.restaurant_menu_outlined,
+                 size: AppIcons.md,
+                 color: AppIcons.standard()),
+            activeIcon: Icon(Icons.restaurant_menu,
+                 size: AppIcons.md,
+                 color: AppIcons.active()),
+            label: AppLocalizations.of(context)!.navRecipes,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline, size: 24),
-            label: 'Perfil',
+            icon: Icon(Icons.person_outline,
+                 size: AppIcons.md,
+                 color: AppIcons.standard()),
+            activeIcon: Icon(Icons.person,
+                 size: AppIcons.md,
+                 color: AppIcons.active()),
+            label: AppLocalizations.of(context)!.navProfile,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.smart_toy_outlined, size: 24),
-            label: 'Coach',
+            icon: Icon(Icons.smart_toy_outlined,
+                 size: AppIcons.md,
+                 color: AppIcons.standard()),
+            activeIcon: Icon(Icons.smart_toy,
+                 size: AppIcons.md,
+                 color: AppIcons.active()),
+            label: AppLocalizations.of(context)!.navCoach,
           ),
         ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Modal para selecionar tipo de refeição
+  void _showMealSelectionDialog() {
+    final meals = [
+      (AppLocalizations.of(context)!.mealBreakfast, AppIcons.mealBreakfast, 'breakfast'),
+      (AppLocalizations.of(context)!.mealLunch, AppIcons.mealLunch, 'lunch'),
+      (AppLocalizations.of(context)!.mealDinner, AppIcons.mealDinner, 'dinner'),
+      (AppLocalizations.of(context)!.mealSnack, AppIcons.mealSnack, 'snack'),
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.dashboardAddMeal,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            ...meals.map((meal) => ListTile(
+              leading: Icon(meal.$2,
+                  size: AppIcons.md,
+                  color: AppIcons.standard()),
+              title: Text(meal.$1),
+              trailing: Icon(Icons.chevron_right,
+                  size: AppIcons.sm,
+                  color: AppIcons.secondary()),
+              onTap: () {
+                Navigator.pop(context);
+                // Navegar para tela de adicionar alimento para esta refeição
+                // Por enquanto, apenas fecha o modal
+              },
+            )),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+        ),
       ),
     );
   }
@@ -3216,7 +3542,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 AppTheme.activeBlue,
               ),
               _buildCalorieDetailRow(
-                'Restantes',
+                AppLocalizations.of(context)!.remainingPlural,
                 _dailyData["totalCalories"] - _dailyData["consumedCalories"],
                 AppTheme.successGreen,
               ),
@@ -3301,7 +3627,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               ),
               SizedBox(height: 1.h),
               Text(
-                'Restante: ${macro["total"] - macro["consumed"]}g',
+                AppLocalizations.of(context)!
+                    .remainingGrams((macro["total"] - macro["consumed"]) as int),
                 style: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(
                   color: AppTheme.activeBlue,
                 ),
@@ -3312,7 +3639,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Fechar',
+                AppLocalizations.of(context)!.close,
                 style: TextStyle(color: AppTheme.activeBlue),
               ),
             ),
@@ -3365,7 +3692,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Fechar',
+                AppLocalizations.of(context)!.close,
                 style: TextStyle(color: AppTheme.activeBlue),
               ),
             ),
@@ -3390,7 +3717,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       if (entries.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: const Text('Sem refeições para duplicar hoje'),
+              content: Text(AppLocalizations.of(context)!.noMealsToDuplicateToday),
               backgroundColor: AppTheme.warningAmber),
         );
         return;
@@ -3411,7 +3738,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       await _loadToday();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Refeição duplicada (${lastMealTime})'),
+            content: Text(AppLocalizations.of(context)!.mealDuplicated(lastMealTime)),
             backgroundColor: AppTheme.successGreen),
       );
     } catch (_) {}
@@ -3459,9 +3786,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               ),
               const Divider(height: 1),
               ListTile(
-                leading:
-                    Icon(Icons.playlist_add, color: sheetColors.onSurface),
-                title: const Text('Duplicar última refeição'),
+                leading: Icon(Icons.playlist_add, color: sheetColors.onSurface),
+                title: Text(AppLocalizations.of(context)!.duplicateLastMealTitle),
                 onTap: () async {
                   Navigator.pop(ctx);
                   _duplicateLastMeal();
@@ -3476,6 +3802,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   }
 
   Future<void> _loadToday() async {
+    final prevConsumed = _dailyData["consumedCalories"] as int? ?? 0;
+    final prevAllMeals = _mealTotals.values
+        .every((m) => (m['kcal'] ?? 0) > 0);
     List<Map<String, dynamic>> entries = [];
     try {
       entries = await NutritionStorage.getEntriesForDate(_selectedDate)
@@ -3524,14 +3853,39 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       });
     }
     _checkMealExceeds();
+
+    // Optional toasts
+    try {
+      final totalGoal = _dailyData["totalCalories"] as int? ?? 0;
+      if (totalGoal > 0 && prevConsumed < totalGoal && consumed >= totalGoal) {
+        HapticHelper.success();
+        ToastManager.showAchievement(
+          context: context,
+          title: AppStrings.achievementCaloriesTitle,
+          message: AppStrings.achievementCaloriesMessage(totalGoal),
+          emoji: AppStrings.emojiCalories,
+        );
+      }
+      final nowAllMeals = _mealTotals.values
+          .every((m) => (m['kcal'] ?? 0) > 0);
+      if (!prevAllMeals && nowAllMeals) {
+        HapticHelper.success();
+        ToastManager.showAchievement(
+          context: context,
+          title: AppStrings.achievementAllMealsTitle,
+          message: AppStrings.achievementAllMealsMessage,
+          emoji: AppStrings.emojiMeals,
+        );
+      }
+    } catch (_) {}
   }
 
   void _checkMealExceeds() {
     final Map<String, String> labels = {
-      'breakfast': 'Café da manhã',
-      'lunch': 'Almoço',
-      'dinner': 'Jantar',
-      'snack': 'Lanches',
+      'breakfast': AppLocalizations.of(context)!.mealBreakfast,
+      'lunch': AppLocalizations.of(context)!.mealLunch,
+      'dinner': AppLocalizations.of(context)!.mealDinner,
+      'snack': AppLocalizations.of(context)!.mealSnack,
     };
     for (final meal in _mealTotals.keys) {
       final kcal = _mealTotals[meal]!['kcal'] ?? 0;
@@ -3579,6 +3933,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   }
 
   Future<void> _loadExercise() async {
+    final prev = _dailyData["spentCalories"] as int? ?? 0;
     final kcal = await NutritionStorage.getExerciseCalories(_selectedDate);
     if (!mounted) return;
     final meta = await NutritionStorage.getExerciseMeta(_selectedDate);
@@ -3589,11 +3944,28 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       _lastExerciseMeta = meta;
       _exerciseLogs = logs.reversed.toList();
     });
+    try {
+      final goals = await UserPreferences.getGoals();
+      final g = goals.exerciseGoalKcal;
+      if (g > 0 && prev < g && kcal >= g) {
+        HapticHelper.success();
+        if (mounted) {
+          ToastManager.showAchievement(
+            context: context,
+            title: AppStrings.achievementActivitiesTitle,
+            message: AppStrings.achievementActivitiesMessage(g),
+            emoji: AppStrings.emojiActivities,
+          );
+        }
+      }
+    } catch (_) {}
     await _updateHydrationAchievements();
     await _updateExerciseStreak();
   }
 
   void _addWater() {
+    final prev = _dailyData["waterMl"] as int? ?? 0;
+    final goal = _dailyData["waterGoalMl"] as int? ?? 0;
     NutritionStorage.addWaterMl(_selectedDate, 250).then((ml) {
       if (!mounted) return;
       setState(() {
@@ -3601,10 +3973,22 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Água registrada: +250ml (total ${ml}ml)'),
+          content: Text('Água registrada: +250ml (total ' + ml.toString() + 'ml)'),
           backgroundColor: AppTheme.successGreen,
+          duration: const Duration(seconds: 2),
         ),
       );
+      if (prev < goal && ml >= goal && goal > 0) {
+        HapticHelper.success();
+        ToastManager.showAchievement(
+          context: context,
+          title: 'Meta de água atingida!',
+          message: 'Você bateu sua meta diária de hidratação.',
+          emoji: '💧',
+        );
+      } else {
+        HapticHelper.light();
+      }
       _updateHydrationAchievements();
     });
   }
@@ -3627,7 +4011,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
+            child: Text(AppLocalizations.of(context)!.cancel,
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -3647,7 +4031,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 ),
               );
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -3664,7 +4048,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.secondaryBackgroundDark,
-        title: Text('Ajustar metas de macros',
+        title: Text(AppLocalizations.of(context)!.adjustMacroGoals,
             style: AppTheme.darkTheme.textTheme.titleLarge
                 ?.copyWith(color: AppTheme.textPrimary)),
         content: Column(
@@ -3692,7 +4076,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
+            child: Text(AppLocalizations.of(context)!.cancel,
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -3717,12 +4101,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Metas de macros atualizadas'),
+                  content: Text(AppLocalizations.of(context)!.macroGoalsUpdated),
                   backgroundColor: AppTheme.successGreen,
                 ),
               );
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -3772,7 +4156,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.secondaryBackgroundDark,
-        title: Text('Metas por refeição',
+        title: Text(AppLocalizations.of(context)!.goalsPerMealTitle,
             style: AppTheme.darkTheme.textTheme.titleLarge
                 ?.copyWith(color: AppTheme.textPrimary)),
         content: SingleChildScrollView(
@@ -3885,7 +4269,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                             const InputDecoration(labelText: 'Gord (g)'))),
               ]),
               SizedBox(height: 12),
-              Text('Lanches',
+              Text(AppLocalizations.of(context)!.mealSnack,
                   style: AppTheme.darkTheme.textTheme.titleSmall
                       ?.copyWith(color: AppTheme.textPrimary)),
               SizedBox(height: 6),
@@ -3925,7 +4309,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
+            child: Text(AppLocalizations.of(context)!.cancel,
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -3979,12 +4363,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Metas por refeição atualizadas'),
+                  content: Text(AppLocalizations.of(context)!.goalsPerMealUpdated),
                   backgroundColor: AppTheme.successGreen,
                 ),
               );
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -3999,7 +4383,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Água ajustada: -250ml (total ${ml}ml)'),
+          content: Text('Água ajustada: -250ml (total ' + ml.toString() + 'ml)'),
           backgroundColor: AppTheme.warningAmber,
         ),
       );
@@ -4076,6 +4460,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         arguments: {'date': _selectedDate.toIso8601String()});
     if (!mounted) return;
     await _loadExercise();
+    await _loadToday();
   }
 
   void _openEditExerciseGoalDialog(int current) {
@@ -4092,7 +4477,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
+              child: Text(AppLocalizations.of(context)!.cancel)),
           TextButton(
             onPressed: () async {
               final v = int.tryParse(ctl.text.trim());
@@ -4101,7 +4486,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               Navigator.pop(ctx);
               setState(() {});
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -4219,10 +4604,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   Wrap(
                     spacing: 8,
                     children: [
-                      _addMealButton('Café', 'breakfast', tappedDay),
-                      _addMealButton('Almoço', 'lunch', tappedDay),
-                      _addMealButton('Jantar', 'dinner', tappedDay),
-                      _addMealButton('Lanche', 'snack', tappedDay),
+                      _addMealButton(AppLocalizations.of(context)!.mealBreakfast, 'breakfast', tappedDay),
+                      _addMealButton(AppLocalizations.of(context)!.mealLunch, 'lunch', tappedDay),
+                      _addMealButton(AppLocalizations.of(context)!.mealDinner, 'dinner', tappedDay),
+                      _addMealButton(AppLocalizations.of(context)!.mealSnack, 'snack', tappedDay),
                       OutlinedButton(
                         onPressed: () async {
                           final ml = await NutritionStorage.addWaterMl(
@@ -4316,7 +4701,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancelar',
+                                  child: Text(AppLocalizations.of(context)!.cancel,
                                       style: TextStyle(
                                           color: AppTheme.textSecondary)),
                                 ),
@@ -4334,13 +4719,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     Navigator.pop(context);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: const Text(
-                                            'Meta de água atualizada'),
+                                        content: const Text('Meta de água atualizada'),
                                         backgroundColor: AppTheme.successGreen,
                                       ),
                                     );
                                   },
-                                  child: const Text('Salvar'),
+                                  child: Text(AppLocalizations.of(context)!.save),
                                 ),
                               ],
                             ),
@@ -4369,7 +4753,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancelar',
+                                  child: Text(AppLocalizations.of(context)!.cancel,
                                       style: TextStyle(
                                           color: AppTheme.textSecondary)),
                                 ),
@@ -4398,7 +4782,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                       ),
                                     );
                                   },
-                                  child: const Text('Salvar'),
+                                  child: Text(AppLocalizations.of(context)!.save),
                                 ),
                               ],
                             ),
@@ -4423,11 +4807,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         TextEditingController(text: (entry['quantity']?.toString() ?? '1'));
     final servingController =
         TextEditingController(text: (entry['serving'] as String?) ?? 'porção');
-    final mealOptions = const [
-      {'key': 'breakfast', 'label': 'Café da manhã'},
-      {'key': 'lunch', 'label': 'Almoço'},
-      {'key': 'dinner', 'label': 'Jantar'},
-      {'key': 'snack', 'label': 'Lanches'},
+    final t = AppLocalizations.of(context)!;
+    final mealOptions = [
+      {'key': 'breakfast', 'label': t.mealBreakfast},
+      {'key': 'lunch', 'label': t.mealLunch},
+      {'key': 'dinner', 'label': t.mealDinner},
+      {'key': 'snack', 'label': t.mealSnack},
     ];
     String selectedMeal = (entry['mealTime'] as String?) ?? 'snack';
 
@@ -4480,7 +4865,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: Text(
-                    'Cancelar',
+                    AppLocalizations.of(context)!.cancel,
                     style: textStyles.bodyMedium?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
@@ -4518,7 +4903,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     Navigator.pop(context);
                     _loadToday();
                   },
-                  child: const Text('Duplicar'),
+                  child: Text(AppLocalizations.of(context)!.duplicate),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -4551,7 +4936,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     Navigator.pop(context);
                     _loadToday();
                   },
-                  child: const Text('Salvar'),
+                  child: Text(AppLocalizations.of(context)!.save),
                 ),
               ],
             );
@@ -4627,7 +5012,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     ),
                   ],
                 ),
-                Text('Ações do dia',
+                Text(AppLocalizations.of(context)!.dayActions,
                     style: AppTheme.darkTheme.textTheme.titleLarge
                         ?.copyWith(color: AppTheme.textPrimary)),
                 SizedBox(height: 1.5.h),
@@ -4644,8 +5029,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading:
-                      Icon(Icons.bookmark_border, color: Theme.of(context).colorScheme.onSurface),
+                  leading: Icon(Icons.bookmark_border,
+                      color: Theme.of(context).colorScheme.onSurface),
                   title: Text('Salvar dia como template',
                       style: AppTheme.darkTheme.textTheme.bodyMedium
                           ?.copyWith(color: AppTheme.textPrimary)),
@@ -4681,10 +5066,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.copy_all, color: AppTheme.textPrimary),
-                  title: Text('Duplicar dia → amanhã',
-                      style: AppTheme.darkTheme.textTheme.bodyMedium
-                          ?.copyWith(color: AppTheme.textPrimary)),
+                  title: Text(AppLocalizations.of(context)!.duplicateDayTomorrowTitle, style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(color: AppTheme.textPrimary)),
                   onTap: () async {
                     Navigator.pop(context);
                     final to = _selectedDate.add(const Duration(days: 1));
@@ -4700,10 +5082,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.event, color: AppTheme.textPrimary),
-                  title: Text('Duplicar dia → escolher data',
-                      style: AppTheme.darkTheme.textTheme.bodyMedium
-                          ?.copyWith(color: AppTheme.textPrimary)),
+                  title: Text(AppLocalizations.of(context)!.duplicateDayPickDateTitle, style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(color: AppTheme.textPrimary)),
                   onTap: () async {
                     Navigator.pop(context);
                     final picked =
@@ -4722,7 +5101,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 ),
                 ListTile(
                   leading: Icon(Icons.bolt, color: AppTheme.textPrimary),
-                  title: Text('Duplicar "novos" → escolher data',
+                  title: Text(AppLocalizations.of(context)!.duplicateNewPickDateTitle,
                       style: AppTheme.darkTheme.textTheme.bodyMedium
                           ?.copyWith(color: AppTheme.textPrimary)),
                   onTap: () async {
@@ -4747,7 +5126,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content:
-                              const Text('Nenhum item "novo" para duplicar'),
+                              Text(AppLocalizations.of(context)!.noNewItemsToDuplicate),
                           backgroundColor: AppTheme.warningAmber,
                         ),
                       );
@@ -4759,7 +5138,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       context: context,
                       builder: (_) => AlertDialog(
                         backgroundColor: AppTheme.secondaryBackgroundDark,
-                        title: Text('Selecionar itens para duplicar',
+                        title: Text(AppLocalizations.of(context)!.selectItemsToDuplicateTitle,
                             style: AppTheme.darkTheme.textTheme.titleLarge
                                 ?.copyWith(
                               color: AppTheme.textPrimary,
@@ -4804,7 +5183,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text('Cancelar',
+                            child: Text(AppLocalizations.of(context)!.cancel,
                                 style:
                                     TextStyle(color: AppTheme.textSecondary)),
                           ),
@@ -4895,7 +5274,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: Text('Cancelar',
+                            child: Text(AppLocalizations.of(context)!.cancel,
                                 style:
                                     TextStyle(color: AppTheme.textSecondary)),
                           ),
@@ -4989,7 +5368,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                     },
                                     icon: const Icon(Icons.attach_file),
                                     label:
-                                        const Text('Escolher arquivo (.csv)'),
+                                        Text(AppLocalizations.of(context)!.chooseFileCsv),
                                   ),
                                 ),
                               ],
@@ -4999,7 +5378,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text('Cancelar',
+                            child: Text(AppLocalizations.of(context)!.cancel,
                                 style:
                                     TextStyle(color: AppTheme.textSecondary)),
                           ),
@@ -5051,7 +5430,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar',
+            child: Text(AppLocalizations.of(context)!.cancel,
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -5063,7 +5442,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 Navigator.pop(context, true);
               }
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -5146,8 +5525,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:
-                Text('Fechar', style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text(
+              AppLocalizations.of(context)!.close,
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
           ),
         ],
       ),
@@ -5267,6 +5648,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 }
+
+
+
+
+
+
+
 
 
 

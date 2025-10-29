@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:nutritracker/services/nutrition_storage.dart';
-import 'package:nutritracker/services/streak_recalculator.dart';
-import 'package:nutritracker/services/achievement_service.dart';
-import 'package:nutritracker/services/streak_service.dart';
+import 'package:nutriz/services/nutrition_storage.dart';
+import 'package:nutriz/services/streak_recalculator.dart';
+import 'package:nutriz/services/achievement_service.dart';
+import 'package:nutriz/services/streak_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

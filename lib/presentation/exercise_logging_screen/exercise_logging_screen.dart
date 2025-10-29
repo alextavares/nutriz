@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import '../../core/app_export.dart';
@@ -365,7 +366,7 @@ class _ActivityEditorState extends State<_ActivityEditor> {
                   widget.onSaved(kcal, meta);
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Salvar exercício'),
+                label: Text(AppLocalizations.of(context)!.save),
                 // Rely on theme’s ElevatedButtonTheme (mapped to preset)
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,

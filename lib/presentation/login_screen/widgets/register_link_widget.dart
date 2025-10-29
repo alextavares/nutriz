@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 import '../../../theme/design_tokens.dart';
 
@@ -13,6 +14,7 @@ class RegisterLinkWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final colors = context.colors;
     final semantics = context.semanticColors;
     final textStyles = Theme.of(context).textTheme;
@@ -22,7 +24,7 @@ class RegisterLinkWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Novo usuário? ',
+            t.newUser,
             style: textStyles.bodyMedium?.copyWith(
               color: colors.onSurfaceVariant,
             ),
@@ -33,13 +35,13 @@ class RegisterLinkWidget extends StatelessWidget {
                 : () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Tela de cadastro em desenvolvimento'),
+                        content: Text(t.registerScreenInDevelopment),
                         backgroundColor: semantics.warning,
                       ),
                     );
                   },
             child: Text(
-              'Cadastre-se',
+              t.register,
               style: textStyles.bodyMedium?.copyWith(
                 color: isLoading
                     ? colors.onSurfaceVariant.withValues(alpha: 0.6)

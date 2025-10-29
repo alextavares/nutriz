@@ -1,7 +1,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:nutritracker/presentation/food_logging_screen/widgets/manual_entry_widget.dart';
+import 'package:nutriz/presentation/food_logging_screen/widgets/manual_entry_widget.dart';
 import 'helpers.dart';
 
 void main() {

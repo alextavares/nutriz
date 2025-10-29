@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter/services.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
@@ -102,7 +103,7 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
             ],
           ),
           content: Text(
-            'Tem certeza que deseja interromper seu jejum atual? Seu progresso será salvo.',
+            AppLocalizations.of(context)!.areYouSureStopFasting,
             style: textTheme.bodyMedium?.copyWith(
               color: colors.onSurfaceVariant,
               fontSize: 14.sp,
@@ -112,7 +113,7 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Cancelar',
+                AppLocalizations.of(context)!.cancel,
                 style: TextStyle(
                   color: colors.onSurfaceVariant,
                   fontSize: 14.sp,
@@ -132,7 +133,7 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
                 foregroundColor: colors.onError,
               ),
               child: Text(
-                'Parar Jejum',
+                AppLocalizations.of(context)!.stopFasting,
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
@@ -151,7 +152,9 @@ class _FastingControlButtonWidgetState extends State<FastingControlButtonWidget>
       animation: _scaleAnimation,
       builder: (context, child) {
         final isFasting = widget.isFasting;
-        final label = isFasting ? 'Parar Jejum' : 'Iniciar Jejum';
+        final label = isFasting
+            ? AppLocalizations.of(context)!.stopFasting
+            : AppLocalizations.of(context)!.startFasting;
         final colors = context.colors;
         final semantics = context.semanticColors;
         final textTheme = Theme.of(context).textTheme;

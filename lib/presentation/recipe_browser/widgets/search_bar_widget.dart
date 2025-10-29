@@ -3,7 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController controller;

@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
-import 'package:nutritracker/presentation/progress_overview/progress_overview.dart';
+import 'package:nutriz/presentation/progress_overview/progress_overview.dart';
 
 void main() {
   setUp(() {

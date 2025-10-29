@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(dart analyze:*)",
+      "Bash(flutter run:*)",
+      "Bash(flutter:*)",
+      "Bash(timeout:*)",
+      "Read(//c/Users/alext/Downloads/**)",
+      "Bash(dir \"C:\\Users\\alext\\Downloads\\nutritracker\\nutritracker\\yazio_onboarding\")",
+      "Bash(copy:*)",
+      "Bash(nc localhost 60354)",
+      "Bash(tasklist)",
+      "Bash(findstr flutter)",
+      "Bash(awk:*)",
+      "Bash(for file in lib/presentation/onboarding/*.dart lib/presentation/ai_*.dart lib/presentation/food_logging_screen/*.dart)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(test:*)",
+      "Bash(dir:*)",
+      "Bash(keytool -list:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

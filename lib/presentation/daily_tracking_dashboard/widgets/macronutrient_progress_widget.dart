@@ -82,39 +82,37 @@ class _MacronutrientProgressWidgetState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(children: [
-                  Icon(icon, color: widget.color, size: 18),
-                  SizedBox(width: 6),
-                  Text(
+                Icon(icon, color: widget.color, size: 18),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
                     widget.name,
                     style: textTheme.titleMedium?.copyWith(
                       color: colors.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ]),
-                Row(children: [
-                  Text(
-                    '${percentage.toInt()}%',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: widget.color,
                       fontWeight: FontWeight.w700,
                     ),
-                  ),
-                  SizedBox(width: 2.w),
-                  Text(
-                    '${_fmtInt(widget.consumed)} / ${_fmtInt(widget.total)} g',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ]),
+                ),
+                Text(
+                  '${percentage.toInt()}%',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: widget.color,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${_fmtInt(widget.consumed)} / ${_fmtInt(widget.total)} g',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
             SizedBox(height: 0.6.h),

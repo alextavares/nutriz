@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import '../common/celebration_overlay.dart';
 import '../../services/gamification_engine.dart';
 import '../../services/streak_service.dart';
@@ -222,7 +223,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                         SizedBox(width: 2.w),
                         Expanded(
                           child: Text(
-                            'Horários de jejum',
+                            AppLocalizations.of(context)!.fastingSchedules,
                             style: textTheme.titleSmall?.copyWith(
                               color: colorScheme.onSurface,
                               fontWeight: FontWeight.w700,
@@ -245,7 +246,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                   SizedBox(width: 2.w),
                   Expanded(
                     child: Text(
-                      'Horários de jejum',
+                      AppLocalizations.of(context)!.fastingSchedules,
                       style: textTheme.titleSmall?.copyWith(
                         color: colorScheme.onSurface,
                         fontWeight: FontWeight.w700,
@@ -296,7 +297,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'Janela de alimentação: ${_formatTimeOfDay(_stopEatingTime)} - ${_formatTimeOfDay(_startEatingTime)}',
+                  AppLocalizations.of(context)!.eatingWindow(_formatTimeOfDay(_stopEatingTime), _formatTimeOfDay(_startEatingTime)),
                   style: textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
@@ -436,18 +437,19 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
   }
 
   String _methodDisplayName(String method) {
+    final t = AppLocalizations.of(context)!;
     switch (method) {
       case '16:8':
-        return 'Método 16:8';
+        return t.fastingMethod168;
       case '18:6':
-        return 'Método 18:6';
+        return t.fastingMethod186;
       case '20:4':
-        return 'Método 20:4';
+        return t.fastingMethod204;
       case 'custom':
         final hours = _customTarget.inHours;
-        return hours > 0 ? 'Custom • ${hours}h' : 'Custom';
+        return hours > 0 ? t.fastingMethodCustom(hours) : 'Custom';
       default:
-        return 'Método $method';
+        return t.fastingMethodLabel(method);
     }
   }
 
@@ -629,9 +631,9 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
             '${two(u.day)}/${two(u.month)} ${two(u.hour)}:${two(u.minute)}';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Notificações silenciadas até $label'),
+            content: Text(AppLocalizations.of(context)!.notificationsMutedUntil(label)),
             action: SnackBarAction(
-              label: 'Reativar',
+              label: AppLocalizations.of(context)!.reactivate,
               onPressed: () async {
                 await NotificationsService.setFastingMuteUntil(null);
                 if (!mounted) return;
@@ -653,7 +655,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
 
     // Show success message
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Jejum iniciado! Método $_selectedMethod',
+        content: Text(AppLocalizations.of(context)!.fastStarted(_selectedMethod),
             style: context.textStyles.bodyMedium
                 ?.copyWith(color: context.colors.onSurface)),
         backgroundColor: context.semanticColors.success,
@@ -685,7 +687,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
             variant: CelebrationVariant.goal);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-              'Jejum finalizado! Duração: ${hours}h ${fd.inMinutes.remainder(60)}min',
+              AppLocalizations.of(context)!.fastCompleted(hours, fd.inMinutes.remainder(60)),
               style: context.textStyles.bodyMedium
                   ?.copyWith(color: context.colors.onSurface)),
           backgroundColor: context.colors.primary,
@@ -728,12 +730,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                     color: context.semanticColors.premium,
                     size: 24),
                 SizedBox(width: 2.w),
-                Text('Parabéns!',
+                Text(AppLocalizations.of(context)!.congratulations,
                     style: context.textStyles.titleLarge?.copyWith(
                         color: context.colors.onSurface, fontSize: 18.sp)),
               ]),
               content: Text(
-                  'Você completou seu jejum $_selectedMethod com sucesso! 🎉',
+                  AppLocalizations.of(context)!.fastCompletedSuccess(_selectedMethod),
                   style: context.textStyles.bodyMedium?.copyWith(
                       color: context.colors.onSurfaceVariant, fontSize: 14.sp)),
               actions: [
@@ -742,7 +744,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                     style: ElevatedButton.styleFrom(
                         backgroundColor: context.semanticColors.success,
                         foregroundColor: context.colors.onSurface),
-                    child: Text('Continuar',
+                    child: Text(AppLocalizations.of(context)!.continueLabel,
                         style: TextStyle(
                             fontSize: 14.sp, fontWeight: FontWeight.w500))),
               ]);
@@ -759,7 +761,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     if (_isFasting) {
       // Avoid changing method during active fast
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text('Finalize o jejum atual para alterar o método'),
+        content: Text(AppLocalizations.of(context)!.stopCurrentFastToChangeMethod),
         backgroundColor: context.semanticColors.warning,
       ));
       return;
@@ -792,12 +794,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Definir método personalizado',
+                Text(AppLocalizations.of(context)!.defineCustomMethod,
                     style: context.textStyles.titleLarge?.copyWith(
                       color: context.colors.onSurface,
                     )),
                 SizedBox(height: 1.h),
-                Text('Duração do jejum',
+                Text(AppLocalizations.of(context)!.fastingDuration,
                     style: context.textStyles.bodySmall?.copyWith(
                       color: context.colors.onSurfaceVariant,
                     )),
@@ -822,7 +824,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                   ],
                 ),
                 SizedBox(height: 1.h),
-                Text('Minutos',
+                Text(AppLocalizations.of(context)!.minutes,
                     style: context.textStyles.bodySmall?.copyWith(
                       color: context.colors.onSurfaceVariant,
                     )),
@@ -866,7 +868,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       backgroundColor: context.semanticColors.success,
                       foregroundColor: context.colors.onSurface,
                     ),
-                    child: const Text('Salvar'),
+                    child: Text(AppLocalizations.of(context)!.save),
                   ),
                 )
               ],
@@ -917,7 +919,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 backgroundColor: context.colors.surfaceContainerHigh,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
-                title: Text('Jejum de ${day.day}/${day.month}',
+                title: Text(AppLocalizations.of(context)!.fastingOfDay('${day.day}/${day.month}'),
                     style: context.textStyles.titleMedium?.copyWith(
                         color: context.colors.onSurface, fontSize: 16.sp)),
                 content: Column(
@@ -930,7 +932,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                             color: context.semanticColors.success,
                             size: 20),
                         SizedBox(width: 2.w),
-                        Text('Duração: ${dayData["duration"]}h',
+                        Text(AppLocalizations.of(context)!.duration(dayData["duration"]),
                             style: context.textStyles.bodyMedium?.copyWith(
                                 color: context.colors.onSurface,
                                 fontSize: 14.sp)),
@@ -942,7 +944,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                             color: context.semanticColors.success,
                             size: 20),
                         SizedBox(width: 2.w),
-                        Text('Jejum completado com sucesso',
+                        Text(AppLocalizations.of(context)!.fastCompletedSuccessfully,
                             style: context.textStyles.bodyMedium?.copyWith(
                                 color: context.semanticColors.success,
                                 fontSize: 14.sp)),
@@ -951,7 +953,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 actions: [
                   TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text('Fechar',
+                      child: Text(AppLocalizations.of(context)!.close,
                           style: TextStyle(
                               color: context.colors.primary, fontSize: 14.sp))),
                 ]);
@@ -972,7 +974,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
         appBar: AppBar(
             backgroundColor: context.colors.surface,
             elevation: 0,
-            title: Text('Jejum Intermitente',
+            title: Text(AppLocalizations.of(context)!.intermittentFasting,
                 style: context.textStyles.titleLarge?.copyWith(
                     color: context.colors.onSurface,
                     fontSize: 20.sp,
@@ -1016,7 +1018,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
               totalDuration: total,
               onTimerComplete: _onTimerComplete,
               onPrimaryAction: _isFasting ? _stopFasting : _startFasting,
-              primaryActionLabel: _isFasting ? 'Encerrar jejum' : 'Iniciar jejum',
+              primaryActionLabel: _isFasting ? AppLocalizations.of(context)!.endFastButton : AppLocalizations.of(context)!.startFastButton,
               startAt: startAt,
               endAt: endAt,
             );
@@ -1037,7 +1039,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                         color: context.colors.outline.withValues(alpha: 0.4)),
                   ),
                   child: Text(
-                    'Fuso: $_tzName',
+                    AppLocalizations.of(context)!.timezone(_tzName),
                     style: context.textStyles.labelSmall?.copyWith(
                       color: context.colors.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
@@ -1060,7 +1062,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       size: 16, color: context.colors.onSurfaceVariant),
                   const SizedBox(width: 6),
                   Text(
-                    'Termina às $hh:$mm',
+                    AppLocalizations.of(context)!.endsAt('$hh:$mm'),
                     style: context.textStyles.labelSmall?.copyWith(
                       color: context.colors.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
@@ -1090,8 +1092,8 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                     const SizedBox(width: 6),
                     Text(
                       _fastingStreak > 0
-                          ? '${_fastingStreak}d jejum'
-                          : 'Sem streak jejum',
+                          ? AppLocalizations.of(context)!.fastingDays(_fastingStreak)
+                          : AppLocalizations.of(context)!.noFastingStreak,
                       style: context.textStyles.labelSmall?.copyWith(
                         color: context.colors.onSurface,
                         fontWeight: FontWeight.w700,
@@ -1184,7 +1186,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 setState(() => _muteUntil = until);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('Lembretes silenciados por 24h'),
+                    content: Text(AppLocalizations.of(context)!.remindersMuted24h),
                     backgroundColor: context.semanticColors.warning,
                   ),
                 );
@@ -1205,7 +1207,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('Lembretes reativados'),
+                    content: Text(AppLocalizations.of(context)!.remindersReactivated),
                     backgroundColor: context.semanticColors.success,
                   ),
                 );
@@ -1223,7 +1225,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 setState(() => _muteUntil = until);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Lembretes silenciados até amanhã 08:00'),
+                    content: Text(AppLocalizations.of(context)!.remindersMutedTomorrow),
                     backgroundColor: context.semanticColors.warning,
                   ),
                 );
@@ -1296,29 +1298,29 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       break;
                   }
                 },
-                tabs: const [
+                tabs: [
                   Tab(
-                      icon: CustomIconWidget(
+                      icon: const CustomIconWidget(
                           iconName: 'dashboard',
                           size: 20),
-                      text: 'Diário'),
+                      text: AppLocalizations.of(context)!.navDiary),
                   Tab(
-                      icon: CustomIconWidget(
+                      icon: const CustomIconWidget(
                           iconName: 'schedule',
                           size: 20),
-                      text: 'Jejum'),
+                      text: AppLocalizations.of(context)!.navFasting),
                   Tab(
-                      icon: CustomIconWidget(
+                      icon: const CustomIconWidget(
                           iconName: 'restaurant_menu',
                           size: 20),
-                      text: 'Receitas'),
+                      text: AppLocalizations.of(context)!.navRecipes),
                   Tab(
-                      icon: CustomIconWidget(
+                      icon: const CustomIconWidget(
                           iconName: 'person',
                           size: 20),
-                      text: 'Perfil'),
+                      text: AppLocalizations.of(context)!.navProfile),
                   Tab(
-                      icon: CustomIconWidget(
+                      icon: const CustomIconWidget(
                           iconName: 'star',
                           size: 20),
                       text: 'PRO'),

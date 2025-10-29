@@ -5,6 +5,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 import '../../core/app_export.dart';
 import '../../services/body_metrics_storage.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class BodyMetricsScreen extends StatefulWidget {
   const BodyMetricsScreen({super.key});
@@ -93,7 +94,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
         title: const Text('Valores Corporais'),
         actions: [
           IconButton(
-            tooltip: 'Registrar',
+            tooltip: 'Save',
             onPressed: _openEditor,
             icon: const Icon(Icons.add),
           ),
@@ -351,7 +352,7 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
                   widget.onSaved(m);
                 },
                 icon: const Icon(Icons.save),
-                label: const Text('Salvar'),
+                label: Text(AppLocalizations.of(context)!.save),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.activeBlue,
                   foregroundColor: Colors.white,

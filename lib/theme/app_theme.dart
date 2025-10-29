@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
+import 'app_text_theme.dart';
 import 'design_tokens.dart';
 import 'presets/yazio_like.dart';
 
@@ -9,8 +8,7 @@ class AppTheme {
   AppTheme._();
 
   // Test hook: disable Google Fonts in widget tests to avoid font loading issues.
-  static bool _testNoGoogleFonts = false;
-  static void enableTestFonts() => _testNoGoogleFonts = true;
+  static void enableTestFonts() {}
 
   // Back-compat shim: if THEME_PRESET is provided at build time,
   // map legacy AppTheme.* static color getters to that preset as well.
@@ -84,25 +82,14 @@ class AppTheme {
 
   static ThemeData _buildTheme(AppColorTokens colors, Brightness brightness) {
     final colorScheme = colors.scheme;
-    final useGoogleFonts = !_testNoGoogleFonts && GoogleFonts.config.allowRuntimeFetching;
-
-    final String? fontFamily =
-        useGoogleFonts ? GoogleFonts.inter().fontFamily : null;
-    List<String>? fontFallbacks;
-    if (useGoogleFonts) {
-      final fallbacks = _safeFontFallbackFamilies();
-      fontFallbacks = fallbacks.isEmpty ? null : fallbacks;
-    }
-
-
-    final textTheme = _buildTextTheme(brightness, colorScheme, useGoogleFonts);
+    final textTheme = AppTextTheme.build(colorScheme);
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
-      fontFamily: fontFamily,
-      fontFamilyFallback: fontFallbacks,
+      fontFamily: AppTextTheme.fontFamily,
+      fontFamilyFallback: const ['sans-serif'],
       scaffoldBackgroundColor: colorScheme.surface,
       textTheme: textTheme,
       visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -401,75 +388,6 @@ class AppTheme {
         space: 1,
       ),
       extensions: <ThemeExtension<dynamic>>[colors.semantics],
-    );
-  }
-
-  static List<String> _safeFontFallbackFamilies() {
-    // Rely on platform defaults when runtime fetching is disabled.
-    return const <String>["sans-serif"];
-  }
-
-  static TextTheme _buildTextTheme(
-    Brightness brightness,
-    ColorScheme colorScheme,
-    bool useGoogleFonts,
-  ) {
-    final base = ThemeData(
-      useMaterial3: true,
-      colorScheme: colorScheme,
-      brightness: brightness,
-    ).textTheme;
-
-    final appliedBase = base.apply(
-      bodyColor: colorScheme.onSurface,
-      displayColor: colorScheme.onSurface,
-    );
-
-    if (!useGoogleFonts) {
-      return appliedBase;
-    }
-
-    final interTheme = GoogleFonts.interTextTheme(appliedBase);
-
-    TextStyle _notoSans(TextStyle? baseStyle, double size, FontWeight weight,
-        {double letterSpacing = 0, double? height}) {
-      return GoogleFonts.notoSans(
-        textStyle: baseStyle,
-        fontSize: size,
-        fontWeight: weight,
-        letterSpacing: letterSpacing,
-        height: height,
-      );
-    }
-
-    return interTheme.copyWith(
-      headlineLarge: _notoSans(interTheme.headlineLarge, 32, FontWeight.w700,
-          letterSpacing: -0.2, height: 1.24),
-      headlineMedium: _notoSans(interTheme.headlineMedium, 28, FontWeight.w600,
-          letterSpacing: -0.2, height: 1.27),
-      headlineSmall: _notoSans(interTheme.headlineSmall, 24, FontWeight.w600,
-          letterSpacing: -0.1, height: 1.28),
-      titleLarge: _notoSans(interTheme.titleLarge, 22, FontWeight.w600,
-          letterSpacing: -0.05, height: 1.3),
-      titleMedium: _notoSans(interTheme.titleMedium, 16, FontWeight.w600,
-          letterSpacing: 0.1, height: 1.5),
-      titleSmall: _notoSans(interTheme.titleSmall, 14, FontWeight.w600,
-          letterSpacing: 0.1, height: 1.4),
-      bodyLarge:
-          interTheme.bodyLarge?.copyWith(letterSpacing: 0.2, height: 1.5),
-      bodyMedium:
-          interTheme.bodyMedium?.copyWith(letterSpacing: 0.15, height: 1.43),
-      bodySmall: interTheme.bodySmall?.copyWith(
-        color: colorScheme.onSurfaceVariant,
-        letterSpacing: 0.2,
-        height: 1.33,
-      ),
-      labelLarge: interTheme.labelLarge
-          ?.copyWith(letterSpacing: 0.1, fontWeight: FontWeight.w600),
-      labelMedium: interTheme.labelMedium
-          ?.copyWith(letterSpacing: 0.2, fontWeight: FontWeight.w600),
-      labelSmall: interTheme.labelSmall
-          ?.copyWith(letterSpacing: 0.3, fontWeight: FontWeight.w600),
     );
   }
 }

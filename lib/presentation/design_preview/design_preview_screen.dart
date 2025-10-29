@@ -23,7 +23,7 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
 
   final Map<String, Widget> _screens = {
     'Dashboard': const DailyTrackingDashboard(),
-    'Food Logging': const FoodLoggingScreen(),
+    'Food Logging': FoodLoggingScreen(),
     'AI Detection': const AiFoodDetectionScreen(),
     'Weekly Progress': const WeeklyProgressScreen(),
     'Progress Overview': const ProgressOverviewScreen(),

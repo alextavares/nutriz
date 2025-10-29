@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
@@ -56,21 +57,23 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
   }
 
   String? _validateEmail(String? value) {
+    final t = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) {
-      return 'Email é obrigatório';
+      return t.emailRequired;
     }
     if (!_isValidEmail(value)) {
-      return 'Email inválido';
+      return t.emailInvalid;
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
+    final t = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) {
-      return 'Senha é obrigatória';
+      return t.passwordRequired;
     }
     if (value.length < 6) {
-      return 'Senha deve ter pelo menos 6 caracteres';
+      return t.passwordMinLength;
     }
     return null;
   }
@@ -83,6 +86,7 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final colors = context.colors;
     final semantics = context.semanticColors;
     final textStyles = Theme.of(context).textTheme;
@@ -140,8 +144,8 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
             textInputAction: TextInputAction.next,
             style: textStyles.bodyLarge,
             decoration: decoration(
-              label: 'Email',
-              hint: 'Digite seu email',
+              label: t.email,
+              hint: t.enterEmail,
               prefixIcon: icon('email'),
             ),
             validator: _validateEmail,
@@ -153,8 +157,8 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
             textInputAction: TextInputAction.done,
             style: textStyles.bodyLarge,
             decoration: decoration(
-              label: 'Senha',
-              hint: 'Digite sua senha',
+              label: t.password,
+              hint: t.enterPassword,
               prefixIcon: icon('lock'),
               suffixIcon: GestureDetector(
                 onTap: () {
@@ -182,13 +186,13 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('Funcionalidade em desenvolvimento'),
+                    content: Text(t.featureInDevelopment),
                     backgroundColor: semantics.warning,
                   ),
                 );
               },
               child: Text(
-                'Esqueci minha senha?',
+                t.forgotPassword,
                 style: textStyles.bodyMedium?.copyWith(
                   color: colors.primary,
                   fontWeight: FontWeight.w500,
@@ -228,7 +232,7 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
                       ),
                     )
                   : Text(
-                      'Entrar',
+                      t.login,
                       style: textStyles.labelLarge?.copyWith(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,

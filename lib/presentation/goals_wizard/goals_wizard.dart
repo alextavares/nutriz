@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/app_theme.dart';
@@ -158,7 +159,9 @@ class _GoalsWizardScreenState extends State<GoalsWizardScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _next,
-                  child: Text(_step < 2 ? 'Continuar' : 'Salvar metas'),
+                  child: Text(_step < 2
+                      ? AppLocalizations.of(context)!.continueLabel
+                      : AppLocalizations.of(context)!.save),
                 ),
               ),
             ],

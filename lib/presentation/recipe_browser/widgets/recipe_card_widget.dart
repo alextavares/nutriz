@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
@@ -24,6 +25,7 @@ class RecipeCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final bool isFavorite = recipe['isFavorite'] ?? false;
     final bool isPremiumRecipe = recipe['isPremium'] ?? false;
     final bool locked = isPremiumRecipe && !isPremiumUser;
@@ -107,7 +109,7 @@ class RecipeCardWidget extends StatelessWidget {
                                   color: Colors.white, size: 28),
                               SizedBox(height: 0.8.h),
                               Text(
-                                'Receita PRO',
+                                t.proRecipe,
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelLarge
@@ -118,7 +120,7 @@ class RecipeCardWidget extends StatelessWidget {
                               ),
                               SizedBox(height: 0.4.h),
                               Text(
-                                'Toque para desbloquear',
+                                t.tapToUnlock,
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
@@ -206,6 +208,7 @@ class RecipeCardWidget extends StatelessWidget {
 class _ProChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final semantics = context.semanticColors;
     final textStyles = context.textStyles;
     return Container(
@@ -231,7 +234,7 @@ class _ProChip extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'Somente PRO',
+            t.proOnly,
             style: textStyles.labelSmall?.copyWith(
               color: semantics.onPremium,
               fontWeight: FontWeight.w600,

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
@@ -23,6 +24,7 @@ import './widgets/camera_controls_widget.dart';
 import './widgets/camera_preview_widget.dart';
 import './widgets/food_analysis_results_widget.dart';
 import './widgets/image_preview_widget.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class AiFoodDetectionScreen extends StatefulWidget {
   const AiFoodDetectionScreen({Key? key}) : super(key: key);
@@ -98,7 +100,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
             final textTheme = Theme.of(context).textTheme;
         return AlertDialog(
           backgroundColor: colors.surfaceContainerHigh,
-          title: Text('Revisar itens',
+          title: Text(AppLocalizations.of(context)!.reviewItemsTitle,
               style: textTheme.titleLarge?.copyWith(
                 color: colors.onSurface,
               )),
@@ -223,7 +225,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar',
+              child: Text(AppLocalizations.of(context)!.cancel,
                   style: TextStyle(color: colors.onSurfaceVariant)),
             ),
             ElevatedButton(
@@ -292,7 +294,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       'fat': (f['fat'] as num?)?.toDouble() ?? 0.0,
                       'fiber': (f['fiber'] as num?)?.toDouble(),
                       'sugar': (f['sugar'] as num?)?.toDouble(),
-                      'serving': (f['serving']?.toString() ?? '1 porção'),
+                       'serving': (f['serving']?.toString() ?? AppLocalizations.of(context) !.onePortion),
                       'mealTime': f['mealTime'] ?? 'snack',
                       'createdAt': DateTime.now().toIso8601String(),
                       'source': f['source']?.toString() ?? 'AI/batch',
@@ -302,7 +304,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                 }
                 if (okCount > 0) {
                   Fluttertoast.showToast(
-                    msg: '$okCount item(ns) adicionados',
+                    msg: AppLocalizations.of(context)!.itemsAdded(okCount),
                     backgroundColor: AppTheme.successGreen,
                     textColor: AppTheme.textPrimary,
                   );
@@ -323,7 +325,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                   });
                 }
               },
-              child: const Text('Adicionar selecionados'),
+              child: Text(AppLocalizations.of(context)!.addSelected),
             ),
           ],
         );
@@ -529,7 +531,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
 
       if (data.foods.isEmpty) {
         Fluttertoast.showToast(
-          msg: 'Nenhum alimento detectado na imagem',
+          msg: AppLocalizations.of(context)!.noFoodDetectedInImage,
           backgroundColor: context.semanticColors.warning,
           textColor: context.semanticColors.onWarning,
         );
@@ -675,7 +677,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
         return AlertDialog(
           backgroundColor: AppTheme.secondaryBackgroundDark,
           title: Text(
-            'Adicionar ou editar',
+            AppLocalizations.of(context)!.addOrEdit,
             style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
               color: AppTheme.textPrimary,
             ),
@@ -710,8 +712,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       child: TextField(
                         controller: kcalCtrl,
                         keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Calorias (kcal)'),
+                        decoration: InputDecoration(
+                            labelText:
+                                '${AppLocalizations.of(context)!.caloriesLabel} (kcal)'),
                       ),
                     ),
                   ],
@@ -724,8 +727,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                         controller: carbsCtrl,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
-                        decoration: const InputDecoration(
-                            labelText: 'Carboidratos (g)'),
+                        decoration: InputDecoration(
+                            labelText:
+                                '${AppLocalizations.of(context)!.carbsLabel} (g)'),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -734,8 +738,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                         controller: protCtrl,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
-                        decoration:
-                            const InputDecoration(labelText: 'Proteínas (g)'),
+                        decoration: InputDecoration(
+                            labelText:
+                                '${AppLocalizations.of(context)!.proteinLabel} (g)'),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -744,8 +749,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                         controller: fatCtrl,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
-                        decoration:
-                            const InputDecoration(labelText: 'Gorduras (g)'),
+                        decoration: InputDecoration(
+                            labelText:
+                                '${AppLocalizations.of(context)!.fatLabel} (g)'),
                       ),
                     ),
                   ],
@@ -793,7 +799,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar',
+              child: Text(AppLocalizations.of(context)!.cancel,
                   style: TextStyle(color: AppTheme.textSecondary)),
             ),
             // Salvar e adicionar (com opção de salvar como template)
@@ -816,9 +822,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       Expanded(
                         child: TextField(
                           controller: tplLabelCtrl,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                               labelText:
-                                  'Salvar como alimento (rótulo opcional)'),
+                                  AppLocalizations.of(context)!.saveAsMyFoodOptional),
                         ),
                       ),
                     ],
@@ -886,7 +892,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       );
                       // Permanece nesta tela para permitir adicionar mais itens sem perder a lista
                     },
-                    child: const Text('Salvar e adicionar'),
+                    child: Text(AppLocalizations.of(context)!.saveAndAdd),
                   ),
                 ],
               );
@@ -984,11 +990,11 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: true,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
-        title: Text('Editar item',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
+          builder: (_) => AlertDialog(
+            backgroundColor: AppTheme.secondaryBackgroundDark,
+            title: Text('Editar item',
+                style: AppTheme.darkTheme.textTheme.titleLarge
+                    ?.copyWith(color: AppTheme.textPrimary)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1019,8 +1025,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                     child: TextField(
                       controller: kcalCtrl,
                       keyboardType: TextInputType.number,
-                      decoration:
-                          const InputDecoration(labelText: 'Calorias (kcal)'),
+                      decoration: InputDecoration(
+                          labelText:
+                              '${AppLocalizations.of(context)!.caloriesLabel} (kcal)'),
                     ),
                   ),
                 ],
@@ -1033,8 +1040,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       controller: carbsCtrl,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration:
-                          const InputDecoration(labelText: 'Carboidratos (g)'),
+                      decoration: InputDecoration(
+                          labelText:
+                              '${AppLocalizations.of(context)!.carbsLabel} (g)'),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1043,8 +1051,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       controller: protCtrl,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration:
-                          const InputDecoration(labelText: 'Proteínas (g)'),
+                      decoration: InputDecoration(
+                          labelText:
+                              '${AppLocalizations.of(context)!.proteinLabel} (g)'),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1053,8 +1062,9 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       controller: fatCtrl,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration:
-                          const InputDecoration(labelText: 'Gorduras (g)'),
+                      decoration: InputDecoration(
+                          labelText:
+                              '${AppLocalizations.of(context)!.fatLabel} (g)'),
                     ),
                   ),
                 ],
@@ -1102,7 +1112,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
+            child: Text(AppLocalizations.of(context)!.cancel,
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -1126,7 +1136,7 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                 'mealKey': mealKey,
               });
             },
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -1273,11 +1283,11 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Detectar Alimento por IA',
+                          AppLocalizations.of(context)!.detectFoodHeadline,
                           style: textTheme.titleLarge,
                         ),
                         Text(
-                          'Capture ou selecione uma foto',
+                          AppLocalizations.of(context)!.detectFoodSubtitle,
                           style: textTheme.bodySmall?.copyWith(
                             color: colors.onSurfaceVariant,
                           ),
@@ -1368,7 +1378,6 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
     );
   }
 }
-
 
 
 

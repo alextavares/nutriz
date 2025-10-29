@@ -1,0 +1,15 @@
+            SnackBar(
+              behavior: SnackBarBehavior.floating
+              margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 80,
+                left: 16,
+                right: 16,
+              ),
+              content: Text('Água registrada: +250ml (total \ml)'),
+              backgroundColor: AppTheme.successGreen,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        onAddActivity: () {
+          Navigator.pushNamed(context, AppRoutes.exerciseLogging);

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/achievement_service.dart';
 import '../../services/user_preferences.dart';
 import '../../core/app_export.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
 
 class AllAchievementsScreen extends StatefulWidget {
   const AllAchievementsScreen({super.key});

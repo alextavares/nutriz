@@ -1,8 +1,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:nutritracker/presentation/ai_food_detection_screen/widgets/food_analysis_results_widget.dart';
-import 'package:nutritracker/services/gemini_client.dart';
+import 'package:nutriz/presentation/ai_food_detection_screen/widgets/food_analysis_results_widget.dart';
+import 'package:nutriz/services/gemini_client.dart';
 import 'helpers.dart';
 
 void main() {

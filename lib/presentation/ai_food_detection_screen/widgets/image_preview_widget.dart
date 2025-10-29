@@ -5,6 +5,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class ImagePreviewWidget extends StatelessWidget {
   final File imageFile;
@@ -70,14 +71,14 @@ class ImagePreviewWidget extends StatelessWidget {
                           ),
                           SizedBox(height: 2.h),
                           Text(
-                            'Analisando alimentos...',
+                            AppLocalizations.of(context)!.analyzingFoods,
                             style: textTheme.bodyLarge?.copyWith(
                               color: colors.onSurface,
                             ),
                           ),
                           SizedBox(height: 1.h),
                           Text(
-                            'Aguarde alguns segundos',
+                            AppLocalizations.of(context)!.pleaseWait,
                             style: textTheme.bodySmall?.copyWith(
                               color: colors.onSurfaceVariant,
                             ),
@@ -104,7 +105,7 @@ class ImagePreviewWidget extends StatelessWidget {
                   color: colors.onSurface,
                   size: 5.w,
                 ),
-                label: Text('Nova Foto'),
+                label: Text(AppLocalizations.of(context)!.retakePhoto),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.surfaceContainerHigh,
                   foregroundColor: colors.onSurface,

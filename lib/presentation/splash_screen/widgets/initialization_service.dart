@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../../services/purchase_service.dart';
 
 class InitializationService {
   static const String _keyIsFirstLaunch = 'is_first_launch';
@@ -37,13 +38,16 @@ class InitializationService {
       // Prepare food database (simulate initialization)
       await _prepareFoodDatabase();
 
+      // Initialize RevenueCat SDK for in-app purchases
+      await PurchaseService.initialize();
+
       // Determine navigation destination
       String nextRoute;
       final bool onboardingCompleted =
           prefs.getBool(_keyOnboardingCompleted) ?? false;
       if (isFirstLaunch || !onboardingCompleted) {
         // First run or onboarding not completed yet
-        nextRoute = '/onboarding';
+        nextRoute = '/new-onboarding-v2'; // NEW: Updated to use new onboarding
       } else if (!isAuthenticated) {
         nextRoute = '/login-screen';
       } else {

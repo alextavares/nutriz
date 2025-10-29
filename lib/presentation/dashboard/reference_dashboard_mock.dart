@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nutritracker/presentation/activity/widgets/activities_section_widget.dart';
-import 'package:nutritracker/presentation/daily_tracking_dashboard/widgets/meal_plan_section_widget.dart';
-import 'package:nutritracker/theme/design_tokens.dart';
+import 'package:nutriz/presentation/activity/widgets/activities_section_widget.dart';
+import 'package:nutriz/presentation/daily_tracking_dashboard/widgets/meal_plan_section_widget.dart';
+import 'package:nutriz/theme/design_tokens.dart';
 
 class ReferenceDashboardMock extends StatelessWidget {
   const ReferenceDashboardMock({super.key});

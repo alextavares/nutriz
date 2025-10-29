@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../theme/app_theme.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import '../../services/streak_service.dart';
 import '../../services/user_preferences.dart';
 import '../../services/notifications_service.dart';

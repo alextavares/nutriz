@@ -53,12 +53,20 @@ class WeeklyCalendarWidget extends StatelessWidget {
                 final double iSize = w < 360 ? 14 : 16;
                 final double padH = w < 360 ? 8 : 10;
                 final double padV = w < 360 ? 6 : 8;
+                // Use neutral gray for streak indicator instead of orange warning color
+                final useNeutral = currentStreak == 0;
+                final bgColor = useNeutral
+                    ? context.colors.surfaceContainerHighest
+                    : context.semanticColors.warning.withValues(alpha: 0.2);
+                final textColor = useNeutral
+                    ? context.colors.onSurfaceVariant
+                    : context.semanticColors.warning;
+
                 return Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: padH, vertical: padV),
                   decoration: BoxDecoration(
-                    color:
-                        context.semanticColors.warning.withValues(alpha: 0.2),
+                    color: bgColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -66,14 +74,14 @@ class WeeklyCalendarWidget extends StatelessWidget {
                     children: [
                       CustomIconWidget(
                         iconName: 'local_fire_department',
-                        color: context.semanticColors.warning,
+                        color: textColor,
                         size: iSize,
                       ),
                       SizedBox(width: 1.w),
                       Text(
                         '$currentStreak dias',
                         style: context.textStyles.bodySmall?.copyWith(
-                          color: context.semanticColors.warning,
+                          color: textColor,
                           fontSize: fs,
                           fontWeight: FontWeight.w600,
                         ),

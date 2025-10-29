@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/app_export.dart';
 import '../../services/user_preferences.dart';
+import '../../services/purchase_service.dart';
 
 class ProSubscriptionScreen extends StatefulWidget {
   const ProSubscriptionScreen({super.key});
@@ -12,31 +14,10 @@ class ProSubscriptionScreen extends StatefulWidget {
 }
 
 class _ProSubscriptionScreenState extends State<ProSubscriptionScreen> {
-  final List<_ProPlanOption> _plans = const [
-    _ProPlanOption(
-      id: '12m',
-      title: '12 meses',
-      monthlyPrice: 'R\$ 14,99/mês',
-      totalPrice: 'R\$ 179,90',
-      oldPrice: 'R\$ 359,90',
-      badge: 'Mais popular',
-      description: 'Economia de 50% no plano anual',
-    ),
-    _ProPlanOption(
-      id: '3m',
-      title: '3 meses',
-      monthlyPrice: 'R\$ 30,00/mês',
-      totalPrice: 'R\$ 89,99',
-      description: 'Flexibilidade com economia trimestral',
-    ),
-    _ProPlanOption(
-      id: '1m',
-      title: '1 mês',
-      monthlyPrice: 'R\$ 39,90/mês',
-      totalPrice: 'Cobrança mensal',
-      description: 'Ideal para experimentar todos os recursos',
-    ),
-  ];
+  // Will be populated from RevenueCat offerings
+  List<Package> _packages = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   final List<_ProFeature> _features = const [
     _ProFeature(
@@ -80,6 +61,47 @@ class _ProSubscriptionScreenState extends State<ProSubscriptionScreen> {
   bool _isProcessing = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadOfferings();
+  }
+
+  Future<void> _loadOfferings() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final packages = await PurchaseService.getOfferings();
+
+      if (!mounted) return;
+
+      if (packages.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Nenhum plano disponível no momento.\nTente novamente mais tarde.';
+        });
+        return;
+      }
+
+      setState(() {
+        _packages = packages;
+        _isLoading = false;
+        // Select first package by default (usually the best value)
+        _selectedPlan = 0;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Erro ao carregar planos.\nVerifique sua conexão.';
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -119,19 +141,57 @@ class _ProSubscriptionScreenState extends State<ProSubscriptionScreen> {
                           ),
                     ),
                     SizedBox(height: 1.2.h),
-                    ..._plans.asMap().entries.map((entry) {
-                      final idx = entry.key;
-                      final plan = entry.value;
-                      final bool selected = _selectedPlan == idx;
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 1.4.h),
-                        child: _ProPlanCard(
-                          plan: plan,
-                          selected: selected,
-                          onTap: () => setState(() => _selectedPlan = idx),
+                    if (_isLoading) ...[
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ] else if (_errorMessage != null) ...[
+                      Container(
+                        padding: EdgeInsets.all(4.w),
+                        margin: EdgeInsets.symmetric(vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: AppTheme.errorRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.errorRed.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.error_outline, size: 48, color: AppTheme.errorRed),
+                            SizedBox(height: 2.h),
+                            Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            SizedBox(height: 2.h),
+                            ElevatedButton.icon(
+                              onPressed: _loadOfferings,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Tentar novamente'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      ..._packages.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final package = entry.value;
+                        final bool selected = _selectedPlan == idx;
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 1.4.h),
+                          child: _ProPackageCard(
+                            package: package,
+                            selected: selected,
+                            onTap: () => setState(() => _selectedPlan = idx),
+                          ),
+                        );
+                      }).toList(),
+                    ],
                     SizedBox(height: 2.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -234,7 +294,9 @@ class _ProSubscriptionScreenState extends State<ProSubscriptionScreen> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white),
                       )
-                    : Text('Continuar com ${_plans[_selectedPlan].title}'),
+                    : Text(_packages.isNotEmpty
+                        ? 'Continuar com ${_getPackageTitle(_packages[_selectedPlan])}'
+                        : 'Continuar'),
               ),
             ),
           ],
@@ -300,18 +362,72 @@ class _ProSubscriptionScreenState extends State<ProSubscriptionScreen> {
   }
 
   Future<void> _activateSelectedPlan() async {
+    if (_packages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Nenhum plano selecionado'),
+          backgroundColor: AppTheme.errorRed,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isProcessing = true);
-    await UserPreferences.setPremiumStatus(true,
-        planId: _plans[_selectedPlan].id, purchaseDate: DateTime.now());
-    if (!mounted) return;
-    setState(() => _isProcessing = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Assinatura ${_plans[_selectedPlan].title} ativada!'),
-        backgroundColor: AppTheme.successGreen,
-      ),
-    );
-    Navigator.pop(context, true);
+
+    try {
+      final result = await PurchaseService.purchasePackage(_packages[_selectedPlan]);
+
+      if (!mounted) return;
+
+      setState(() => _isProcessing = false);
+
+      if (result.success && result.isPremium) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            backgroundColor: AppTheme.successGreen,
+          ),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isProcessing = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro inesperado: $e'),
+          backgroundColor: AppTheme.errorRed,
+        ),
+      );
+    }
+  }
+
+  String _getPackageTitle(Package package) {
+    // Extract readable title from package identifier
+    // You can customize this based on your RevenueCat package identifiers
+    switch (package.packageType) {
+      case PackageType.annual:
+        return '12 meses';
+      case PackageType.threeMonth:
+        return '3 meses';
+      case PackageType.monthly:
+        return '1 mês';
+      case PackageType.sixMonth:
+        return '6 meses';
+      case PackageType.weekly:
+        return '1 semana';
+      default:
+        return package.storeProduct.title;
+    }
   }
 }
 
@@ -476,6 +592,154 @@ class _ProPlanCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// New widget that uses RevenueCat Package data
+class _ProPackageCard extends StatelessWidget {
+  final Package package;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ProPackageCard({
+    required this.package,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color highlight = AppTheme.activeBlue;
+    final product = package.storeProduct;
+
+    // Determine if this is the best value package (typically annual)
+    final isBestValue = package.packageType == PackageType.annual;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(4.w),
+        decoration: BoxDecoration(
+          color: selected
+              ? highlight.withValues(alpha: 0.12)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected
+                ? highlight
+                : Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.2),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            _getPackageTitle(package.packageType),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          if (isBestValue) ...[
+                            SizedBox(width: 2.w),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: highlight,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Mais popular',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      SizedBox(height: 0.6.h),
+                      Text(
+                        product.priceString,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: highlight,
+                            ),
+                      ),
+                      SizedBox(height: 0.4.h),
+                      Text(
+                        _getPackageDescription(package.packageType),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                Radio<int>(
+                  value: 1,
+                  groupValue: selected ? 1 : 0,
+                  activeColor: highlight,
+                  onChanged: (_) => onTap(),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getPackageTitle(PackageType type) {
+    switch (type) {
+      case PackageType.annual:
+        return '12 meses';
+      case PackageType.threeMonth:
+        return '3 meses';
+      case PackageType.monthly:
+        return '1 mês';
+      case PackageType.sixMonth:
+        return '6 meses';
+      case PackageType.weekly:
+        return '1 semana';
+      default:
+        return 'Plano';
+    }
+  }
+
+  String _getPackageDescription(PackageType type) {
+    switch (type) {
+      case PackageType.annual:
+        return 'Melhor custo-benefício';
+      case PackageType.threeMonth:
+        return 'Flexibilidade trimestral';
+      case PackageType.monthly:
+        return 'Ideal para experimentar';
+      case PackageType.sixMonth:
+        return 'Plano semestral';
+      case PackageType.weekly:
+        return 'Teste por 1 semana';
+      default:
+        return 'Plano de assinatura';
+    }
   }
 }
 

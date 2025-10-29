@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nutritracker/presentation/recipe_browser/recipe_browser.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/presentation/recipe_browser/recipe_browser.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {

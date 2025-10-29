@@ -1,5 +1,5 @@
-name: nutritracker
-description: A new Flutter project.
+name: nutriz
+description: Nutrição inteligente, jejum intermitente e tracking com IA
 publish_to: none
 version: 1.1.0+2
 
@@ -38,6 +38,8 @@ dependencies:
   share_plus: ^7.2.2
   material_design_icons_flutter: ^7.0.7296
   timezone: ^0.9.4
+  purchases_flutter: ^8.2.3  # RevenueCat for in-app purchases and subscriptions
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:    # 🚨 CRITICAL: Required for Flutter project testing - DO NOT REMOVE
@@ -56,6 +58,14 @@ flutter:
   # - DO NOT ADD NEW ASSET DIRECTORIES (assets/svg/, assets/icons/, etc.)
   # - ONLY USE EXISTING AND ITEMS AVAILABLE IN THE DIRECTORIES LISTED ABOVE (assets/, assets/images/)
   
-  # 🚨 CRITICAL FONTS RULE: 
-  # - THIS PROJECT USES GOOGLE FONTS INSTEAD OF LOCAL FONTS
-  # - DO NOT ADD ANY LOCAL FONTS SECTION OR FONT FILES
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700

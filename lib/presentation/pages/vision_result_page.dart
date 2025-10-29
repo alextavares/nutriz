@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nutritracker/services/gemini_client.dart' show FoodNutritionData, DetectedFood;
+import 'package:nutriz/services/gemini_client.dart' show FoodNutritionData, DetectedFood;
 
 class VisionResultPage extends StatelessWidget {
   final FoodNutritionData data;

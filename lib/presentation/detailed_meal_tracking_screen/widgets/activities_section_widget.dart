@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class ActivitiesSectionWidget extends StatelessWidget {
   const ActivitiesSectionWidget({super.key});
@@ -13,7 +14,7 @@ class ActivitiesSectionWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Atividades',
+              AppLocalizations.of(context)!.activitiesTitle,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -24,7 +25,7 @@ class ActivitiesSectionWidget extends StatelessWidget {
                 // Handle "Mais" action for activities
               },
               child: Text(
-                'Mais',
+                AppLocalizations.of(context)!.more,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w500,
@@ -60,7 +61,7 @@ class ActivitiesSectionWidget extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Nenhuma atividade registrada hoje',
+                AppLocalizations.of(context)!.noActivitiesToday,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -73,7 +74,7 @@ class ActivitiesSectionWidget extends StatelessWidget {
                   // Handle add activity action
                 },
                 child: Text(
-                  'Adicionar exercício',
+                  AppLocalizations.of(context)!.addExercise,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w500,

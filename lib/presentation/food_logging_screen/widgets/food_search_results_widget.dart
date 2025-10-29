@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
@@ -205,7 +206,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                   ElevatedButton.icon(
                     onPressed: widget.onHeaderRightTap,
                     icon: const Icon(Icons.tune),
-                    label: const Text('Abrir filtros'),
+                    label: Text(AppLocalizations.of(context)!.openFilters),
                   ),
               ],
             ),
@@ -239,7 +240,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                       ),
                       SizedBox(width: 2.w),
                       Text(
-                        'Adicionar',
+                        AppLocalizations.of(context)!.navAdd,
                         style:
                             AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
                           color: AppTheme.textPrimary,
@@ -261,7 +262,7 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        'Detalhes',
+                        AppLocalizations.of(context)!.details,
                         style:
                             AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
                           color: AppTheme.textPrimary,
@@ -329,8 +330,9 @@ class _FoodSearchResultsWidgetState extends State<FoodSearchResultsWidget> {
                             if (widget.onQuickSaveRequested != null)
                               IconButton(
                                 tooltip: widget.quickSaveMealLabel != null
-                                    ? 'Adicionar — ${widget.quickSaveMealLabel}'
-                                    : 'Adicionar',
+                                    ? AppLocalizations.of(context)!
+                                        .addToDiaryWithMeal(widget.quickSaveMealLabel!)
+                                    : AppLocalizations.of(context)!.navAdd,
                                 onPressed: () =>
                                     widget.onQuickSaveRequested!(food),
                                 icon: const Icon(Icons.add_circle_outline),

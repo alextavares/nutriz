@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
-import 'package:nutritracker/presentation/recipe_browser/recipe_browser.dart';
+import 'package:nutriz/presentation/recipe_browser/recipe_browser.dart';
 
 void main() {
   setUp(() {

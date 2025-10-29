@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nutritracker/presentation/achievements/all_achievements_screen.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/presentation/achievements/all_achievements_screen.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

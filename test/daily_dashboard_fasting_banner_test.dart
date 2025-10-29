@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
-import 'package:nutritracker/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart';
+import 'package:nutriz/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

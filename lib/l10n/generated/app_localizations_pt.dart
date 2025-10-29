@@ -214,19 +214,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addSheetAddSnacks => 'Adicionar aos Lanches';
 
   @override
-  String get addSheetAddWater250 => 'Adicionar água (+250 ml)';
+  String get addSheetAddWater250 => 'Adicionar Água (+250 ml)';
 
   @override
-  String get addSheetAddedWater250 => 'Adicionado 250 ml de água';
+  String get addSheetAddedWater250 => 'Adicionado 250 ml de Água';
 
   @override
-  String get addSheetAddWater500 => 'Adicionar água (+500 ml)';
+  String get addSheetAddWater500 => 'Adicionar Água (+500 ml)';
 
   @override
-  String get addSheetAddedWater500 => 'Adicionado 500 ml de água';
+  String get addSheetAddedWater500 => 'Adicionado 500 ml de Água';
 
   @override
-  String get addSheetFoodScanner => 'Scanner/AI de alimento';
+  String get addSheetFoodScanner => 'Scanner/IA de alimento';
 
   @override
   String get addSheetExploreRecipes => 'Explorar receitas';
@@ -326,7 +326,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String streakNext(int next) {
-    return '• próx: ${next}d';
+    return '→ próx: ${next}d';
   }
 
   @override
@@ -518,7 +518,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get intervalMinutes => 'Intervalo (min)';
 
   @override
-  String get requesting => 'Solicitando…';
+  String get requesting => 'Solicitando...';
 
   @override
   String get allowNotifications => 'Permitir notificações';
@@ -646,4 +646,1133 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get searchRecipesHint => 'Buscar receitas...';
+
+  @override
+  String get dashboardSummary => 'Resumo';
+
+  @override
+  String get dashboardDetails => 'Detalhes';
+
+  @override
+  String get dashboardWeek => 'Semana';
+
+  @override
+  String get dashboardNutrition => 'Nutrição';
+
+  @override
+  String get dismissToday => 'Dispensar hoje';
+
+  @override
+  String get notesTitle => 'Anotações';
+
+  @override
+  String get addNote => 'Adicionar anotação';
+
+  @override
+  String get addNoteHint => 'Abre editor para criar nova anotação do dia';
+
+  @override
+  String todayNotesCount(int count) {
+    return 'Hoje: $count anotação(ões)';
+  }
+
+  @override
+  String get addBodyMetrics => 'Adicionar valores corporais';
+
+  @override
+  String get noEntryTodayTapToLog => 'Sem registro hoje - toque para registrar';
+
+  @override
+  String get noMealsToDuplicateToday => 'Sem refeições para duplicar hoje';
+
+  @override
+  String get duplicateLastMealTitle => 'Duplicar última refeição';
+
+  @override
+  String mealDuplicated(String meal) {
+    return 'Refeição duplicada ($meal)';
+  }
+
+  @override
+  String get goalsPerMealTitle => 'Metas por refeição';
+
+  @override
+  String get goalsPerMealUpdated => 'Metas por refeição atualizadas';
+
+  @override
+  String get remainingPlural => 'Restantes';
+
+  @override
+  String remainingGrams(int grams) {
+    return 'Restante: ${grams}g';
+  }
+
+  @override
+  String get duplicate => 'Duplicar';
+
+  @override
+  String get duplicateDayTomorrowTitle => 'Duplicar dia → amanhã';
+
+  @override
+  String get duplicateDayPickDateTitle => 'Duplicar dia → escolher data';
+
+  @override
+  String get duplicateNewPickDateTitle => 'Duplicar \"novos\" → escolher data';
+
+  @override
+  String get noNewItemsToDuplicate => 'Nenhum item \"novo\" para duplicar';
+
+  @override
+  String get selectItemsToDuplicateTitle => 'Selecionar itens para duplicar';
+
+  @override
+  String get chooseFileCsv => 'Escolher arquivo (.csv)';
+
+  @override
+  String get reviewItemsTitle => 'Revisar itens';
+
+  @override
+  String get addSelected => 'Adicionar selecionados';
+
+  @override
+  String get saveAndAdd => 'Salvar e adicionar';
+
+  @override
+  String get detectFoodHeadline => 'Detectar Alimentos com IA';
+
+  @override
+  String get detectFoodSubtitle =>
+      'Capture uma foto ou selecione da galeria para identificar automaticamente os alimentos e suas informações nutricionais';
+
+  @override
+  String get takePhoto => 'Tirar Foto';
+
+  @override
+  String get gallery => 'Galeria';
+
+  @override
+  String get initializingCamera => 'Inicializando câmera...';
+
+  @override
+  String get detectionTipsTitle => 'Dicas para melhor detecção:';
+
+  @override
+  String get detectionTip1 => 'Certifique-se de ter boa iluminação';
+
+  @override
+  String get detectionTip2 => 'Fotografe os alimentos de perto';
+
+  @override
+  String get detectionTip3 => 'Evite sombras no prato';
+
+  @override
+  String get detectionTip4 => 'Um alimento por vez funciona melhor';
+
+  @override
+  String get onePortion => '1 porção';
+
+  @override
+  String itemsAdded(int count) {
+    return '$count item(ns) adicionados';
+  }
+
+  @override
+  String get portionApplied => 'Porção aplicada';
+
+  @override
+  String addedToDiaryWithMeal(String meal) {
+    return 'Adicionado ao diário ($meal)';
+  }
+
+  @override
+  String get changesSaved => 'Alterações salvas';
+
+  @override
+  String saveChangesWithMeal(String meal) {
+    return 'Salvar alterações - $meal';
+  }
+
+  @override
+  String addToDiaryWithMeal(String meal) {
+    return 'Adicionar ao diário - $meal';
+  }
+
+  @override
+  String get addedToMyFoods => 'Adicionado em Meus Alimentos';
+
+  @override
+  String get addToMyFoods => 'Adicionar aos meus alimentos';
+
+  @override
+  String get noMyFoodsTitle => 'Você ainda não tem Meus Alimentos';
+
+  @override
+  String get presetsHelp =>
+      'Abra os detalhes de um alimento e toque em \"Adicionar aos meus alimentos\" para criar seus presets.';
+
+  @override
+  String get portionSizeGramsLabel => 'Tamanho da porção (g)';
+
+  @override
+  String get grams => 'gramas';
+
+  @override
+  String get caloriesLabel => 'Calorias';
+
+  @override
+  String get carbsLabel => 'Carboidratos';
+
+  @override
+  String get proteinLabel => 'Proteína';
+
+  @override
+  String get fatLabel => 'Gordura';
+
+  @override
+  String get genericBrand => 'Genérico';
+
+  @override
+  String addWithCalories(int kcal) {
+    return 'Adicionar - $kcal kcal';
+  }
+
+  @override
+  String get analyzingFoods => 'Analisando alimentos...';
+
+  @override
+  String get pleaseWait => 'Aguarde alguns segundos';
+
+  @override
+  String get retakePhoto => 'Nova foto';
+
+  @override
+  String get noFoodDetected => 'Nenhum alimento detectado';
+
+  @override
+  String get tryCloserPhoto => 'Tente tirar uma foto mais próxima do alimento';
+
+  @override
+  String get detectedFoods => 'Alimentos Detectados';
+
+  @override
+  String get addOrEdit => 'Adicionar ou editar';
+
+  @override
+  String get addedShort => 'Adicionado!';
+
+  @override
+  String get noFoodDetectedInImage => 'Nenhum alimento detectado na imagem';
+
+  @override
+  String get saveAsMyFoodOptional => 'Salvar como alimento (rótulo opcional)';
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String get copy => 'Copiar';
+
+  @override
+  String get importDayCsv => 'Importar CSV do dia';
+
+  @override
+  String get clearDayBeforeApply => 'Limpar dia antes de aplicar';
+
+  @override
+  String get untitled => 'sem nome';
+
+  @override
+  String get duplicateNewPickDate => 'Duplicar novos → escolher data';
+
+  @override
+  String dayDuplicatedTo(String date) {
+    return 'Dia duplicado para $date';
+  }
+
+  @override
+  String get exerciseAdded100 => 'Exercício registrado: +100 kcal';
+
+  @override
+  String waterAdjustedMinus250(int total) {
+    return 'Água ajustada: -250ml (total ${total}ml)';
+  }
+
+  @override
+  String get weekDuplicatedNext => 'Semana duplicada para a próxima';
+
+  @override
+  String weekDuplicatedToStart(String date) {
+    return 'Semana duplicada para iniciar em $date';
+  }
+
+  @override
+  String get noItemsThisMeal => 'Sem itens nesta refeição';
+
+  @override
+  String get tapAddToLog =>
+      'Toque em + Adicionar para registrar alimentos rapidamente.';
+
+  @override
+  String get viewDay => 'Ver dia';
+
+  @override
+  String get onlyNew => 'Somente novos';
+
+  @override
+  String get dayCsvDownloaded => 'CSV do dia baixado';
+
+  @override
+  String get dayCsvCopied => 'CSV do dia copiado';
+
+  @override
+  String get dayTemplateSaved => 'Template de dia salvo';
+
+  @override
+  String get noDayTemplatesSaved => 'Nenhum template de dia salvo';
+
+  @override
+  String get templateName => 'Nome do template';
+
+  @override
+  String get weekTemplateSaved => 'Template de semana salvo';
+
+  @override
+  String get noWeekTemplatesSaved => 'Nenhum template de semana salvo';
+
+  @override
+  String get yesterday => 'Ontem';
+
+  @override
+  String get carbAbbrPlus => 'Carb+';
+
+  @override
+  String get proteinAbbrPlus => 'Prot+';
+
+  @override
+  String get fatAbbrPlus => 'Gord+';
+
+  @override
+  String get activitiesTitle => 'Atividades';
+
+  @override
+  String get more => 'Mais';
+
+  @override
+  String get noActivitiesToday => 'Nenhuma atividade registrada hoje';
+
+  @override
+  String get addExercise => 'Adicionar exercício';
+
+  @override
+  String get areYouSureStopFasting =>
+      'Tem certeza que deseja interromper seu jejum atual? Seu progresso será salvo.';
+
+  @override
+  String get stopFasting => 'Parar Jejum';
+
+  @override
+  String get startFasting => 'Iniciar Jejum';
+
+  @override
+  String get openFilters => 'Abrir filtros';
+
+  @override
+  String get details => 'Detalhes';
+
+  @override
+  String get addToDiary => 'Adicionar ao diário';
+
+  @override
+  String get prepMode => 'Modo de preparo';
+
+  @override
+  String get prepDetailsUnavailable =>
+      'Detalhes de preparo não disponíveis nesta versão (mock).';
+
+  @override
+  String get proRecipe => 'Receita PRO';
+
+  @override
+  String get tapToUnlock => 'Toque para desbloquear';
+
+  @override
+  String get proOnly => 'Somente PRO';
+
+  @override
+  String get qaAddMeal => 'Adicionar\nRefeição';
+
+  @override
+  String get qaLogWater => 'Registrar\nÁgua';
+
+  @override
+  String get qaExercise => 'Exercício';
+
+  @override
+  String get qaProgress => 'Progresso';
+
+  @override
+  String get qaRecipes => 'Receitas';
+
+  @override
+  String get qaSetupGoals => 'Configurar\nMetas';
+
+  @override
+  String get featureInDevelopment => 'Funcionalidade em desenvolvimento';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get enterEmail => 'Digite seu email';
+
+  @override
+  String get password => 'Senha';
+
+  @override
+  String get enterPassword => 'Digite sua senha';
+
+  @override
+  String get emailRequired => 'Email é obrigatório';
+
+  @override
+  String get emailInvalid => 'Email inválido';
+
+  @override
+  String get passwordRequired => 'Senha é obrigatória';
+
+  @override
+  String get passwordMinLength => 'Senha deve ter pelo menos 6 caracteres';
+
+  @override
+  String get forgotPassword => 'Esqueci minha senha?';
+
+  @override
+  String get login => 'Entrar';
+
+  @override
+  String get newUser => 'Novo usuário? ';
+
+  @override
+  String get register => 'Cadastre-se';
+
+  @override
+  String get registerScreenInDevelopment =>
+      'Tela de cadastro em desenvolvimento';
+
+  @override
+  String get logout => 'Sair';
+
+  @override
+  String get clear => 'Limpar';
+
+  @override
+  String get import => 'Importar';
+
+  @override
+  String get myProgress => 'Meu progresso';
+
+  @override
+  String get myGoals => 'Meus objetivos';
+
+  @override
+  String get diet => 'Alimentação';
+
+  @override
+  String get standard => 'Padrão';
+
+  @override
+  String get weightGoal => 'Objetivo de peso';
+
+  @override
+  String get lose => 'Perder';
+
+  @override
+  String get maintain => 'Manter';
+
+  @override
+  String get gain => 'Ganhar';
+
+  @override
+  String get initialWeight => 'Peso inicial (kg)';
+
+  @override
+  String get targetWeight => 'Meta de peso (kg)';
+
+  @override
+  String get editGoals => 'Editar objetivos';
+
+  @override
+  String get goalsUpdated => 'Objetivos atualizados';
+
+  @override
+  String get carbs => 'Carboidratos';
+
+  @override
+  String get proteins => 'Proteínas';
+
+  @override
+  String get fats => 'Gorduras';
+
+  @override
+  String get confirm => 'Confirmar';
+
+  @override
+  String get validCaloriesRequired => 'Informe calorias válidas (> 0)';
+
+  @override
+  String get validMacrosRequired => 'Macros devem ser números ≥ 0';
+
+  @override
+  String get weight => 'Peso';
+
+  @override
+  String get height => 'Altura';
+
+  @override
+  String get bodyFat => 'Gordura';
+
+  @override
+  String get bodyMetrics => 'Valores Corporais';
+
+  @override
+  String get proPlanPersonalized => 'Planos personalizados';
+
+  @override
+  String get proPlanPersonalizedDesc =>
+      'Cardápios e ciclos de jejum ajustados às suas metas.';
+
+  @override
+  String get proSmartScanner => 'Scanner inteligente';
+
+  @override
+  String get proSmartScannerDesc =>
+      'Barcode + OCR para lançar refeições em segundos.';
+
+  @override
+  String get proAdvancedInsights => 'Insights avançados';
+
+  @override
+  String get proAdvancedInsightsDesc =>
+      'Relatórios preditivos e ajustes automáticos de meta.';
+
+  @override
+  String get proExclusiveRecipes => 'Receitas exclusivas';
+
+  @override
+  String get proExclusiveRecipesDesc =>
+      'Coleção PRO com macros calculados e filtros avançados.';
+
+  @override
+  String get cancelAnytime => 'Cancele quando quiser';
+
+  @override
+  String get dayGuarantee => '7 dias de garantia';
+
+  @override
+  String get averageRating => 'Avaliação média 4,8/5';
+
+  @override
+  String get noPlansAvailable =>
+      'Nenhum plano disponível no momento.\nTente novamente mais tarde.';
+
+  @override
+  String get errorLoadingPlans =>
+      'Erro ao carregar planos.\nVerifique sua conexão.';
+
+  @override
+  String get proActivated => 'Assinatura PRO ativada com sucesso!';
+
+  @override
+  String get cancelPro => 'Encerrar PRO';
+
+  @override
+  String get keepPro => 'Manter PRO';
+
+  @override
+  String get cancelProTestMode => 'Cancelar PRO (ambiente de testes)';
+
+  @override
+  String get freePlanReactivated => 'Plano gratuito reativado';
+
+  @override
+  String get exploreProBenefits => 'Explorar benefícios PRO';
+
+  @override
+  String get restorePurchases => 'Restaurar Compras';
+
+  @override
+  String get reduceAnimations => 'Reduzir animações';
+
+  @override
+  String get reduceAnimationsDesc => 'Evita confetes/transições exageradas';
+
+  @override
+  String get animationsReduced => 'Animações reduzidas';
+
+  @override
+  String get animationsNormal => 'Animações normais';
+
+  @override
+  String get celebrateAchievements => 'Celebrar conquistas';
+
+  @override
+  String get celebrateAchievementsDesc =>
+      'Mostra confete ao desbloquear badges';
+
+  @override
+  String get celebrationsDisabled => 'Celebrações desativadas';
+
+  @override
+  String get celebrationsEnabled => 'Celebrações ativadas';
+
+  @override
+  String get showNextMilestone => 'Exibir \'Próximo marco\' nos chips';
+
+  @override
+  String get showNextMilestoneDesc =>
+      'Mostra \'• próx: Nd\' nos chips de streak';
+
+  @override
+  String get useLottieInCelebrations => 'Usar Lottie nas celebrações';
+
+  @override
+  String get searchAndFoods => 'Busca e alimentos';
+
+  @override
+  String get interpretQuantitiesNLQ => 'Interpretar quantidades no texto (NLQ)';
+
+  @override
+  String get collapse => 'Recolher';
+
+  @override
+  String get expand => 'Expandir';
+
+  @override
+  String get breakfast => 'Café da manhã';
+
+  @override
+  String get lunch => 'Almoço';
+
+  @override
+  String get dinner => 'Jantar';
+
+  @override
+  String get snacks => 'Lanches';
+
+  @override
+  String get exportJSON => 'Exportar JSON';
+
+  @override
+  String get importJSON => 'Importar JSON';
+
+  @override
+  String get clearTemplates => 'Limpar templates';
+
+  @override
+  String get clearFoods => 'Limpar alimentos';
+
+  @override
+  String get setGoals => 'Set goals';
+
+  @override
+  String get knowProNutriTracker => 'Conheça o NutriTracker PRO';
+
+  @override
+  String get friends => 'Amigos';
+
+  @override
+  String get analysis => 'ANÁLISE';
+
+  @override
+  String get registerWeight => 'REGISTRAR PESO';
+
+  @override
+  String get defineGoal => 'DEFINIR META';
+
+  @override
+  String get edit => 'EDITAR';
+
+  @override
+  String dietType(String type) {
+    return 'Alimentação: $type';
+  }
+
+  @override
+  String goalObjective(String objective) {
+    return 'Objetivo: $objective';
+  }
+
+  @override
+  String unexpectedErrorMessage(String error) {
+    return 'Erro inesperado: $error';
+  }
+
+  @override
+  String get dataSourceQA => 'Mostrar fonte dos dados (OFF/FDC/NLQ)';
+
+  @override
+  String get qaDebugging => 'QA / Depuração';
+
+  @override
+  String get achievementsStreaksCleared => 'Conquistas e streaks limpos';
+
+  @override
+  String get clearAchievementsStreaks => 'Limpar conquistas/streaks';
+
+  @override
+  String get testBadgeGranted => 'Badge de teste concedido';
+
+  @override
+  String get grantTestBadge => 'Conceder badge de teste';
+
+  @override
+  String get recalculateStreaks60 => 'Recalcular streaks (60 dias)';
+
+  @override
+  String get recalculatePerfectWeek => 'Recalcular semana perfeita';
+
+  @override
+  String get testCelebration => 'Testar celebração';
+
+  @override
+  String get preferenceSaved => 'Preferência salva';
+
+  @override
+  String get aiCacheNormalization => 'Cache de IA (normalização de alimentos)';
+
+  @override
+  String get chipsUpdated => 'Chips atualizados';
+
+  @override
+  String get aiCacheCleared => 'Cache de IA limpo';
+
+  @override
+  String get aiCacheCopied => 'Cache de IA copiado';
+
+  @override
+  String get aiCacheImported => 'Cache de IA importado';
+
+  @override
+  String invalidJSON(String error) {
+    return 'JSON inválido: $error';
+  }
+
+  @override
+  String get mealGoalsSaved => 'Metas por refeição salvas!';
+
+  @override
+  String get dataSource => 'Mostrar fonte dos dados (OFF/FDC/NLQ)';
+
+  @override
+  String get me => 'EU';
+
+  @override
+  String get freePlan => 'Plano Gratuito';
+
+  @override
+  String get proSubscription => 'Assinatura PRO';
+
+  @override
+  String get dailyGoals => 'Metas Diárias';
+
+  @override
+  String get logoutAccount => 'Sair da conta?';
+
+  @override
+  String get logoutConfirmMessage =>
+      'Você precisará fazer login novamente. Para confirmar, digite: SAIR';
+
+  @override
+  String get intelligentReports => 'Relatórios inteligentes';
+
+  @override
+  String get guidedPlans => 'Planos guiados';
+
+  @override
+  String get barcodeScanner => 'Scanner de código de barras';
+
+  @override
+  String get nutriTrackerPro => 'NutriTracker PRO';
+
+  @override
+  String get proDescription =>
+      'Personalize refeições, receba alertas inteligentes e acesse a biblioteca completa de receitas exclusivas.';
+
+  @override
+  String get meetNutriTrackerPro => 'Conheça o NutriTracker PRO';
+
+  @override
+  String get plansStartingAt =>
+      'Planos a partir de R\$ 14,99/mês · Cancele quando quiser';
+
+  @override
+  String get youArePro => 'Você é PRO!';
+
+  @override
+  String get proEnjoyMessage =>
+      'Aproveite todos os recursos avançados do NutriTracker. Novas receitas e planos chegam toda semana.';
+
+  @override
+  String get advancedInsights => 'Insights avançados';
+
+  @override
+  String get dynamicPlans => 'Planos dinâmicos';
+
+  @override
+  String get proRecipes => 'Receitas PRO';
+
+  @override
+  String get proSubscriptionActivated => 'Assinatura PRO ativada com sucesso!';
+
+  @override
+  String unexpectedError(String error) {
+    return 'Erro inesperado: $error';
+  }
+
+  @override
+  String get terminatePro => 'Encerrar PRO';
+
+  @override
+  String get terminateProConfirmMessage =>
+      'Essa ação está disponível apenas para testes. Confirmar cancelamento da assinatura PRO?';
+
+  @override
+  String get connectWithFriends =>
+      'Conecte-se com amigos para comparar progresso. Em breve.';
+
+  @override
+  String get goalReached => 'Meta atingida!';
+
+  @override
+  String get noVariationYet => 'Sem variação ainda';
+
+  @override
+  String youGainedWeight(String weight) {
+    return 'Você ganhou $weight kg';
+  }
+
+  @override
+  String youLostWeight(String weight) {
+    return 'Você perdeu $weight kg';
+  }
+
+  @override
+  String get defineWeightGoalMessage =>
+      'Defina sua meta de peso para acompanhar a barra';
+
+  @override
+  String get weightGoalKg => 'Meta de peso (kg)';
+
+  @override
+  String get startingWeightKg => 'Peso inicial (kg)';
+
+  @override
+  String get weightObjective => 'Objetivo de peso';
+
+  @override
+  String get goalsUpdatedSuccess => 'Objetivos atualizados';
+
+  @override
+  String get reducedAnimations => 'Animações reduzidas';
+
+  @override
+  String get normalAnimations => 'Animações normais';
+
+  @override
+  String get showConfettiOnBadges => 'Mostra confete ao desbloquear badges';
+
+  @override
+  String get showNextMilestoneDescription =>
+      'Mostra \'• próx: Nd\' nos chips de streak';
+
+  @override
+  String get interpretQuantitiesInText =>
+      'Interpretar quantidades no texto (NLQ)';
+
+  @override
+  String get quantitiesExample => 'Ex.: \'150g frango\', \'2 ovos e 1 banana\'';
+
+  @override
+  String get mealGoalsPerMeal => 'Metas por refeição';
+
+  @override
+  String get kcal => 'kcal';
+
+  @override
+  String get carbGrams => 'Carb. (g)';
+
+  @override
+  String get protGrams => 'Prot. (g)';
+
+  @override
+  String get fatGrams => 'Gord. (g)';
+
+  @override
+  String get saveMealGoals => 'Salvar metas';
+
+  @override
+  String get mealGoalsCleared => 'Metas por refeição limpas';
+
+  @override
+  String get clearMealGoalsConfirm => 'Limpar metas por refeição?';
+
+  @override
+  String get clearMealGoalsMessage =>
+      'Esta ação zera as metas de Café, Almoço, Jantar e Lanches.\nPara confirmar, digite: CONFIRMAR';
+
+  @override
+  String get diaryExported => 'Diário exportado para a área de transferência';
+
+  @override
+  String exportFailed(String error) {
+    return 'Falha ao exportar: $error';
+  }
+
+  @override
+  String get importDiary => 'Importar Diário (JSON)';
+
+  @override
+  String get diaryImported => 'Diário importado com sucesso';
+
+  @override
+  String get templatesExported =>
+      'Templates copiados para a área de transferência';
+
+  @override
+  String exportTemplatesFailed(String error) {
+    return 'Falha ao exportar templates: $error';
+  }
+
+  @override
+  String get importTemplates => 'Importar Templates (JSON)';
+
+  @override
+  String get templatesImported => 'Templates importados com sucesso';
+
+  @override
+  String get foodsExported => 'Alimentos copiados para a área de transferência';
+
+  @override
+  String exportFoodsFailed(String error) {
+    return 'Falha ao exportar alimentos: $error';
+  }
+
+  @override
+  String get importFoods => 'Importar Alimentos (JSON)';
+
+  @override
+  String get foodsImported => 'Alimentos importados com sucesso';
+
+  @override
+  String get foodsCleared => 'Alimentos limpos';
+
+  @override
+  String get clearAllFoodsConfirm => 'Limpar todos os alimentos?';
+
+  @override
+  String get clearAllFoodsMessage =>
+      'Esta ação remove Favoritos e Meus Alimentos. Não pode ser desfeita.\nPara confirmar, digite: LIMPAR';
+
+  @override
+  String get templatesCleared => 'Templates limpos';
+
+  @override
+  String get clearAllTemplatesConfirm => 'Limpar todos os templates?';
+
+  @override
+  String get clearAllTemplatesMessage =>
+      'Esta ação remove todos os templates de dia e semana. Não pode ser desfeita.\nPara confirmar, digite: LIMPAR';
+
+  @override
+  String get importAICacheJSON => 'Importar Cache de IA (JSON)';
+
+  @override
+  String get water => 'Água';
+
+  @override
+  String get activities => 'Atividades';
+
+  @override
+  String get walking => 'Caminhada';
+
+  @override
+  String get running => 'Corrida';
+
+  @override
+  String get cycling => 'Bike';
+
+  @override
+  String get addMeal => 'Add Meal';
+
+  @override
+  String get navFasting => 'Jejum';
+
+  @override
+  String get navRecipes => 'Receitas';
+
+  @override
+  String get navCoach => 'Coach';
+
+  @override
+  String get eaten => 'Consumido';
+
+  @override
+  String get remaining => 'Restante';
+
+  @override
+  String get burned => 'Queimado';
+
+  @override
+  String get nutrition => 'Nutrição';
+
+  @override
+  String get dayActions => 'Ações do dia';
+
+  @override
+  String get statistics => 'Estatísticas';
+
+  @override
+  String get moreActions => 'Mais ações';
+
+  @override
+  String walkingMinutes(int minutes) {
+    return 'Caminhada ${minutes}m';
+  }
+
+  @override
+  String runningMinutes(int minutes) {
+    return 'Corrida ${minutes}m';
+  }
+
+  @override
+  String cyclingMinutes(int minutes) {
+    return 'Bike ${minutes}m';
+  }
+
+  @override
+  String get macronutrients => 'Macronutrientes';
+
+  @override
+  String get goals => 'Metas';
+
+  @override
+  String get adjustMacroGoals => 'Ajustar metas de macros';
+
+  @override
+  String get macroGoalsUpdated => 'Metas de macros atualizadas';
+
+  @override
+  String get intermittentFasting => 'Jejum Intermitente';
+
+  @override
+  String get fastingSchedules => 'Horários de jejum';
+
+  @override
+  String eatingWindow(String stop, String start) {
+    return 'Janela de alimentação: $stop - $start';
+  }
+
+  @override
+  String get fastingMethod168 => 'Método 16:8';
+
+  @override
+  String get fastingMethod186 => 'Método 18:6';
+
+  @override
+  String get fastingMethod204 => 'Método 20:4';
+
+  @override
+  String fastingMethodCustom(int hours) {
+    return 'Custom • ${hours}h';
+  }
+
+  @override
+  String fastingMethodLabel(String method) {
+    return 'Método $method';
+  }
+
+  @override
+  String timezone(String timezone) {
+    return 'Fuso: $timezone';
+  }
+
+  @override
+  String endsAt(String time) {
+    return 'Termina às $time';
+  }
+
+  @override
+  String fastingDays(int days) {
+    return '${days}d jejum';
+  }
+
+  @override
+  String get noFastingStreak => 'Sem streak jejum';
+
+  @override
+  String get defineCustomMethod => 'Definir método personalizado';
+
+  @override
+  String get fastingDuration => 'Duração do jejum';
+
+  @override
+  String get minutes => 'Minutos';
+
+  @override
+  String fastStarted(String method) {
+    return 'Jejum iniciado! Método $method';
+  }
+
+  @override
+  String fastCompleted(int hours, int minutes) {
+    return 'Jejum finalizado! Duração: ${hours}h ${minutes}min';
+  }
+
+  @override
+  String get congratulations => 'Parabéns!';
+
+  @override
+  String fastCompletedSuccess(String method) {
+    return 'Você completou seu jejum $method com sucesso! 🎉';
+  }
+
+  @override
+  String notificationsMutedUntil(String time) {
+    return 'Notificações silenciadas até $time';
+  }
+
+  @override
+  String get reactivate => 'Reativar';
+
+  @override
+  String get stopCurrentFastToChangeMethod =>
+      'Finalize o jejum atual para alterar o método';
+
+  @override
+  String fastingOfDay(String date) {
+    return 'Jejum de $date';
+  }
+
+  @override
+  String duration(int hours) {
+    return 'Duração: ${hours}h';
+  }
+
+  @override
+  String get fastCompletedSuccessfully => 'Jejum completado com sucesso';
+
+  @override
+  String get remindersMuted24h => 'Lembretes silenciados por 24h';
+
+  @override
+  String get remindersReactivated => 'Lembretes reativados';
+
+  @override
+  String get remindersMutedTomorrow => 'Lembretes silenciados até amanhã 08:00';
+
+  @override
+  String get startFastButton => 'Iniciar jejum';
+
+  @override
+  String get endFastButton => 'Encerrar jejum';
 }

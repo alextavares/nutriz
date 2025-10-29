@@ -1,0 +1,1194 @@
+# 🚀 INSTRUÇÕES COMPLETAS PARA CLAUDE CODE
+
+Copie tudo abaixo e cole no Claude Code:
+
+---
+
+# 🔧 CORREÇÃO CRÍTICA - UNIFICAÇÃO DE ARQUITETURA
+
+## 📋 CONTEXTO
+
+Atualmente temos **2 telas separadas** que causam duplicação de informação:
+- `diary_screen.dart` - Mostra Activities, Macros, Refeições, Water
+- `today_screen.dart` (ou Summary) - Mostra anel de calorias, Macros, Refeições
+
+**Problema:** Macros aparecem em múltiplos lugares, confundindo o usuário.
+
+**Solução:** Unificar TUDO em uma única tela com scroll vertical.
+
+---
+
+## 🎯 OBJETIVO FINAL
+
+Criar uma única tela `diary_screen.dart` com esta estrutura:
+
+```
+┌─────────────────────────────────────┐
+│ 📱 HEADER FIXO (Sticky)             │
+│ ← Diário  (Hoje)  →                │
+│ Segunda, 28 de Outubro             │
+├─────────────────────────────────────┤
+│ ⬇️ SCROLL AREA                      │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 📊 SUMMARY CARD                 │ │
+│ │ • Anel: 2,000 Remaining        │ │
+│ │ • 0 Eaten | 0 Burned           │ │
+│ │ • Macros com progress bars     │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 🍽️ NUTRITION CARD              │ │
+│ │ • Breakfast 0 Cal (+ button)   │ │
+│ │ • Lunch 0 Cal (+ button)       │ │
+│ │ • Dinner 0 Cal (+ button)      │ │
+│ │ • Snack 0 Cal (+ button)       │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 💧 WATER CARD                   │ │
+│ │ • 0/2000 ml                    │ │
+│ │ • Progress bar                 │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 🏃 ACTIVITIES CARD              │ │
+│ │ • Walking 30m                  │ │
+│ │ • Running 20m                  │ │
+│ │ • Cycling 30m                  │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 📝 NOTES CARD                   │ │
+│ │ • Empty state                  │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ ⚖️ BODY METRICS CARD            │ │
+│ │ • Empty state                  │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ [Espaço para FAB - 80px]           │
+└─────────────────────────────────────┘
+
+🔵 FAB (Floating Action Button)
+   posição: bottom-right
+```
+
+---
+
+## 📁 PASSO 1: REORGANIZAR ARQUIVOS
+
+### Arquivos a DELETAR ou REFATORAR:
+```bash
+❌ lib/screens/today_screen.dart          # Deletar (será integrado no diary)
+❌ lib/widgets/summary_section.dart       # Mover para diary
+❌ Qualquer widget de macros duplicado
+```
+
+### Arquivos a CRIAR/MANTER:
+```bash
+✅ lib/screens/diary_screen.dart          # Principal (unificada)
+✅ lib/widgets/summary_card.dart          # Anel + Macros
+✅ lib/widgets/nutrition_card.dart        # 4 refeições
+✅ lib/widgets/water_card.dart            # Tracker de água
+✅ lib/widgets/activities_card.dart       # Atividades
+✅ lib/widgets/notes_card.dart            # Notas
+✅ lib/widgets/body_metrics_card.dart     # Métricas
+✅ lib/widgets/macro_progress_bars.dart   # Componente de macros
+✅ lib/widgets/calorie_ring.dart          # Anel de calorias
+```
+
+---
+
+## 💻 PASSO 2: CÓDIGO COMPLETO
+
+### 📄 1. `lib/screens/diary_screen.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../core/design_tokens.dart';
+import '../core/app_colors.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/nutrition_card.dart';
+import '../widgets/water_card.dart';
+import '../widgets/activities_card.dart';
+import '../widgets/notes_card.dart';
+import '../widgets/body_metrics_card.dart';
+import '../widgets/multi_action_fab.dart';
+
+class DiaryScreen extends StatefulWidget {
+  const DiaryScreen({Key? key}) : super(key: key);
+
+  @override
+  State<DiaryScreen> createState() => _DiaryScreenState();
+}
+
+class _DiaryScreenState extends State<DiaryScreen> {
+  DateTime _selectedDate = DateTime.now();
+
+  void _changeDate(int days) {
+    setState(() {
+      _selectedDate = _selectedDate.add(Duration(days: days));
+    });
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDay = DateTime(date.year, date.month, date.day);
+    
+    if (selectedDay == today) {
+      return 'Hoje';
+    } else if (selectedDay == today.subtract(Duration(days: 1))) {
+      return 'Ontem';
+    } else if (selectedDay == today.add(Duration(days: 1))) {
+      return 'Amanhã';
+    } else {
+      return DateFormat('EEEE, d \'de\' MMMM', 'pt_BR').format(date);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // Header fixo
+          SliverAppBar(
+            pinned: true,
+            floating: false,
+            expandedHeight: 120,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                color: Colors.white,
+                padding: EdgeInsets.fromLTRB(20, 60, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Navegação de data
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.chevron_left, size: 28),
+                          onPressed: () => _changeDate(-1),
+                          splashRadius: 24,
+                        ),
+                        Text(
+                          _formatDate(_selectedDate),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.chevron_right, size: 28),
+                          onPressed: () => _changeDate(1),
+                          splashRadius: 24,
+                        ),
+                      ],
+                    ),
+                    
+                    SizedBox(height: 4),
+                    
+                    // Título
+                    Text(
+                      'Diário',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // Conteúdo com cards
+          SliverPadding(
+            padding: EdgeInsets.all(20),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // 1. SUMMARY CARD (Anel + Macros)
+                SummaryCard(
+                  caloriesRemaining: 2000,
+                  caloriesEaten: 0,
+                  caloriesBurned: 0,
+                  carbsConsumed: 0,
+                  carbsGoal: 250,
+                  proteinConsumed: 0,
+                  proteinGoal: 120,
+                  fatConsumed: 0,
+                  fatGoal: 80,
+                ),
+                
+                SizedBox(height: AppSpacing.cardStack),
+                
+                // 2. NUTRITION CARD
+                NutritionCard(),
+                
+                SizedBox(height: AppSpacing.cardStack),
+                
+                // 3. WATER CARD
+                WaterCard(
+                  currentAmount: 0,
+                  goalAmount: 2000,
+                ),
+                
+                SizedBox(height: AppSpacing.cardStack),
+                
+                // 4. ACTIVITIES CARD
+                ActivitiesCard(
+                  caloriesBurned: 0,
+                  caloriesGoal: 300,
+                ),
+                
+                SizedBox(height: AppSpacing.cardStack),
+                
+                // 5. NOTES CARD
+                NotesCard(),
+                
+                SizedBox(height: AppSpacing.cardStack),
+                
+                // 6. BODY METRICS CARD
+                BodyMetricsCard(),
+                
+                // Espaço para FAB
+                SizedBox(height: 80),
+              ]),
+            ),
+          ),
+        ],
+      ),
+      
+      // FAB (já implementado)
+      floatingActionButton: MultiActionFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+}
+```
+
+---
+
+### 📄 2. `lib/widgets/summary_card.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import '../core/app_colors.dart';
+import '../core/design_tokens.dart';
+import 'calorie_ring.dart';
+import 'macro_progress_bars.dart';
+
+class SummaryCard extends StatelessWidget {
+  final int caloriesRemaining;
+  final int caloriesEaten;
+  final int caloriesBurned;
+  final double carbsConsumed;
+  final double carbsGoal;
+  final double proteinConsumed;
+  final double proteinGoal;
+  final double fatConsumed;
+  final double fatGoal;
+
+  const SummaryCard({
+    Key? key,
+    required this.caloriesRemaining,
+    required this.caloriesEaten,
+    required this.caloriesBurned,
+    required this.carbsConsumed,
+    required this.carbsGoal,
+    required this.proteinConsumed,
+    required this.proteinGoal,
+    required this.fatConsumed,
+    required this.fatGoal,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        boxShadow: [AppShadows.card],
+        border: Border.all(color: AppColors.gray100),
+      ),
+      padding: EdgeInsets.all(AppSpacing.cardPaddingLarge),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Summary',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  // TODO: Navegar para detalhes
+                },
+                child: Text(
+                  'Details',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          SizedBox(height: 24),
+          
+          // Anel de calorias
+          CalorieRing(
+            remaining: caloriesRemaining,
+            eaten: caloriesEaten,
+            burned: caloriesBurned,
+          ),
+          
+          SizedBox(height: 24),
+          
+          // MACROS - ÚNICA FONTE DE VERDADE
+          MacroProgressBars(
+            carbsConsumed: carbsConsumed,
+            carbsGoal: carbsGoal,
+            proteinConsumed: proteinConsumed,
+            proteinGoal: proteinGoal,
+            fatConsumed: fatConsumed,
+            fatGoal: fatGoal,
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+---
+
+### 📄 3. `lib/widgets/macro_progress_bars.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import '../core/app_colors.dart';
+
+class MacroProgressBars extends StatelessWidget {
+  final double carbsConsumed;
+  final double carbsGoal;
+  final double proteinConsumed;
+  final double proteinGoal;
+  final double fatConsumed;
+  final double fatGoal;
+
+  const MacroProgressBars({
+    Key? key,
+    required this.carbsConsumed,
+    required this.carbsGoal,
+    required this.proteinConsumed,
+    required this.proteinGoal,
+    required this.fatConsumed,
+    required this.fatGoal,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Macros',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // TODO: Abrir configuração de goals
+              },
+              child: Text(
+                'Goals',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        
+        SizedBox(height: 16),
+        
+        // Carbs
+        _MacroItem(
+          name: 'Carbs',
+          color: AppColors.macroCarb,
+          consumed: carbsConsumed,
+          goal: carbsGoal,
+          unit: 'g',
+        ),
+        
+        SizedBox(height: 16),
+        
+        // Protein
+        _MacroItem(
+          name: 'Protein',
+          color: AppColors.macroProtein,
+          consumed: proteinConsumed,
+          goal: proteinGoal,
+          unit: 'g',
+        ),
+        
+        SizedBox(height: 16),
+        
+        // Fat
+        _MacroItem(
+          name: 'Fat',
+          color: AppColors.macroFat,
+          consumed: fatConsumed,
+          goal: fatGoal,
+          unit: 'g',
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroItem extends StatelessWidget {
+  final String name;
+  final Color color;
+  final double consumed;
+  final double goal;
+  final String unit;
+
+  const _MacroItem({
+    Key? key,
+    required this.name,
+    required this.color,
+    required this.consumed,
+    required this.goal,
+    required this.unit,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final percentage = goal > 0 ? (consumed / goal).clamp(0.0, 1.0) : 0.0;
+    
+    return Column(
+      children: [
+        // Info row
+        Row(
+          children: [
+            // Dot indicator
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
+            
+            SizedBox(width: 8),
+            
+            // Name
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            
+            Spacer(),
+            
+            // Values
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                children: [
+                  TextSpan(text: '${consumed.toInt()}'),
+                  TextSpan(
+                    text: '/${goal.toInt()} $unit',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        
+        SizedBox(height: 8),
+        
+        // Progress bar
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LinearProgressIndicator(
+            value: percentage,
+            minHeight: 6,
+            backgroundColor: AppColors.gray100,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+
+---
+
+### 📄 4. `lib/widgets/calorie_ring.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import 'dart:math' as math;
+import '../core/app_colors.dart';
+
+class CalorieRing extends StatelessWidget {
+  final int remaining;
+  final int eaten;
+  final int burned;
+
+  const CalorieRing({
+    Key? key,
+    required this.remaining,
+    required this.eaten,
+    required this.burned,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final total = remaining + eaten;
+    final percentage = total > 0 ? (eaten / total).clamp(0.0, 1.0) : 0.0;
+    final isEmpty = eaten == 0;
+    
+    return Column(
+      children: [
+        // Anel
+        SizedBox(
+          width: 160,
+          height: 160,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Background circle
+              CustomPaint(
+                size: Size(160, 160),
+                painter: _RingPainter(
+                  progress: isEmpty ? 0 : percentage,
+                  color: isEmpty ? AppColors.gray200 : AppColors.primary500,
+                  backgroundColor: AppColors.gray100,
+                  strokeWidth: 12,
+                  isDashed: isEmpty,
+                ),
+              ),
+              
+              // Center content
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    remaining.toString().replaceAllMapped(
+                      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                      (Match m) => '${m[1]},',
+                    ),
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary600,
+                      letterSpacing: -1,
+                      height: 1,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Remaining',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        
+        SizedBox(height: 24),
+        
+        // Stats row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _StatItem(
+              value: eaten.toString(),
+              label: 'Eaten',
+            ),
+            
+            Container(
+              width: 1,
+              height: 40,
+              color: AppColors.gray200,
+              margin: EdgeInsets.symmetric(horizontal: 24),
+            ),
+            
+            _StatItem(
+              value: burned.toString(),
+              label: 'Burned',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _StatItem({
+    Key? key,
+    required this.value,
+    required this.label,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Color backgroundColor;
+  final double strokeWidth;
+  final bool isDashed;
+
+  _RingPainter({
+    required this.progress,
+    required this.color,
+    required this.backgroundColor,
+    required this.strokeWidth,
+    this.isDashed = false,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    
+    // Background circle
+    final backgroundPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    
+    canvas.drawCircle(center, radius, backgroundPaint);
+    
+    // Progress arc
+    if (progress > 0 || isDashed) {
+      final progressPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      
+      if (isDashed) {
+        // Draw dashed circle for empty state
+        final dashWidth = 8.0;
+        final dashSpace = 4.0;
+        final circumference = 2 * math.pi * radius;
+        final dashCount = (circumference / (dashWidth + dashSpace)).floor();
+        
+        for (int i = 0; i < dashCount; i++) {
+          final startAngle = (i * (dashWidth + dashSpace) / radius) - math.pi / 2;
+          final sweepAngle = dashWidth / radius;
+          
+          canvas.drawArc(
+            rect,
+            startAngle,
+            sweepAngle,
+            false,
+            progressPaint,
+          );
+        }
+      } else {
+        // Draw solid progress arc
+        canvas.drawArc(
+          rect,
+          -math.pi / 2,
+          2 * math.pi * progress,
+          false,
+          progressPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+           oldDelegate.color != color ||
+           oldDelegate.isDashed != isDashed;
+  }
+}
+```
+
+---
+
+### 📄 5. `lib/widgets/nutrition_card.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import '../core/app_colors.dart';
+import '../core/design_tokens.dart';
+
+class NutritionCard extends StatelessWidget {
+  const NutritionCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        boxShadow: [AppShadows.card],
+        border: Border.all(color: AppColors.gray100),
+      ),
+      padding: EdgeInsets.all(AppSpacing.cardPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Nutrition',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          
+          SizedBox(height: 16),
+          
+          _MealItem(
+            icon: '☕',
+            iconBg: Color(0xFFFFE0B2),
+            name: 'Breakfast',
+            calories: 0,
+            timeRange: '7:00 - 10:00 AM',
+          ),
+          
+          SizedBox(height: 12),
+          
+          _MealItem(
+            icon: '🥗',
+            iconBg: Color(0xFFC8E6C9),
+            name: 'Lunch',
+            calories: 0,
+            timeRange: '12:00 - 2:00 PM',
+          ),
+          
+          SizedBox(height: 12),
+          
+          _MealItem(
+            icon: '🍽️',
+            iconBg: Color(0xFFBBDEFB),
+            name: 'Dinner',
+            calories: 0,
+            timeRange: '6:00 - 9:00 PM',
+          ),
+          
+          SizedBox(height: 12),
+          
+          _MealItem(
+            icon: '🥜',
+            iconBg: Color(0xFFFFF9C4),
+            name: 'Snack',
+            calories: 0,
+            timeRange: 'Anytime',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MealItem extends StatelessWidget {
+  final String icon;
+  final Color iconBg;
+  final String name;
+  final int calories;
+  final String timeRange;
+
+  const _MealItem({
+    Key? key,
+    required this.icon,
+    required this.iconBg,
+    required this.name,
+    required this.calories,
+    required this.timeRange,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        // TODO: Abrir modal de adicionar refeição
+      },
+      borderRadius: BorderRadius.circular(AppRadii.medium),
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  icon,
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+            ),
+            
+            SizedBox(width: 12),
+            
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.gray100,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '$calories Cal',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    timeRange,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Add button
+            Container(
+              width: TouchTargets.comfortable,
+              height: TouchTargets.comfortable,
+              decoration: BoxDecoration(
+                color: AppColors.gray100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.add,
+                size: 20,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+---
+
+### 📄 6. `lib/core/design_tokens.dart` (UPDATE)
+
+```dart
+import 'package:flutter/material.dart';
+
+class AppSpacing {
+  static const double space1 = 4;
+  static const double space2 = 8;
+  static const double space3 = 12;
+  static const double space4 = 16;
+  static const double space5 = 20;
+  static const double space6 = 24;
+  static const double space8 = 32;
+  
+  static const double containerPadding = 20;
+  static const double cardPadding = 16;
+  static const double cardPaddingLarge = 20;
+  static const double cardStack = 16;
+  static const double elementGap = 12;
+}
+
+class AppRadii {
+  static const double small = 8;
+  static const double medium = 12;
+  static const double large = 16;
+  static const double extraLarge = 20;
+  static const double full = 9999;
+  
+  static const double card = 12;
+  static const double button = 12;
+  static const double pill = 20;
+  static const double input = 8;
+}
+
+class AppShadows {
+  static const card = BoxShadow(
+    color: Color(0x0A000000),
+    offset: Offset(0, 2),
+    blurRadius: 8,
+  );
+  
+  static const button = BoxShadow(
+    color: Color(0x333B82F6),
+    offset: Offset(0, 2),
+    blurRadius: 8,
+  );
+  
+  static const fab = BoxShadow(
+    color: Color(0x663B82F6),
+    offset: Offset(0, 4),
+    blurRadius: 16,
+  );
+}
+
+class TouchTargets {
+  static const double minimum = 44;
+  static const double comfortable = 48;
+  static const double large = 56;
+}
+
+class AppTypography {
+  // Display
+  static const displayLarge = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.5,
+    height: 1.3,
+  );
+  
+  // Headings
+  static const headingLarge = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+  );
+  
+  static const headingMedium = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+  );
+  
+  // Body
+  static const bodyLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+  );
+  
+  static const bodyMedium = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+  );
+  
+  static const bodySmall = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.4,
+  );
+  
+  // Small
+  static const captionLarge = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 1.4,
+  );
+}
+```
+
+---
+
+## ✅ PASSO 3: ATUALIZAR NAVEGAÇÃO
+
+### `lib/main.dart` ou onde está a navegação bottom
+
+```dart
+// Certifique-se que o primeiro item do bottom nav aponta para DiaryScreen
+bottomNavigationBar: BottomNavigationBar(
+  currentIndex: _currentIndex,
+  onTap: (index) {
+    setState(() => _currentIndex = index);
+  },
+  items: [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.book_outlined),
+      activeIcon: Icon(Icons.book),
+      label: 'Diary', // ← Apenas este deve existir agora
+    ),
+    // ... outros itens
+  ],
+),
+
+// No body do Scaffold:
+body: IndexedStack(
+  index: _currentIndex,
+  children: [
+    DiaryScreen(), // ← Única tela principal
+    FastingScreen(),
+    RecipesScreen(),
+    ProfileScreen(),
+    CoachScreen(),
+  ],
+),
+```
+
+---
+
+## 🧪 PASSO 4: TESTES DE VALIDAÇÃO
+
+Após implementar, verifique:
+
+```bash
+✅ CHECKLIST DE VALIDAÇÃO:
+
+□ Existe apenas UMA tela "Diary" acessível pelo bottom nav
+□ Não existe mais tela "Today" ou "Summary" separada
+□ Macros aparecem APENAS uma vez (dentro do Summary Card)
+□ Ordem dos cards está correta:
+  1. Summary (anel + macros)
+  2. Nutrition (4 refeições)
+  3. Water
+  4. Activities
+  5. Notes
+  6. Body Metrics
+□ Header "Diário" aparece no topo
+□ Navegação < Hoje > funciona
+□ FAB continua funcionando no canto inferior direito
+□ Scroll é suave e todos os cards são visíveis
+□ Não há duplicação de informações
+□ Body Metrics aparece apenas UMA vez (no final)
+□ Activities aparece apenas UMA vez
+```
+
+---
+
+## 🎯 RESULTADO ESPERADO
+
+Após implementação:
+
+**Antes (❌ Problemático):**
+- 2 telas separadas (Diary + Today)
+- Macros em 3 lugares
+- Informação duplicada
+- Confusão para o usuário
+
+**Depois (✅ Correto):**
+- 1 única tela Diary
+- Macros em 1 único lugar (Summary Card)
+- Single source of truth
+- Fluxo claro e organizado
+
+---
+
+## 📞 PRÓXIMOS PASSOS
+
+Depois desta correção funcionar, podemos implementar:
+1. Water tracker com progress bar horizontal
+2. Empty states melhorados
+3. Animações e micro-interações
+4. Coach marks
+
+---
+
+**IMPORTANTE:** Esta é a correção mais crítica do projeto. Sem ela, o app continuará com arquitetura inconsistente. Por favor, implemente TUDO acima antes de adicionar novos recursos.
+
+Alguma dúvida sobre o código? Posso explicar qualquer parte! 🚀

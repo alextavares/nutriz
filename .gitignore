@@ -72,3 +72,18 @@ backups/
 # Windows reserved filenames accidentally created
 CON
 NUL
+
+# ==========================================
+# KEYSTORE AND SIGNING (NEVER COMMIT!)
+# ==========================================
+# These files contain sensitive information for app signing
+# If you commit these, anyone can sign apps as you!
+*.jks
+*.keystore
+key.properties
+android/key.properties
+android/upload-keystore.jks
+android/app/upload-keystore.jks
+
+# Play Store credentials
+play-store-credentials.json

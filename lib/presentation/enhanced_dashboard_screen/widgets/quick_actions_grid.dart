@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
-import 'package:nutritracker/routes/app_routes.dart';
-import 'package:nutritracker/theme/design_tokens.dart';
+import 'package:nutriz/routes/app_routes.dart';
+import 'package:nutriz/theme/design_tokens.dart';
 
 class QuickActionsGrid extends StatelessWidget {
   const QuickActionsGrid({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final colors = context.colors;
     final semantics = context.semanticColors;
 
     final actions = [
       _QuickAction(
         icon: Icons.restaurant,
-        label: 'Adicionar\nRefeição',
+        label: t.qaAddMeal,
         color: colors.primary,
         onTap: () {
           Navigator.pushNamed(context, AppRoutes.addFoodEntry);
@@ -23,12 +25,12 @@ class QuickActionsGrid extends StatelessWidget {
       ),
       _QuickAction(
         icon: Icons.local_drink,
-        label: 'Registrar\nÁgua',
+        label: t.qaLogWater,
         color: colors.primary,
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Funcionalidade em desenvolvimento'),
+              content: Text(t.featureInDevelopment),
               backgroundColor: colors.primary,
             ),
           );
@@ -36,12 +38,12 @@ class QuickActionsGrid extends StatelessWidget {
       ),
       _QuickAction(
         icon: Icons.fitness_center,
-        label: 'Exercício',
+        label: t.qaExercise,
         color: semantics.success,
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Funcionalidade em desenvolvimento'),
+              content: Text(t.featureInDevelopment),
               backgroundColor: semantics.success,
             ),
           );
@@ -49,7 +51,7 @@ class QuickActionsGrid extends StatelessWidget {
       ),
       _QuickAction(
         icon: Icons.show_chart,
-        label: 'Progresso',
+        label: t.qaProgress,
         color: semantics.warning,
         onTap: () {
           Navigator.pushNamed(context, AppRoutes.progressOverview);
@@ -57,7 +59,7 @@ class QuickActionsGrid extends StatelessWidget {
       ),
       _QuickAction(
         icon: Icons.restaurant_menu,
-        label: 'Receitas',
+        label: t.qaRecipes,
         color: semantics.premium,
         onTap: () {
           Navigator.pushNamed(context, AppRoutes.recipeBrowser);
@@ -65,7 +67,7 @@ class QuickActionsGrid extends StatelessWidget {
       ),
       _QuickAction(
         icon: Icons.settings,
-        label: 'Configurar\nMetas',
+        label: t.qaSetupGoals,
         color: colors.onSurfaceVariant,
         onTap: () {
           Navigator.pushNamed(context, AppRoutes.goalsWizard);

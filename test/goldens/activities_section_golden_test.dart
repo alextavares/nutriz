@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:nutritracker/presentation/activity/widgets/activities_section_widget.dart';
+import 'package:nutriz/presentation/activity/widgets/activities_section_widget.dart';
 import 'helpers.dart';
 
 void main() {

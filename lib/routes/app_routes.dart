@@ -19,6 +19,7 @@ import '../presentation/goals_wizard/goals_wizard.dart';
 import '../presentation/exercise_logging_screen/exercise_logging_screen.dart';
 import '../presentation/achievements/all_achievements_screen.dart';
 import '../presentation/onboarding/onboarding_flow.dart';
+import '../presentation/onboarding/new_onboarding_v2.dart';
 import '../presentation/streaks/streak_overview_screen.dart';
 import '../presentation/ai_coach_chat/ai_coach_chat_screen.dart';
 import '../presentation/pro_subscription/pro_subscription_screen.dart';
@@ -49,13 +50,14 @@ class AppRoutes {
   static const String addFoodEntry = '/add-food-entry';
   static const String achievements = '/achievements';
   static const String onboarding = '/onboarding';
+  static const String newOnboardingV2 = '/new-onboarding-v2';
   static const String streakOverview = '/streak-overview';
   static const String proSubscription = '/pro-subscription';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
     splash: (context) => const SplashScreen(),
-    foodLogging: (context) => const FoodLoggingScreen(),
+    foodLogging: (context) => FoodLoggingScreen(),
     login: (context) => const LoginScreen(),
     dailyTrackingDashboard: (context) => const DailyTrackingDashboard(),
     enhancedDashboard: (context) => const EnhancedDashboardScreen(),
@@ -75,6 +77,7 @@ class AppRoutes {
     addFoodEntry: (context) => const AddFoodEntryScreen(),
     achievements: (context) => const AllAchievementsScreen(),
     onboarding: (context) => const OnboardingFlow(),
+    newOnboardingV2: (context) => const NewOnboardingV2(),
     streakOverview: (context) => const StreakOverviewScreen(),
     proSubscription: (context) => const ProSubscriptionScreen(),
     // TODO: Add your other routes here

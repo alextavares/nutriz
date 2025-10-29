@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 import '../../../core/app_export.dart';
 import '../../../services/gemini_client.dart';
 import '../../../theme/design_tokens.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class FoodAnalysisResultsWidget extends StatelessWidget {
   final FoodNutritionData results;
@@ -43,12 +44,12 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
             ),
             SizedBox(height: 1.5.h),
             Text(
-              'Nenhum alimento detectado',
+              AppLocalizations.of(context)!.noFoodDetected,
               style: textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             Text(
-              'Tente tirar uma foto mais próxima do alimento',
+              AppLocalizations.of(context)!.tryCloserPhoto,
               style: textTheme.bodyMedium?.copyWith(
                 color: colors.onSurfaceVariant,
               ),
@@ -77,7 +78,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
                 SizedBox(width: 2.w),
                 Expanded(
                   child: Text(
-                    'Alimentos Detectados',
+                    AppLocalizations.of(context)!.detectedFoods,
                     style: textTheme.titleLarge,
                   ),
                 ),
@@ -97,7 +98,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
                           size: 4.5.w,
                         ),
                         SizedBox(width: 1.w),
-                        Text('Selecionar e adicionar'),
+                        Text(AppLocalizations.of(context)!.addSelected),
                       ],
                     ),
                   ),
@@ -209,7 +210,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
               Expanded(
                 child: _buildNutrientInfo(
                   context,
-                  label: 'Calorias',
+                  label: AppLocalizations.of(context)!.caloriesLabel,
                   value: '${food.calories}',
                   unit: 'kcal',
                   color: semantics.warning,
@@ -218,7 +219,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
               Expanded(
                 child: _buildNutrientInfo(
                   context,
-                  label: 'Carboidratos',
+                  label: AppLocalizations.of(context)!.carbsLabel,
                   value: '${food.carbs.toStringAsFixed(1)}',
                   unit: 'g',
                   color: colors.primary,
@@ -234,7 +235,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
               Expanded(
                 child: _buildNutrientInfo(
                   context,
-                  label: 'Proteínas',
+                  label: AppLocalizations.of(context)!.proteinLabel,
                   value: '${food.protein.toStringAsFixed(1)}',
                   unit: 'g',
                   color: semantics.success,
@@ -243,7 +244,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
               Expanded(
                 child: _buildNutrientInfo(
                   context,
-                  label: 'Gorduras',
+                  label: AppLocalizations.of(context)!.fatLabel,
                   value: '${food.fat.toStringAsFixed(1)}',
                   unit: 'g',
                   color: colors.error,
@@ -314,7 +315,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
                     ),
                     SizedBox(width: 2.w),
                     Text(
-                      'Adicionar ou editar',
+                      AppLocalizations.of(context)!.addOrEdit,
                       style: textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colors.primary,
@@ -353,7 +354,7 @@ class FoodAnalysisResultsWidget extends StatelessWidget {
                     children: [
                       Icon(Icons.check_circle, color: semantics.success, size: 28),
                       SizedBox(width: 8),
-                      Text('Adicionado!', style: textTheme.titleMedium?.copyWith(color: semantics.success, fontWeight: FontWeight.w700)),
+                      Text(AppLocalizations.of(context)!.addedShort, style: textTheme.titleMedium?.copyWith(color: semantics.success, fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),

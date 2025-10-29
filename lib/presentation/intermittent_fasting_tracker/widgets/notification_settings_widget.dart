@@ -442,20 +442,22 @@ class _NotificationSettingsWidgetState
       untilLabel =
           '${two(u.day)}/${two(u.month)} ${two(u.hour)}:${two(u.minute)}';
     }
-    return Row(
-      children: [
-        if (!muted) ...[
-          ElevatedButton.icon(
+    if (!muted) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          OutlinedButton.icon(
             onPressed: widget.onMute24h,
             icon: const Icon(Icons.notifications_off_outlined, size: 16),
             label: const Text('Silenciar 24h'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: semantics.warning,
-              foregroundColor: semantics.onWarning,
+            style: OutlinedButton.styleFrom(
               visualDensity: VisualDensity.compact,
+              foregroundColor: colors.onSurfaceVariant,
+              side: BorderSide(
+                  color: colors.outlineVariant.withValues(alpha: 0.6)),
             ),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: widget.onMuteTomorrow,
             icon: const Icon(Icons.snooze, size: 14),
@@ -467,7 +469,11 @@ class _NotificationSettingsWidgetState
                   color: colors.outlineVariant.withValues(alpha: 0.6)),
             ),
           ),
-        ] else ...[
+        ],
+      );
+    } else {
+      return Row(
+        children: [
           Expanded(
             child: Text(
               'Silenciado até $untilLabel',
@@ -488,9 +494,9 @@ class _NotificationSettingsWidgetState
               side: BorderSide(color: colors.primary.withValues(alpha: 0.6)),
             ),
           ),
-        ]
-      ],
-    );
+        ],
+      );
+    }
   }
 }
 

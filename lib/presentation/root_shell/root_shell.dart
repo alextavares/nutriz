@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_export.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import '../../services/nutrition_storage.dart';
 import '../daily_tracking_dashboard/daily_tracking_dashboard.dart';
 import '../enhanced_dashboard_screen/enhanced_dashboard_screen.dart';
@@ -393,7 +393,7 @@ class _RootShellState extends State<RootShell> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: _buildAppBar(),
+      appBar: _currentIndex == 0 ? null : _buildAppBar(),
       body: ValueListenableBuilder<DateTime>(
         valueListenable: _selectedDate,
         builder: (context, _, __) {

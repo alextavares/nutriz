@@ -12,6 +12,15 @@ class AppSpacing {
   static const double lg = 20;
   static const double xl = 24;
   static const double xxl = 32;
+  static const double screenHorizontal = 24.0;
+  static const double betweenSections = 24.0;
+  static const double cardPadding = 20.0;
+  static const double cardInternal = 12.0;
+  static const double cardRadius = 20.0;
+
+  static const SizedBox sectionGap =
+      SizedBox(height: AppSpacing.betweenSections);
+  static const SizedBox itemGap = SizedBox(height: AppSpacing.cardInternal);
 }
 
 /// Corner radius tokens for rounded components.
@@ -23,6 +32,129 @@ class AppRadii {
   static const double md = 12;
   static const double lg = 16;
   static const double xl = 24;
+
+  // Semantic radii
+  static const double card = 12;
+  static const double button = 12;
+  static const double pill = 20;
+  static const double input = 8;
+}
+
+/// Touch target sizes following accessibility guidelines
+@immutable
+class TouchTargets {
+  const TouchTargets._();
+
+  /// Minimum touch target size (44x44dp) - WCAG AA requirement
+  static const double minimum = 44.0;
+
+  /// Comfortable touch target size (48x48dp) - recommended
+  static const double comfortable = 48.0;
+
+  /// Large touch target size (56x56dp) - for primary actions
+  static const double large = 56.0;
+
+  /// Extra small icon size (for visual icon inside touch target)
+  static const double iconXs = 16.0;
+
+  /// Small icon size (for visual icon inside touch target)
+  static const double iconSm = 20.0;
+
+  /// Medium icon size
+  static const double iconMd = 24.0;
+}
+
+/// Typography scale with line heights
+@immutable
+class AppTypography {
+  const AppTypography._();
+
+  // Display
+  static const double text3xl = 28.0;
+  static const double text3xlLineHeight = 36.0;
+
+  static const double text2xl = 24.0;
+  static const double text2xlLineHeight = 32.0;
+
+  // Headings
+  static const double textXl = 20.0;
+  static const double textXlLineHeight = 28.0;
+
+  static const double textLg = 18.0;
+  static const double textLgLineHeight = 26.0;
+
+  // Body
+  static const double textBase = 16.0;
+  static const double textBaseLineHeight = 24.0;
+
+  // Small
+  static const double textSm = 14.0;
+  static const double textSmLineHeight = 20.0;
+
+  static const double textXs = 13.0;
+  static const double textXsLineHeight = 18.0;
+
+  // Numeric (for calories, macros)
+  static const double numericLg = 48.0;
+  static const double numericLgLineHeight = 56.0;
+
+  static const double numericMd = 20.0;
+  static const double numericMdLineHeight = 28.0;
+}
+
+/// Box shadow tokens
+@immutable
+class AppShadows {
+  const AppShadows._();
+
+  static const BoxShadow xs = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.05),
+    blurRadius: 2,
+    offset: Offset(0, 1),
+  );
+
+  static const BoxShadow sm = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.1),
+    blurRadius: 3,
+    offset: Offset(0, 1),
+  );
+
+  static const BoxShadow md = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.08),
+    blurRadius: 8,
+    offset: Offset(0, 2),
+  );
+
+  static const BoxShadow lg = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.12),
+    blurRadius: 12,
+    offset: Offset(0, 4),
+  );
+
+  static const BoxShadow xl = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.16),
+    blurRadius: 24,
+    offset: Offset(0, 8),
+  );
+
+  // Component specific
+  static const BoxShadow card = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.04),
+    blurRadius: 8,
+    offset: Offset(0, 2),
+  );
+
+  static const BoxShadow button = BoxShadow(
+    color: Color.fromRGBO(59, 130, 246, 0.2),
+    blurRadius: 8,
+    offset: Offset(0, 2),
+  );
+
+  static const BoxShadow fab = BoxShadow(
+    color: Color.fromRGBO(59, 130, 246, 0.4),
+    blurRadius: 16,
+    offset: Offset(0, 4),
+  );
 }
 
 /// Semantic colors exposed as a theme extension for quick lookups.

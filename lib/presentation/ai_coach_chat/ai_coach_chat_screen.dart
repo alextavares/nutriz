@@ -9,6 +9,7 @@ import '../../services/coach_api_service.dart';
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
 import '../../theme/design_tokens.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 abstract class _ChatEntry {}
 
@@ -563,7 +564,7 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                 '${nomeS.isEmpty ? 'Sugestão' : nomeS}${porcaoS.isNotEmpty ? ' • $porcaoS' : ''}${kcalS.isNotEmpty ? ' • $kcalS kcal' : ''} • C ${c}g • P ${p}g • G ${g}g${meal.isNotEmpty ? ' • $meal' : ''}'),
             ElevatedButton(
               onPressed: () => _confirmAndLogSuggestion(sug),
-              child: const Text('Registrar'),
+              child: Text(AppLocalizations.of(context)!.save),
             ),
           ],
         );
@@ -640,11 +641,11 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: mealKey,
-                  items: const [
-                    DropdownMenuItem(value: 'breakfast', child: Text('Café')),
-                    DropdownMenuItem(value: 'lunch', child: Text('Almoço')),
-                    DropdownMenuItem(value: 'dinner', child: Text('Jantar')),
-                    DropdownMenuItem(value: 'snack', child: Text('Lanche')),
+                  items: [
+                    DropdownMenuItem(value: 'breakfast', child: Text(AppLocalizations.of(context)!.mealBreakfast)),
+                    DropdownMenuItem(value: 'lunch', child: Text(AppLocalizations.of(context)!.mealLunch)),
+                    DropdownMenuItem(value: 'dinner', child: Text(AppLocalizations.of(context)!.mealDinner)),
+                    DropdownMenuItem(value: 'snack', child: Text(AppLocalizations.of(context)!.mealSnack)),
                   ],
                   onChanged: (v) => mealKey = v ?? 'snack',
                   decoration: const InputDecoration(labelText: 'Período'),
@@ -657,10 +658,10 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancelar')),
+                child: Text(AppLocalizations.of(context)!.cancel)),
             ElevatedButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Confirmar')),
+                child: Text(AppLocalizations.of(context)!.save)),
           ],
         );
       },
@@ -759,11 +760,11 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: mealKey,
-                    items: const [
-                      DropdownMenuItem(value: 'breakfast', child: Text('Café')),
-                      DropdownMenuItem(value: 'lunch', child: Text('Almoço')),
-                      DropdownMenuItem(value: 'dinner', child: Text('Jantar')),
-                      DropdownMenuItem(value: 'snack', child: Text('Lanche')),
+                    items: [
+                      DropdownMenuItem(value: 'breakfast', child: Text(AppLocalizations.of(context)!.mealBreakfast)),
+                      DropdownMenuItem(value: 'lunch', child: Text(AppLocalizations.of(context)!.mealLunch)),
+                      DropdownMenuItem(value: 'dinner', child: Text(AppLocalizations.of(context)!.mealDinner)),
+                      DropdownMenuItem(value: 'snack', child: Text(AppLocalizations.of(context)!.mealSnack)),
                     ],
                     onChanged: (v) => mealKey = v ?? 'snack',
                     decoration: const InputDecoration(labelText: 'Período'),
@@ -774,10 +775,10 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancelar')),
+                  child: Text(AppLocalizations.of(context)!.cancel)),
               ElevatedButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Salvar')),
+                  child: Text(AppLocalizations.of(context)!.save)),
             ],
           );
         },
@@ -787,7 +788,7 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
       final grams = int.tryParse(gramsController.text.trim()) ?? 0;
       if (grams <= 0) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Porção inválida')));
+            .showSnackBar(const SnackBar(content: Text('Invalid portion')));
         return;
       }
 
@@ -935,11 +936,11 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: mealKey,
-                  items: const [
-                    DropdownMenuItem(value: 'breakfast', child: Text('Café')),
-                    DropdownMenuItem(value: 'lunch', child: Text('Almoço')),
-                    DropdownMenuItem(value: 'dinner', child: Text('Jantar')),
-                    DropdownMenuItem(value: 'snack', child: Text('Lanche')),
+                  items: [
+                    DropdownMenuItem(value: 'breakfast', child: Text(AppLocalizations.of(context)!.mealBreakfast)),
+                    DropdownMenuItem(value: 'lunch', child: Text(AppLocalizations.of(context)!.mealLunch)),
+                    DropdownMenuItem(value: 'dinner', child: Text(AppLocalizations.of(context)!.mealDinner)),
+                    DropdownMenuItem(value: 'snack', child: Text(AppLocalizations.of(context)!.mealSnack)),
                   ],
                   onChanged: (v) => mealKey = v ?? 'snack',
                   decoration: const InputDecoration(labelText: 'Período'),
@@ -951,10 +952,10 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancelar')),
+                  child: Text(AppLocalizations.of(context)!.cancel)),
               ElevatedButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Confirmar')),
+                  child: Text(AppLocalizations.of(context)!.save)),
             ],
           );
         },
@@ -1026,11 +1027,11 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: localMeal,
-                  items: const [
-                    DropdownMenuItem(value: 'breakfast', child: Text('Café')),
-                    DropdownMenuItem(value: 'lunch', child: Text('Almoço')),
-                    DropdownMenuItem(value: 'dinner', child: Text('Jantar')),
-                    DropdownMenuItem(value: 'snack', child: Text('Lanche')),
+                  items: [
+                    DropdownMenuItem(value: 'breakfast', child: Text(AppLocalizations.of(context)!.mealBreakfast)),
+                    DropdownMenuItem(value: 'lunch', child: Text(AppLocalizations.of(context)!.mealLunch)),
+                    DropdownMenuItem(value: 'dinner', child: Text(AppLocalizations.of(context)!.mealDinner)),
+                    DropdownMenuItem(value: 'snack', child: Text(AppLocalizations.of(context)!.mealSnack)),
                   ],
                   onChanged: (v) => setSt(() => localMeal = v ?? 'snack'),
                   decoration: const InputDecoration(labelText: 'Período'),
@@ -1040,13 +1041,13 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx2, false),
-                  child: const Text('Cancelar')),
+                  child: Text(AppLocalizations.of(context)!.cancel)),
               ElevatedButton(
                   onPressed: () {
                     mealKey = localMeal;
                     Navigator.pop(ctx2, true);
                   },
-                  child: const Text('Registrar')),
+                  child: Text(AppLocalizations.of(context)!.save)),
             ],
           );
         });

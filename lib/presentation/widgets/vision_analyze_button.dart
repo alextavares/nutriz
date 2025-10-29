@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nutritracker/services/coach_api_service.dart';
-import 'package:nutritracker/services/gemini_client.dart' show FoodNutritionData;
+import 'package:nutriz/services/coach_api_service.dart';
+import 'package:nutriz/services/gemini_client.dart' show FoodNutritionData;
 import '../pages/vision_result_page.dart';
 
 class VisionAnalyzeButton extends StatefulWidget {

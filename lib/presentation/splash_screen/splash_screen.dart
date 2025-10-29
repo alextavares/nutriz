@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import './widgets/animated_logo_widget.dart';
 import './widgets/initialization_service.dart';
 import './widgets/loading_indicator_widget.dart';

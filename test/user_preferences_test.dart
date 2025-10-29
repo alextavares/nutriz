@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:nutritracker/services/user_preferences.dart';
+import 'package:nutriz/services/user_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

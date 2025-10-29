@@ -4,14 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' as services;
-import 'package:nutritracker/util/download_stub.dart'
-    if (dart.library.html) 'package:nutritracker/util/download_web.dart';
-import 'package:nutritracker/util/upload_stub.dart'
-    if (dart.library.html) 'package:nutritracker/util/upload_web.dart';
+import 'package:nutriz/util/download_stub.dart'
+    if (dart.library.html) 'package:nutriz/util/download_web.dart';
+import 'package:nutriz/util/upload_stub.dart'
+    if (dart.library.html) 'package:nutriz/util/upload_web.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../theme/app_theme.dart';
 import '../../core/app_export.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
 import '../../routes/app_routes.dart';
@@ -132,7 +132,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   ),
                 ),
                 child: Text(
-                  AppLocalizations.of(context)?.achievementsNewBadge ?? 'New',
+                  AppLocalizations.of(context)!.achievementsNewBadge,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w700,
@@ -276,13 +276,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)?.weeklyProgressTitle ?? 'Weekly Progress'),
+        title: Text(AppLocalizations.of(context)!.weeklyProgressTitle),
         actions: [
           IconButton(
             icon: Icon(Icons.more_vert,
                 color: Theme.of(context).colorScheme.onSurface),
             onPressed: _openWeekActionsMenu,
-            tooltip: AppLocalizations.of(context)?.menu ?? 'Menu',
+            tooltip: AppLocalizations.of(context)!.menu,
           ),
           PopupMenuButton<String>(
             onSelected: (v) async {
@@ -306,19 +306,19 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
             },
             itemBuilder: (context) => [
               PopupMenuItem(
-                  value: 'export_csv', child: Text(AppLocalizations.of(context)?.exportCsv ?? 'Export CSV')),
+                  value: 'export_csv', child: Text(AppLocalizations.of(context)!.exportCsv)),
               if (kIsWeb)
                 PopupMenuItem(
-                    value: 'download_csv', child: Text(AppLocalizations.of(context)?.downloadCsv ?? 'Download CSV')),
+                    value: 'download_csv', child: Text(AppLocalizations.of(context)!.downloadCsv)),
               PopupMenuItem(
-                  value: 'import_csv', child: Text(AppLocalizations.of(context)?.importCsv ?? 'Import CSV')),
+                  value: 'import_csv', child: Text(AppLocalizations.of(context)!.importCsv)),
               const PopupMenuDivider(),
               PopupMenuItem(
                   value: 'save_week_tpl',
-                  child: Text(AppLocalizations.of(context)?.saveWeekAsTemplate ?? 'Save week as template')),
+                  child: Text(AppLocalizations.of(context)!.saveWeekAsTemplate)),
               PopupMenuItem(
                   value: 'apply_week_tpl',
-                  child: Text(AppLocalizations.of(context)?.applyWeekTemplate ?? 'Apply week template')),
+                  child: Text(AppLocalizations.of(context)!.applyWeekTemplate)),
               PopupMenuItem(
                   value: 'duplicate_week',
                   child: Text(AppLocalizations.of(context)?.duplicateWeekNext ?? 'Duplicate week → next')),
@@ -331,7 +331,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppLocalizations.of(context)?.installApp ?? 'Install app'),
+                      Text(AppLocalizations.of(context)!.installApp),
                       FutureBuilder<bool>(
                         future: _canInstallPwa(),
                         builder: (context, snap) {
@@ -427,7 +427,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                 fontWeight: FontWeight.w600)),
                     if (_weeklyHasNew.any((e) => e))
                       Text(
-                        AppLocalizations.of(context)?.daysWithNew(_weeklyHasNew.where((e) => e).length) ?? '${_weeklyHasNew.where((e) => e).length} day(s) with new items',
+                    AppLocalizations.of(context)!.daysWithNew(_weeklyHasNew.where((e) => e).length),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
@@ -448,8 +448,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
 
                 // Per-meal averages section
                 Text(
-                    AppLocalizations.of(context)?.perMealAverages ??
-                        'Per-meal averages (kcal/day)',
+                    AppLocalizations.of(context)!.perMealAverages,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -464,8 +463,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
 
                 // Macros averages
                 Text(
-                    AppLocalizations.of(context)?.weeklyMacroAverages ??
-                        'Weekly macro averages',
+                    AppLocalizations.of(context)!.weeklyMacroAverages,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -479,17 +477,15 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                   runSpacing: 1.h,
                   children: [
                     _summaryCard(
-                        AppLocalizations.of(context)?.carbsAvg ??
-                            'Carbs (avg)',
+                        AppLocalizations.of(context)!.carbsAvg,
                         '${avgCarbs} g',
                         context.semanticColors.warning),
                     _summaryCard(
-                        AppLocalizations.of(context)?.proteinAvg ??
-                            'Protein (avg)',
+                        AppLocalizations.of(context)!.proteinAvg,
                         '${avgProteins} g',
                         context.semanticColors.success),
                     _summaryCard(
-                        AppLocalizations.of(context)?.fatAvg ?? 'Fat (avg)',
+                        AppLocalizations.of(context)!.fatAvg,
                         '${avgFats} g',
                         Theme.of(context).colorScheme.primary),
                   ],
@@ -498,7 +494,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 SizedBox(height: 3.h),
 
                 // Water bars
-                Text(AppLocalizations.of(context)?.waterPerDay ?? 'Water per day',
+                Text(AppLocalizations.of(context)!.waterPerDay,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -521,8 +517,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
 
                 // Exercise bars
                 Text(
-                    AppLocalizations.of(context)?.exercisePerDay ??
-                        'Exercise per day',
+                    AppLocalizations.of(context)!.exercisePerDay,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -537,7 +532,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 SizedBox(height: 3.h),
 
                 // Daily summary table
-                Text(AppLocalizations.of(context)?.dailySummary ?? 'Daily summary',
+                Text(AppLocalizations.of(context)!.dailySummary,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -588,37 +583,37 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface)),
                 SizedBox(height: 1.5.h),
-                _sheetAction('Export CSV', Icons.upload_outlined, () async {
+                _sheetAction(AppLocalizations.of(context)?.exportCsv ?? 'Export CSV', Icons.upload_outlined, () async {
                   Navigator.pop(context);
                   await _exportWeekCsv();
                 }),
                 if (kIsWeb)
-                  _sheetAction('Download CSV', Icons.download_outlined, () {
+                  _sheetAction(AppLocalizations.of(context)?.downloadCsv ?? 'Download CSV', Icons.download_outlined, () {
                     Navigator.pop(context);
                     _downloadWeekCsv();
                   }),
-                _sheetAction('Import CSV', Icons.file_upload_outlined,
+                _sheetAction(AppLocalizations.of(context)?.importCsv ?? 'Import CSV', Icons.file_upload_outlined,
                     () async {
                   Navigator.pop(context);
                   await _importWeekCsv();
                 }),
                 const Divider(),
                 _sheetAction(
-                    'Salvar semana como template', Icons.bookmark_border, () {
+                    AppLocalizations.of(context)?.saveWeekAsTemplate ?? 'Save week as template', Icons.bookmark_border, () {
                   Navigator.pop(context);
                   _promptSaveWeekTemplate();
                 }),
-                _sheetAction('Aplicar template de semana', Icons.bookmarks,
+                _sheetAction(AppLocalizations.of(context)?.applyWeekTemplate ?? 'Apply week template', Icons.bookmarks,
                     () async {
                   Navigator.pop(context);
                   await _promptApplyWeekTemplate();
                 }),
-                _sheetAction('Duplicar semana → próxima', Icons.copy_all,
+                _sheetAction(AppLocalizations.of(context)?.duplicateWeekNext ?? 'Duplicate week → next', Icons.copy_all,
                     () async {
                   Navigator.pop(context);
                   await _promptDuplicateWeek();
                 }),
-                _sheetAction('Duplicar semana → escolher data', Icons.event,
+                _sheetAction(AppLocalizations.of(context)?.duplicateWeekPickDate ?? 'Duplicate week → pick date', Icons.event,
                     () async {
                   Navigator.pop(context);
                   await _promptDuplicateWeekToDate();
@@ -693,7 +688,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         backgroundColor:
             Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
         title: Text(
-          AppLocalizations.of(context)?.fileName ?? 'File name',
+          AppLocalizations.of(context)!.fileName,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -701,13 +696,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         content: TextField(
           controller: controller,
           decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)?.fileHint ?? 'file.csv',
+            hintText: AppLocalizations.of(context)!.fileHint,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel',
+            child: Text(AppLocalizations.of(context)!.cancel,
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
@@ -721,7 +716,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               if (!mounted) return;
               Navigator.pop(context);
             },
-            child: const Text('Baixar'),
+            child: Text(AppLocalizations.of(context)!.download),
           ),
         ],
       ),
@@ -745,7 +740,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       builder: (_) => AlertDialog(
         backgroundColor:
             Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-        title: Text('Importar CSV da semana',
+        title: Text(AppLocalizations.of(context)!.importCsv,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface)),
         content: SizedBox(
@@ -773,7 +768,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                       }
                     },
                     icon: const Icon(Icons.attach_file),
-                    label: const Text('Escolher arquivo (.csv)'),
+                    label: Text(AppLocalizations.of(context)!.chooseFileCsv),
                   ),
                 ),
               ],
@@ -783,7 +778,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel',
+            child: Text(AppLocalizations.of(context)!.cancel,
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
@@ -797,12 +792,12 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content:
-                      Text('Importado ${imported} dia(s) desta semana'),
+                      Text('Imported ${imported} day(s) this week'),
                   backgroundColor: context.semanticColors.success,
                 ),
               );
             },
-            child: const Text('Importar'),
+            child: Text(AppLocalizations.of(context)!.importCsv),
           ),
         ],
       ),
@@ -1090,7 +1085,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                 .withValues(alpha: 0.6)),
                       ),
                       child: Text(
-                        AppLocalizations.of(context)?.overGoal ?? 'Over goal',
+                        AppLocalizations.of(context)!.overGoal,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.error,
                           fontWeight: FontWeight.w700,
@@ -1142,10 +1137,10 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     final t = AppLocalizations.of(context);
     return Row(
       children: [
-        item(t?.mealBreakfast ?? 'Breakfast', 'breakfast', 0),
-        item(t?.mealLunch ?? 'Lunch', 'lunch', 1),
-        item(t?.mealDinner ?? 'Dinner', 'dinner', 2),
-        item(t?.mealSnack ?? 'Snack', 'snack', 3),
+        item(t!.mealBreakfast, 'breakfast', 0),
+        item(t.mealLunch, 'lunch', 1),
+        item(t.mealDinner, 'dinner', 2),
+        item(t.mealSnack, 'snack', 3),
       ],
     );
             
@@ -1156,13 +1151,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     final int weekday = _anchorDate.weekday;
     final DateTime monday = _anchorDate.subtract(Duration(days: (weekday - 1)));
     final labels = [
-      AppLocalizations.of(context)?.hdrDate ?? 'Date',
+      AppLocalizations.of(context)!.hdrDate,
       'Kcal',
-      AppLocalizations.of(context)?.hdrWater ?? 'Water',
-      AppLocalizations.of(context)?.hdrExercise ?? 'Exer.',
-      AppLocalizations.of(context)?.hdrCarb ?? 'Carb',
-      AppLocalizations.of(context)?.hdrProt ?? 'Prot',
-      AppLocalizations.of(context)?.hdrFat ?? 'Fat',
+      AppLocalizations.of(context)!.hdrWater,
+      AppLocalizations.of(context)!.hdrExercise,
+      AppLocalizations.of(context)!.hdrCarb,
+      AppLocalizations.of(context)!.hdrProt,
+      AppLocalizations.of(context)!.hdrFat,
     ];
     return Container(
       padding: EdgeInsets.all(3.w),
@@ -1335,7 +1330,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                               StatefulBuilder(builder: (context, setRow) {
                                 return Row(
                                   children: [
-                                    Text('Somente novos',
+                                    Text(AppLocalizations.of(context)!.onlyNew,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
@@ -1381,7 +1376,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                         arguments: {'date': day.toIso8601String()},
                       );
                     },
-                    child: Text('Ver dia',
+                    child: Text(AppLocalizations.of(context)!.viewDay,
                         style: TextStyle(
                             color:
                                 Theme.of(context).colorScheme.primary)),
@@ -1396,8 +1391,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content:
-                                  Text('Água ajustada: -250ml (total ${ml}ml)'),
+                              content: Text(AppLocalizations.of(context)!.waterAdjustedMinus250(ml)),
                               backgroundColor: context.semanticColors.warning,
                             ),
                           );
@@ -1413,8 +1407,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                  'Água registrada: +250ml (total ${ml}ml)'),
+                              content: Text(AppLocalizations.of(context)!.addSheetAddedWater250),
                               backgroundColor: context.semanticColors.success,
                             ),
                           );
@@ -1429,8 +1422,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content:
-                                  const Text('Exercício registrado: +100 kcal'),
+                              content: Text(AppLocalizations.of(context)!.exerciseAdded100),
                               backgroundColor: context.semanticColors.success,
                             ),
                           );
@@ -1445,13 +1437,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           if (ok && mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text('Template de dia salvo'),
+                                content: Text(AppLocalizations.of(context)!.dayTemplateSaved),
                                 backgroundColor: context.semanticColors.success,
                               ),
                             );
                           }
                         },
-                        child: const Text('Salvar como template'),
+                        child: Text(AppLocalizations.of(context)?.saveWeekAsTemplate ?? 'Save week as template'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -1464,8 +1456,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text(
-                                    'Nenhum item "novo" para duplicar'),
+                                content: Text(AppLocalizations.of(context)!.noNewItemsToDuplicate),
                                 backgroundColor: context.semanticColors.warning,
                               ),
                             );
@@ -1490,7 +1481,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                       .dialogTheme
                                       .backgroundColor ??
                                   Theme.of(context).colorScheme.surface,
-                              title: Text('Selecionar itens para duplicar',
+                              title: Text(AppLocalizations.of(context)?.selectItemsToDuplicateTitle ?? 'Select items to duplicate',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleLarge
@@ -1586,7 +1577,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Continuar'),
+                                  child: Text(AppLocalizations.of(context)?.continueLabel ?? 'Continue'),
                                 ),
                               ],
                             ),
@@ -1643,7 +1634,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             ),
                           );
                         },
-                        child: const Text('Duplicar novos → escolher data'),
+                        child: Text(AppLocalizations.of(context)?.duplicateNewPickDate ?? 'Duplicate new → pick date'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -1658,7 +1649,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                             ),
                           );
                         },
-                        child: const Text('Aplicar template'),
+                        child: Text(AppLocalizations.of(context)?.applyWeekTemplate ?? 'Apply week template'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -1670,8 +1661,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                  'Dia duplicado para ${to.day}/${to.month}'),
+                              content: Text(AppLocalizations.of(context)!.dayDuplicatedTo('${to.day}/${to.month}')),
                               backgroundColor: context.semanticColors.success,
                             ),
                           );
@@ -1688,13 +1678,12 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                  'Dia duplicado para ${picked.day}/${picked.month}'),
+                              content: Text(AppLocalizations.of(context)!.dayDuplicatedTo('${picked.day}/${picked.month}')),
                               backgroundColor: context.semanticColors.success,
                             ),
                           );
                         },
-                        child: const Text('Duplicar → escolher data'),
+                        child: Text(AppLocalizations.of(context)?.duplicateNewPickDate ?? 'Duplicate new → pick date'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -1752,20 +1741,20 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(kIsWeb
-                                            ? 'CSV do dia baixado'
-                                            : 'CSV do dia copiado'),
+                                            ? AppLocalizations.of(context)!.dayCsvDownloaded
+                                            : AppLocalizations.of(context)!.dayCsvCopied),
                                         backgroundColor:
                                             context.semanticColors.success,
                                       ),
                                     );
                                   },
-                                  child: Text(kIsWeb ? 'Baixar' : 'Copiar'),
+                                  child: Text(kIsWeb ? (AppLocalizations.of(context)?.download ?? 'Download') : (AppLocalizations.of(context)?.copy ?? 'Copy')),
                                 ),
                               ],
                             ),
                           );
                         },
-                        child: const Text('Exportar CSV'),
+                        child: Text(AppLocalizations.of(context)?.exportCsv ?? 'Export CSV'),
                       ),
                       OutlinedButton(
                         onPressed: () async {
@@ -1778,7 +1767,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                       .dialogTheme
                                       .backgroundColor ??
                                   Theme.of(context).colorScheme.surface,
-                              title: Text('Importar CSV do dia',
+                              title: Text(AppLocalizations.of(context)?.importDayCsv ?? 'Import day CSV',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleLarge
@@ -1798,7 +1787,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                         onChanged: (v) => setState(
                                             () => clearBefore = v ?? false),
                                         title: Text(
-                                            'Limpar dia antes de importar',
+                                            AppLocalizations.of(context)!.clearDayBeforeApply,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodyMedium
@@ -1834,8 +1823,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                             }
                                           },
                                           icon: const Icon(Icons.attach_file),
-                                          label: const Text(
-                                              'Escolher arquivo (.csv)'),
+                                          label: Text(AppLocalizations.of(context)!.chooseFileCsv),
                                         ),
                                       ),
                                     ],
@@ -1865,13 +1853,13 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                            'Importado ${n} item(ns) para o dia'),
+                                            'Imported ${n} item(s) to day'),
                                         backgroundColor:
                                             context.semanticColors.success,
                                       ),
                                     );
                                   },
-                                  child: const Text('Importar'),
+                                  child: Text(AppLocalizations.of(context)!.importCsv),
                                 ),
                               ],
                             ),
@@ -1898,7 +1886,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       builder: (_) => AlertDialog(
         backgroundColor:
             Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-        title: Text('Salvar dia como template',
+      title: Text(AppLocalizations.of(context)?.saveWeekAsTemplate ?? 'Save week as template',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface)),
         content: TextField(
@@ -1921,7 +1909,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 Navigator.pop(context, true);
               }
             },
-            child: Text(AppLocalizations.of(context)?.save ?? 'Save'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -1935,7 +1923,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Nenhum template de dia salvo'),
+          content: Text(AppLocalizations.of(context)!.noDayTemplatesSaved),
           backgroundColor: context.semanticColors.warning,
         ),
       );
@@ -1947,7 +1935,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       builder: (_) => AlertDialog(
         backgroundColor:
             Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-        title: Text('Aplicar template de dia',
+      title: Text(AppLocalizations.of(context)?.applyWeekTemplate ?? 'Apply week template',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface)),
         content: SizedBox(
@@ -1959,7 +1947,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 return CheckboxListTile(
                   value: clearBefore,
                   onChanged: (v) => setState(() => clearBefore = v ?? false),
-                  title: Text('Limpar dia antes de aplicar',
+                  title: Text(AppLocalizations.of(context)?.clearDayBeforeApply ?? 'Clear day before applying',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurface)),
                   controlAffinity: ListTileControlAffinity.leading,
@@ -1969,7 +1957,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               for (final t in templates)
                 ListTile(
                   title: Text(
-                    (t['label'] as String?) ?? 'sem nome',
+                    (t['label'] as String?) ?? (AppLocalizations.of(context)?.untitled ?? 'untitled'),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface),
                   ),
@@ -2007,7 +1995,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Fechar',
+            child: Text(AppLocalizations.of(context)?.close ?? 'Close',
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
@@ -2025,7 +2013,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Semana duplicada para a próxima'),
+        content: Text(AppLocalizations.of(context)!.weekDuplicatedNext),
         backgroundColor: context.semanticColors.success,
       ),
     );
@@ -2038,12 +2026,12 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       builder: (_) => AlertDialog(
         backgroundColor:
             Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-        title: Text('Salvar semana como template',
+      title: Text(AppLocalizations.of(context)?.saveWeekAsTemplate ?? 'Save week as template',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface)),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'Nome do template'),
+          decoration: InputDecoration(hintText: AppLocalizations.of(context)!.templateName),
         ),
         actions: [
           TextButton(
@@ -2067,12 +2055,12 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Template de semana salvo'),
+                  content: Text(AppLocalizations.of(context)!.weekTemplateSaved),
                   backgroundColor: context.semanticColors.success,
                 ),
               );
             },
-            child: Text(AppLocalizations.of(context)?.save ?? 'Save'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -2085,7 +2073,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Nenhum template de semana salvo'),
+          content: Text(AppLocalizations.of(context)!.noWeekTemplatesSaved),
           backgroundColor: context.semanticColors.warning,
         ),
       );
@@ -2097,7 +2085,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       builder: (_) => AlertDialog(
         backgroundColor:
             Theme.of(context).dialogTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-        title: Text('Aplicar template de semana',
+      title: Text(AppLocalizations.of(context)?.applyWeekTemplate ?? 'Apply week template',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface)),
         content: SizedBox(
@@ -2166,7 +2154,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Fechar',
+            child: Text(AppLocalizations.of(context)?.close ?? 'Close',
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ),
@@ -2187,8 +2175,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-            'Semana duplicada para iniciar em ${toMonday.day}/${toMonday.month}'),
+        content: Text(AppLocalizations.of(context)!.weekDuplicatedToStart('${toMonday.day}/${toMonday.month}')),
         backgroundColor: context.semanticColors.success,
       ),
     );

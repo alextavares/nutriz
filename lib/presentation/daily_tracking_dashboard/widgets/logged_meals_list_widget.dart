@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class LoggedMealsListWidget extends StatelessWidget {
   final List<Map<String, dynamic>> entries;
@@ -54,7 +55,7 @@ class LoggedMealsListWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Refeições de hoje',
+            AppLocalizations.of(context)!.dashboardTodaysMeals,
             style: textTheme.titleLarge?.copyWith(
               color: colors.onSurface,
               fontWeight: FontWeight.w700,
@@ -67,15 +68,15 @@ class LoggedMealsListWidget extends StatelessWidget {
               context, e.key, e.value, colors, semantics, textTheme)),
           // Render empty states for missing meals
           ..._missingMeals(grouped.keys.toList()).map(
-              (label) => _buildEmptySection(context, label, colors, textTheme)),
+              (mealKey) => _buildEmptySection(context, mealKey, colors, textTheme)),
         ],
       ),
     );
   }
 
   List<String> _missingMeals(List<String> present) {
-    final all = <String>['Café da manhã', 'Almoço', 'Jantar', 'Lanches'];
-    return all.where((m) => !present.contains(m)).toList();
+    final all = <String>['breakfast', 'lunch', 'dinner', 'snack'];
+    return all.where((k) => !present.contains(k)).toList();
   }
 
   Widget _macroBadge(
@@ -99,21 +100,42 @@ class LoggedMealsListWidget extends StatelessWidget {
     );
   }
 
-  IconData _mealIcon(String label) {
-    if (label.contains('Café')) return Icons.wb_sunny_outlined;
-    if (label.contains('Almoço')) return Icons.restaurant_outlined;
-    if (label.contains('Jantar')) return Icons.nightlight_outlined;
-    return Icons.fastfood_outlined;
+  IconData _mealIcon(String mealKey) {
+    switch (mealKey) {
+      case 'breakfast':
+        return Icons.wb_sunny_outlined;
+      case 'lunch':
+        return Icons.restaurant_outlined;
+      case 'dinner':
+        return Icons.nightlight_outlined;
+      default:
+        return Icons.fastfood_outlined;
+    }
+  }
+
+  String _mealLabel(BuildContext context, String mealKey) {
+    final t = AppLocalizations.of(context)!;
+    switch (mealKey) {
+      case 'breakfast':
+        return t.mealBreakfast;
+      case 'lunch':
+        return t.mealLunch;
+      case 'dinner':
+        return t.mealDinner;
+      default:
+        return t.mealSnack;
+    }
   }
 
   Widget _buildSection(
     BuildContext context,
-    String label,
+    String mealKey,
     List<Map<String, dynamic>> items,
     ColorScheme colors,
     AppSemanticColors semantics,
     TextTheme textTheme,
   ) {
+    final label = _mealLabel(context, mealKey);
     final totalKcal = items.fold<int>(
         0, (sum, it) => sum + ((it['calories'] as num?)?.toInt() ?? 0));
     final totalCarb = items.fold<int>(
@@ -123,15 +145,7 @@ class LoggedMealsListWidget extends StatelessWidget {
     final totalFat =
         items.fold<int>(0, (s, it) => s + ((it['fat'] as num?)?.toInt() ?? 0));
     // Detecta key da refeição
-    String mealKey;
-    if (label.contains('Café'))
-      mealKey = 'breakfast';
-    else if (label.contains('Almoço'))
-      mealKey = 'lunch';
-    else if (label.contains('Jantar'))
-      mealKey = 'dinner';
-    else
-      mealKey = 'snack';
+    // mealKey already provided
     final int? goal = mealKcalGoals?[mealKey];
     final bool exceeded = goal != null && goal > 0 && totalKcal > goal;
     final macroGoals = mealMacroGoalsByKey?[mealKey] ?? const {};
@@ -150,7 +164,7 @@ class LoggedMealsListWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              Icon(_mealIcon(label), color: colors.onSurfaceVariant, size: 18),
+              Icon(_mealIcon(mealKey), color: colors.onSurfaceVariant, size: 18),
               SizedBox(width: 1.w),
               Text(
                 label,
@@ -169,7 +183,7 @@ class LoggedMealsListWidget extends StatelessWidget {
                   },
                 ),
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('Adicionar'),
+                label: Text(AppLocalizations.of(context)!.addSheetAddFood),
                 style: OutlinedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -191,7 +205,7 @@ class LoggedMealsListWidget extends StatelessWidget {
               if (exceeded) ...[
                 SizedBox(width: 2.w),
                 Chip(
-                  label: const Text('Excedeu'),
+                  label: Text(AppLocalizations.of(context)!.overGoal),
                   visualDensity: VisualDensity.compact,
                   backgroundColor: colors.surfaceContainerHigh,
                   shape: StadiumBorder(
@@ -206,15 +220,15 @@ class LoggedMealsListWidget extends StatelessWidget {
               ] else ...[
                 if (carbOver) ...[
                   SizedBox(width: 2.w),
-                  _macroBadge('Carb+', colors, semantics, textTheme)
+                  _macroBadge(AppLocalizations.of(context)!.carbAbbrPlus, colors, semantics, textTheme)
                 ],
                 if (protOver) ...[
                   SizedBox(width: 2.w),
-                  _macroBadge('Prot+', colors, semantics, textTheme)
+                  _macroBadge(AppLocalizations.of(context)!.proteinAbbrPlus, colors, semantics, textTheme)
                 ],
                 if (fatOver) ...[
                   SizedBox(width: 2.w),
-                  _macroBadge('Gord+', colors, semantics, textTheme)
+                  _macroBadge(AppLocalizations.of(context)!.fatAbbrPlus, colors, semantics, textTheme)
                 ],
               ]
             ]),
@@ -289,14 +303,12 @@ class LoggedMealsListWidget extends StatelessWidget {
 
   Widget _buildEmptySection(
     BuildContext context,
-    String label,
+    String mealKey,
     ColorScheme colors,
     TextTheme textTheme,
   ) {
-    IconData icon = Icons.fastfood_outlined;
-    if (label.contains('Café')) icon = Icons.wb_sunny_outlined;
-    if (label.contains('Almoço')) icon = Icons.restaurant_outlined;
-    if (label.contains('Jantar')) icon = Icons.nightlight_outlined;
+    final label = _mealLabel(context, mealKey);
+    final icon = _mealIcon(mealKey);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,11 +332,11 @@ class LoggedMealsListWidget extends StatelessWidget {
                   context,
                   AppRoutes.addFoodEntry,
                   arguments: {
-                    'mealName': label,
+                    'mealKey': mealKey,
                   },
                 ),
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('Adicionar'),
+                label: Text(AppLocalizations.of(context)!.addSheetAddFood),
                 style: OutlinedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -368,14 +380,14 @@ class LoggedMealsListWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sem itens nesta refeição',
+                      AppLocalizations.of(context)!.noItemsThisMeal,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colors.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
-                      'Toque em + Adicionar para registrar alimentos rapidamente.',
+                      AppLocalizations.of(context)!.tapAddToLog,
                       style: textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),
@@ -459,7 +471,7 @@ class LoggedMealsListWidget extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(right: 2.w),
                 child: Chip(
-                  label: const Text('novo'),
+                  label: Text(AppLocalizations.of(context)!.achievementsNewBadge),
                   visualDensity: VisualDensity.compact,
                   backgroundColor: colors.surfaceContainerHigh,
                   shape: StadiumBorder(
@@ -516,21 +528,21 @@ class LoggedMealsListWidget extends StatelessWidget {
   Map<String, List<Map<String, dynamic>>> _groupByMeal(
       List<Map<String, dynamic>> entries) {
     final Map<String, List<Map<String, dynamic>>> grouped = {
-      'Café da manhã': [],
-      'Almoço': [],
-      'Jantar': [],
-      'Lanches': [],
+      'breakfast': [],
+      'lunch': [],
+      'dinner': [],
+      'snack': [],
     };
     for (final e in entries) {
       final meal = (e['mealTime'] as String?) ?? 'snack';
       if (meal == 'breakfast')
-        grouped['Café da manhã']!.add(e);
+        grouped['breakfast']!.add(e);
       else if (meal == 'lunch')
-        grouped['Almoço']!.add(e);
+        grouped['lunch']!.add(e);
       else if (meal == 'dinner')
-        grouped['Jantar']!.add(e);
+        grouped['dinner']!.add(e);
       else
-        grouped['Lanches']!.add(e);
+        grouped['snack']!.add(e);
     }
     // remove vazias
     grouped.removeWhere((key, value) => value.isEmpty);

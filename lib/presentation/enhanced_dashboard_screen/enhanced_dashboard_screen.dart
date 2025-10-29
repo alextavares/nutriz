@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
-import 'package:nutritracker/theme/design_tokens.dart';
-import 'package:nutritracker/l10n/generated/app_localizations.dart';
+import 'package:nutriz/theme/design_tokens.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
 import './widgets/nutrition_summary_card.dart';
 import './widgets/quick_actions_grid.dart';
 import './widgets/todays_meals_list.dart';
