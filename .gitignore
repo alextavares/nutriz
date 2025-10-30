@@ -58,6 +58,8 @@ coverage/
 .venv_cv/
 logs/
 pr_captures/
+*.rar
+*.zip
 
 # Node server env (keep secrets local)
 server/express/.env

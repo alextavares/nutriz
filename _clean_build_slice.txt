@@ -1,0 +1,456 @@
+
+    // Atalho para desenvolvimento: autenticar automaticamente quando rodando localmente
+    assert(() {
+      isAuthenticated = true;
+      prefs.setBool('is_authenticated', true);
+      prefs.setString('user_email', 'dev@local');
+      prefs.setBool('premium_status', false);
+      debugPrint("Modo desenvolvedor: login automático ativado");
+      return true;
+    }());
+
+    if (!isAuthenticated && mounted) {
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final remainingCalories = (_dailyData["totalCalories"] as int? ?? 0) -
+        (_dailyData["consumedCalories"] as int? ?? 0);
+
+    String _fmtDate(DateTime d) {
+      String two(int n) => n < 10 ? '0$n' : '$n';
+      return '${two(d.day)}/${two(d.month)}';
+    }
+
+    void _prevDay() {
+      setState(() =>
+          _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
+      _loadToday();
+      _loadWeek();
+    }
+
+    void _nextDay() {
+      setState(
+          () => _selectedDate = _selectedDate.add(const Duration(days: 1)));
+      _loadToday();
+      _loadWeek();
+    }
+
+    // Removed unused local helpers: _goToday, _openSearch
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: Theme.of(context).colorScheme.primary,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top actions (icons)
+                _topActionsRow(context),
+                SizedBox(height: 0.6.h),
+                // Show fasting banner prominently below header/top actions
+                _fastingMuteBanner(context),
+                SizedBox(height: 0.6.h),
+
+                // Top dashboard header estilo imagem de referência
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
+                    width: double.infinity,
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 1.0.h, horizontal: 4.w),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.2)),
+                      boxShadow: const [],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Date navigation moved to top actions row
+                        const SizedBox.shrink(),
+                        // Chip "Semana N" removido (YAZIO-like)
+                        SizedBox(height: 0.2.h),
+                        CircularProgressChartWidget(
+                          consumedCalories: _dailyData["consumedCalories"],
+                          remainingCalories: remainingCalories +
+                              ((_dailyData["spentCalories"] as int?) ?? 0),
+                          spentCalories: _dailyData["spentCalories"],
+                          totalCalories: _dailyData["totalCalories"],
+                          onTap: _showCalorieBreakdown,
+                          waterMl: _dailyData["waterMl"] as int,
+                        ),
+
+                        // Removed equation card under ring to match YAZIO (no text under the ring)
+                        SizedBox(height: 0.8.h),
+                        _overallMacrosRow(context),
+                      ],
+                    ),
+                  );
+                }),
+                // Botão de ações removido para interface mais limpa/semelhante ao YAZIO
+
+                // Removed duplicate calorie budget card to avoid repeating remaining kcal and label
+                const SizedBox.shrink(),
+
+                // Quick actions removidas para layout mais limpo (estilo YAZIO)
+
+                // Circular chart moved to header
+                const SizedBox.shrink(),
+
+                // Per-meal progress (kcal and macros) — aligns with YAZIO cards
+                SizedBox(height: 1.6.h),
+                _buildPerMealProgressSection(),
+                SizedBox(height: 1.2.h),
+                // Thin divider between meals and water
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.25),
+                  ),
+                ),
+                SizedBox(height: 1.2.h),
+
+                // Water progress
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 3.2.w, vertical: 1.4.w),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.2)),
+                      boxShadow: const [],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.water_drop_outlined,
+                                    color: cs.primary, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Água',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        color: cs.onSurface,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                                const SizedBox(width: 10),
+                                if (_hydrationStreak > 0)
+                                  Builder(builder: (context) {
+                                    final w = MediaQuery.of(context).size.width;
+                                    final double fs = w < 340
+                                        ? 9.sp
+                                        : (w < 380 ? 10.sp : 11.sp);
+                                    final double padH = w < 360 ? 6 : 8;
+                                    final double padV = w < 360 ? 2 : 3;
+                                    return Chip(
+                                      label:
+                                          Text('Streak: ${_hydrationStreak}d'),
+                                      visualDensity: VisualDensity.compact,
+                                      backgroundColor:
+                                          cs.primary.withValues(alpha: 0.12),
+                                      side: BorderSide(
+                                          color: cs.primary
+                                              .withValues(alpha: 0.3)),
+                                      labelPadding: EdgeInsets.symmetric(
+                                          horizontal: padH, vertical: padV),
+                                      labelStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: fs,
+                                          ),
+                                    );
+                                  }),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                TweenAnimationBuilder<double>(
+                                  key: ValueKey(_dailyData["waterMl"] as int?),
+                                  tween: Tween<double>(
+                                    begin: 0,
+                                    end: (_dailyData["waterMl"] as int)
+                                        .toDouble(),
+                                  ),
+                                  duration: _kAnimDuration,
+                                  curve: Curves.linear,
+                                  builder: (context, v, _) {
+                                    final int current =
+                                        _dailyData["waterMl"] as int;
+                                    final int goal =
+                                        _dailyData["waterGoalMl"] as int;
+                                    if (current <= 0) {
+                                      return Text(
+                                        '0/$goal ml',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: cs.primary,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      );
+                                    }
+                                    final p = (v / current).clamp(0.0, 1.0);
+                                    final delayed = p <= _kDelayRight
+                                        ? 0.0
+                                        : (p - _kDelayRight) /
+                                            (1.0 - _kDelayRight);
+                                    final eased =
+                                        _kAnimCurve.transform(delayed);
+                                    final shown = (current * eased).toInt();
+                                    return Text(
+                                      '$shown/$goal ml',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    );
+                                  },
+                                ),
+                                SizedBox(width: 1.2.w),
+                                IconButton(
+                                  tooltip: 'Editar meta',
+                                  icon: Icon(Icons.edit_outlined,
+                                      color: cs.onSurfaceVariant, size: 18),
+                                  onPressed: _openEditWaterGoalDialog,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        // Emphasize hydration: progress + remaining hint
+                        const SizedBox(height: 8),
+                        Builder(builder: (context) {
+                          final int goal = (_dailyData["waterGoalMl"] as int);
+                          final int current = (_dailyData["waterMl"] as int);
+                          final double ratio =
+                              goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+                          final int remain = (goal - current).clamp(0, goal);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: TweenAnimationBuilder<double>(
+                                  key: ValueKey(ratio),
+                                  tween: Tween<double>(begin: 0, end: ratio),
+                                  duration: _kAnimDuration,
+                                  curve: Curves.linear,
+                                  builder: (context, val, _) {
+                                    if (ratio <= 0) {
+                                      return LinearProgressIndicator(
+                                        value: 0,
+                                        minHeight: 6,
+                                        backgroundColor: cs.outlineVariant
+                                            .withValues(alpha: 0.25),
+                                        color: cs.primary,
+                                      );
+                                    }
+                                    final p = (val / ratio).clamp(0.0, 1.0);
+                                    final eased = _kAnimCurve.transform(p);
+                                    return LinearProgressIndicator(
+                                      value: eased * ratio,
+                                      minHeight: 4,
+                                      backgroundColor: cs.outlineVariant
+                                          .withValues(alpha: 0.20),
+                                      color: cs.primary,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: remain > 0
+                                        ? TweenAnimationBuilder<double>(
+                                            key: ValueKey(remain),
+                                            tween: Tween<double>(
+                                                begin: 0,
+                                                end: remain.toDouble()),
+                                            duration: _kAnimDuration,
+                                            curve: Curves.linear,
+                                            builder: (context, v, _) {
+                                              final p =
+                                                  (v / remain).clamp(0.0, 1.0);
+                                              final delayed = p <= _kDelayCenter
+                                                  ? 0.0
+                                                  : (p - _kDelayCenter) /
+                                                      (1.0 - _kDelayCenter);
+                                              final eased = _kAnimCurve
+                                                  .transform(delayed);
+                                              final shown =
+                                                  (remain * eased).toInt();
+                                              return Text(
+                                                'Faltam ${shown} ml para a meta',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: cs.primary,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              );
+                                            },
+                                          )
+                                        : Text(
+                                            'Meta de água alcançada! 🎉',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: cs.primary,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton(
+                                    onPressed: _addWater,
+                                    style: OutlinedButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      side: BorderSide(
+                                          color: cs.primary
+                                              .withValues(alpha: 0.6)),
+                                      foregroundColor: cs.primary,
+                                    ),
+                                    child: const Text('+250 ml'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        }),
+                        const SizedBox(height: 8),
+                        _waterCupsRow(context),
+                      ],
+                    ),
+                  );
+                }),
+
+                // Thin divider between activities and notes
+                SizedBox(height: 1.2.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.25),
+                  ),
+                ),
+                SizedBox(height: 1.2.h),
+
+                // Notes card (link to Notes screen)
+                Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 3.2.w, vertical: 1.4.w),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor:
+                              cs.primary.withValues(alpha: 0.12),
+                          child: Icon(
+                            Icons.sticky_note_2_outlined,
+                            color: cs.primary,
+                            size: 18,
+                          ),
+                        ),
+                        SizedBox(width: 3.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Anotações',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      color: cs.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              const SizedBox(height: 2),
+                              FutureBuilder<List<Map<String, dynamic>>>(
+                                future: NotesStorage.getAll(),
+                                builder: (context, snap) {
+                                  final list = snap.data ?? const [];
+                                  // count notes for selected date
+                                  int countToday = 0;
+                                  final d = _selectedDate;
+                                  final today =
+                                      DateTime(d.year, d.month, d.day);
+                                  Map<String, dynamic>? last;
+                                  for (final n in list) {
+                                    final u = DateTime.tryParse(
+                                            (n['updatedAt'] ?? n['createdAt'])
+                                                    as String? ??
+                                                '') ??
+                                        DateTime(1970);
+                                    final dd = DateTime(u.year, u.month, u.day);
+                                    if (dd == today) {
+                                      countToday++;
+                                      if (last == null) {
+                                        last = n;
+                                      } else {
+                                        final lu = DateTime.tryParse(
+                                                (last['updatedAt'] ??
+                                                            last['createdAt'])
+                                                        as String? ??
+                                                    '') ??
+                                            DateTime(1970);
+                                        if (u.isAfter(lu)) last = n;

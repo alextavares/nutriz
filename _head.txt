@@ -1,0 +1,120 @@
+import 'package:flutter/services.dart';
+import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../core/app_export.dart';
+import '../../theme/design_tokens.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_icons.dart';
+import '../../components/app_card.dart';
+import '../../components/animated_scale_button.dart';
+import '../../components/pill_button.dart';
+import './widgets/circular_progress_chart_widget.dart';
+import './widgets/dashboard_ring_v2.dart';
+import './widgets/macronutrient_progress_widget.dart';
+import './widgets/water_tracker_card_v2.dart';
+import '../../services/nutrition_storage.dart';
+import '../../services/user_preferences.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import '../../services/notes_storage.dart';
+import '../../services/body_metrics_storage.dart';
+import '../../services/fasting_storage.dart';
+import '../../services/streak_service.dart';
+import '../../services/achievement_service.dart';
+import './widgets/achievement_badges_widget.dart';
+import '../../services/notifications_service.dart';
+import '../../services/weekly_goal_service.dart';
+import '../../services/daily_goal_service.dart';
+import '../common/celebration_overlay.dart';
+import 'package:nutriz/util/download_stub.dart'
+    if (dart.library.html) 'package:nutriz/util/download_web.dart';
+import 'package:nutriz/util/upload_stub.dart'
+    if (dart.library.html) 'package:nutriz/util/upload_web.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../components/multi_action_fab.dart';
+import '../../components/pressable_widget.dart';
+import '../../components/animated_card.dart';
+import '../../core/app_strings.dart';
+import '../../components/soft_button.dart';
+import '../../components/coach_mark.dart';
+import '../../components/meal_item_skeleton.dart';
+import '../../core/haptic_helper.dart';
+import '../../core/toast_manager.dart';
+import '../../widgets/notes_card.dart';
+
+class DailyTrackingDashboard extends StatefulWidget {
+  const DailyTrackingDashboard({super.key});
+
+  @override
+  State<DailyTrackingDashboard> createState() => _DailyTrackingDashboardState();
+}
+
+class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
+  DateTime _selectedDate = DateTime.now();
+  bool _initArgsHandled = false;
+  int _currentWeek = 32;
+  bool _showOnboarding = false;
+  int _onboardingStep = 0;
+  bool _isLoadingMeals = false;
+  // Removed old day/week toggle state — we follow YAZIO-like date nav
+  final Set<String> _expandedMealKeys = <String>{};
+  List<Map<String, dynamic>> _todayEntries = [];
+  List<int> _weeklyCalories = List.filled(7, 0);
+  List<int> _weeklyWater = List.filled(7, 0);
+  Map<String, dynamic> _lastExerciseMeta = const {};
+
+  String _fmtInt(int v) {
+    final locale = Localizations.localeOf(context).toString();
+    return NumberFormat.decimalPattern(locale).format(v);
+  }
+
+  // Exercise UI state
+  int _exerciseStreak = 0;
+  bool _exerciseExpanded = false;
+  Map<String, MealGoals> _mealGoals = const {
+    'breakfast': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
+    'lunch': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
+    'dinner': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
+    'snack': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
+  };
+  Map<String, Map<String, int>> _mealTotals = {
+    'breakfast': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+    'lunch': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+    'dinner': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+    'snack': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+  };
+  final Set<String> _exceededMeals = {};
+  // removed unused: _exceededMacroKeys
+  int _hydrationStreak = 0;
+  int _fastingStreak = 0;
+  int _caloriesStreak = 0;
+  int _proteinStreak = 0;
+  List<Map<String, dynamic>> _achievements = const [];
+  List<Map<String, dynamic>> _exerciseLogs = const [];
+  bool _showNextMilestoneCaptions = true;
+  // Fasting mute banner state
+  bool _fastingActiveMuted = false;
+  DateTime? _fastMuteUntil;
+  DateTime? _fastEndAt;
+  String _fastMethod = 'custom';
+  String? _bannerDismissedOn; // YYYY-MM-DD
+  bool _bannerCollapsed = false;
+  bool _bannerAlwaysCollapsed = false;
+  // Eating window (for banner schedule labels)
+  int? _eatStartH;
+  int? _eatStartM;
+  int? _eatStopH;
+  int? _eatStopM;
+
+  // Global animation constants for dashboard sections
+  static const Duration _kAnimDuration = Duration(milliseconds: 900);
+  static const Curve _kAnimCurve = Curves.easeOut;
+  static const double _kDelayLeft = 0.03; // ~27ms
+  static const double _kDelayCenter = 0.06; // ~54ms
+  static const double _kDelayRight = 0.09; // ~81ms
+  // Toggle to draw extremely visible macro bars for debugging screenshots
+  static const bool _kMacroBarsDebug = false;

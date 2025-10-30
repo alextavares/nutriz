@@ -79,8 +79,13 @@ class _DashboardRingBodyState extends State<_DashboardRingBody>
 
   void _onStateChange() {
     if (!mounted) return;
-    // Restart animation to the new progress end
-    _ctrl.forward(from: 0);
+    // Restart animation after current frame to avoid relayout during layout
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        _ctrl.forward(from: 0);
+      } catch (_) {}
+    });
   }
 
   @override
@@ -97,7 +102,12 @@ class _DashboardRingBodyState extends State<_DashboardRingBody>
     if (oldWidget.consumed != widget.consumed ||
         oldWidget.burned != widget.burned ||
         oldWidget.goal != widget.goal) {
-      st.update(widget.consumed, widget.burned, widget.goal);
+      // Post-frame to avoid notifying listeners during layout
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          st.update(widget.consumed, widget.burned, widget.goal);
+        }
+      });
     }
   }
 

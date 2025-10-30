@@ -1,0 +1,66 @@
+                                  customBorder: const CircleBorder(),
+                                  onTap: _addExercise,
+                                  child: const Icon(Icons.add,
+                                      size: 22, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ));
+                }),
+
+                // Macronutrient progress bars removed to avoid duplication (summary already shows macros)
+                const SizedBox.shrink(),
+
+                // YAZIO-like: omit weekly progress and floating actions from top area
+                SizedBox(height: 0.6.h),
+              ],
+            ),
+          ),
+        ),
+      ),
+      // Multi-Action FAB - substitui botão fixo "Add Meal"
+      floatingActionButton: MultiActionFab(
+        onAddMeal: _showMealSelectionDialog,
+        onAddWater: () async {
+          final ml = await NutritionStorage.addWaterMl(_selectedDate, 250);
+          if (!mounted) return;
+          setState(() {
+            _dailyData["waterMl"] = ml;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Água registrada: +250ml (total ' + ml.toString() + 'ml)'),
+              backgroundColor: AppTheme.successGreen,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        onAddActivity: () async {
+          await Navigator.pushNamed(context, AppRoutes.exerciseLogging,
+              arguments: {'date': _selectedDate.toIso8601String()});
+          if (!mounted) return;
+          await _loadExercise();
+          await _loadToday();
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+
+    return Stack(
+      children: [
+        scaffold,
+        if (_showOnboarding) _buildOnboardingOverlay(),
+      ],
+    );
+  }
+
+  Widget _buildOnboardingOverlay() {
+    return Stack(
+      children: [
+        Container(color: Colors.black.withOpacity(0.6)),
+        if (_onboardingStep == 0)

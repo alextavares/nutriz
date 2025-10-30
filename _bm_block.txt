@@ -1,0 +1,141 @@
+                                                                        'savedAt']
+                                                                    as String?) ??
+                                                                '')) ??
+                                                        DateTime.now();
+                                                    final hh = dt.hour
+                                                        .toString()
+                                                        .padLeft(2, '0');
+                                                    final mm = dt.minute
+                                                        .toString()
+                                                        .padLeft(2, '0');
+                                                    return Text(
+                                                      'Último: ' +
+                                                          ((_lastExerciseMeta[
+                                                                      'name']
+                                                                  as String?) ??
+                                                              '-') +
+                                                          ' · +' +
+                                                          (((_lastExerciseMeta[
+                                                                              'kcal']
+                                                                          as num?)
+                                                                      ?.toInt() ??
+                                                                  0)
+                                                              .toString()) +
+                                                          ' kcal' +
+                                                          ((_lastExerciseMeta[
+                                                                      'minutes'] !=
+                                                                  null)
+                                                              ? ' · ' +
+                                                                  ((_lastExerciseMeta[
+                                                                              'minutes']
+                                                                          as num)
+                                                                      .toInt()
+                                                                      .toString()) +
+                                                                  ' min'
+                                                              : '') +
+                                                          ' · ' +
+                                                          hh +
+                                                          ':' +
+                                                          mm,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: cs
+                                                                .onSurfaceVariant,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    );
+                                                  }),
+                                                ),
+                                              ],
+                                            ),
+                                          if (_exerciseLogs.isNotEmpty) ...[
+                                            const SizedBox(height: 6),
+                                            Column(
+                                              children: [
+                                                for (final log in _exerciseLogs)
+                                                  Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .watch_later_outlined,
+                                                        size: 14,
+                                                        color: context
+                                                            .semanticColors
+                                                            .success,
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      Expanded(
+                                                        child: Text(
+                                                          '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min',
+                                                          style: Theme.of(
+                                                                  context)
+                                                              .textTheme
+                                                              .labelSmall
+                                                              ?.copyWith(
+                                                                  color: cs
+                                                                      .onSurfaceVariant),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                              ],
+                                            ),
+                                          ],
+                                          const SizedBox(height: 8),
+                                          if (_exerciseLogs.isNotEmpty) ...[
+                                            Column(
+                                              children: [
+                                                for (final log
+                                                    in (_exerciseExpanded
+                                                        ? _exerciseLogs
+                                                        : _exerciseLogs
+                                                            .take(2)))
+                                                  Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .watch_later_outlined,
+                                                        size: 14,
+                                                        color: context
+                                                            .semanticColors
+                                                            .success,
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      Expanded(
+                                                        child: Builder(
+                                                            builder: (context) {
+                                                          final dt = DateTime.tryParse(
+                                                                  (log['savedAt']
+                                                                          as String?) ??
+                                                                      '') ??
+                                                              DateTime.now();
+                                                          final hh = dt.hour
+                                                              .toString()
+                                                              .padLeft(2, '0');
+                                                          final mm = dt.minute
+                                                              .toString()
+                                                              .padLeft(2, '0');
+                                                          return Text(
+                                                            '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min · $hh:$mm',
+                                                            style: Theme.of(
+                                                                    context)
+                                                                .textTheme
+                                                                .labelSmall
+                                                                ?.copyWith(
+                                                                    color: cs
+                                                                        .onSurfaceVariant),
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          );
+                                                        }),

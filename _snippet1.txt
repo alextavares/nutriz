@@ -1,0 +1,61 @@
+                        double? lastW;
+                        for (int i = 1; i <= 7; i++) {
+                          final d = _selectedDate.subtract(Duration(days: i));
+                          final m = await BodyMetricsStorage.getForDate(d);
+                          final w = (m['weightKg'] as num?)?.toDouble();
+                          if (w != null) { lastW = w; break; }
+                        }
+                        return (today: today, weekly: weights, lastWeight: lastW);
+                      })(),
+                      builder: (context, snap) {
+                        final data = snap.data;
+                        final today = data?.today ?? const {};
+                        final weekly = data?.weekly ?? const <double>[];
+                        final currW = (today['weightKg'] as num?)?.toDouble();
+                        final hasEntry = today.isNotEmpty && currW != null;
+                        final lastW = data?.lastWeight;
+                        double? weeklyChange;
+                        if (weekly.length >= 2) {
+                          weeklyChange = weekly.last - weekly.first;
+                        }
+                        return BodyMetricsCard(
+                          onAddMetrics: () {
+                            Navigator.pushNamed(context, AppRoutes.bodyMetrics, arguments: {
+                              'date': _selectedDate.toIso8601String(),
+                              'openEditor': true,
+                            }).then((_) => setState(() {}));
+                          },
+                          currentWeight: currW,
+                          goalWeight: null,
+                          lastWeight: lastW,
+                          weightUnit: 'kg',
+                          hasEntry: hasEntry,
+                          weeklyWeights: weekly.isEmpty ? null : weekly,
+                          weeklyChange: weeklyChange,
+                          onAdjustWeight: (delta) async {
+                            final m = await BodyMetricsStorage.getForDate(_selectedDate);
+                            final current = (m['weightKg'] as num?)?.toDouble() ?? 0.0;
+                            double next = current + delta;
+                            if (next < 0) next = 0;
+                            m['weightKg'] = double.parse(next.toStringAsFixed(1));
+                            await BodyMetricsStorage.setForDate(_selectedDate, m);
+                            if (!mounted) return;
+                            setState(() {});
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }),
+
+                // Thin divider between water and activities
+                const SizedBox(height: AppSpacing.md),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenHorizontal),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant

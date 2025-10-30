@@ -1,0 +1,120 @@
+      lastDate: DateTime(2100),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+                primary: AppTheme.activeBlue,
+              ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null) return null;
+    return DateTime(picked.year, picked.month, picked.day);
+  }
+
+  String _defaultDayCsvFilename(DateTime day) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    final date = '${day.year}-${two(day.month)}-${two(day.day)}';
+    return 'nutritracker_day_$date.csv';
+  }
+
+  String _buildDayCsv(DateTime day) {
+    final buffer = StringBuffer();
+    buffer.writeln('name,meal,kcal,carbs,proteins,fats,quantity,serving');
+    for (final e in _todayEntries) {
+      final name = (e['name'] ?? '').toString().replaceAll(',', ' ');
+      final meal = (e['mealTime'] ?? '').toString();
+      final kcal = (e['calories'] as num?)?.toInt() ?? 0;
+      final carbs = (e['carbs'] as num?)?.toInt() ?? 0;
+      final prot = (e['protein'] as num?)?.toInt() ?? 0;
+      final fat = (e['fat'] as num?)?.toInt() ?? 0;
+      final qty = (e['quantity'] as num?)?.toDouble() ?? 1.0;
+      final serving = (e['serving'] ?? '').toString().replaceAll(',', ' ');
+      buffer.writeln('$name,$meal,$kcal,$carbs,$prot,$fat,$qty,$serving');
+    }
+    return buffer.toString();
+  }
+
+  Future<int> _importDayCsv(DateTime day, String csv,
+      {bool clearBefore = false}) async {
+    if (csv.isEmpty) return 0;
+    if (clearBefore) {
+      await NutritionStorage.clearDayFully(day);
+    }
+    final lines =
+        csv.split(RegExp(r'\r?\n')).where((l) => l.trim().isNotEmpty).toList();
+    if (lines.isEmpty) return 0;
+    int startIdx = 0;
+    final header = lines.first.toLowerCase();
+    if (header.contains('name') && header.contains('meal')) {
+      startIdx = 1;
+    }
+    int imported = 0;
+    for (int i = startIdx; i < lines.length; i++) {
+      final parts = lines[i].split(',');
+      if (parts.length < 8) continue;
+      try {
+        final name = parts[0].trim();
+        final meal = parts[1].trim();
+        final kcal = int.tryParse(parts[2].trim()) ?? 0;
+        final carbs = int.tryParse(parts[3].trim()) ?? 0;
+        final prot = int.tryParse(parts[4].trim()) ?? 0;
+        final fat = int.tryParse(parts[5].trim()) ?? 0;
+        final qty = double.tryParse(parts[6].trim()) ?? 1.0;
+        final serving = parts.sublist(7).join(',').trim();
+        final entry = <String, dynamic>{
+          'id': DateTime.now().microsecondsSinceEpoch + i,
+          'name': name,
+          'mealTime': meal.isNotEmpty ? meal : 'snack',
+          'calories': kcal,
+          'carbs': carbs,
+          'protein': prot,
+          'fat': fat,
+          'quantity': qty,
+          'serving': serving,
+          'createdAt': DateTime.now().toIso8601String(),
+          'source': 'csv_import',
+        };
+        await NutritionStorage.addEntry(day, entry);
+        imported += 1;
+      } catch (_) {
+        // skip
+      }
+    }
+    return imported;
+  }
+
+  Widget _addMealButton(String label, String mealKey, DateTime day) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(
+          context,
+          '/food-logging-screen',
+          arguments: {
+            'mealKey': mealKey,
+            'date': day.toIso8601String(),
+          },
+        ).then((value) {
+          if (value == true) {
+            _loadToday();
+            _loadWeek();
+          }
+        });
+      },
+      child: Text(label),
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+

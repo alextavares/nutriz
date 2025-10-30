@@ -1,0 +1,281 @@
+                        .withValues(alpha: 0.25),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                // [REMOVED] Legacy water progress card replaced by WaterTrackerCardV2
+                /*Builder(builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return AnimatedCard(
+                    delay: 200,
+                    child: Container(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenHorizontal),
+                    padding: const EdgeInsets.all(AppSpacing.cardPadding),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.cardRadius),
+                      border: Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.2)),
+                      boxShadow: const [],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Icon(Icons.water_drop_outlined,
+                                    color: cs.primary, size: 18),
+                                Text(
+                                  AppLocalizations.of(context)!.water,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        color: cs.onSurface,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                                if (_hydrationStreak > 0)
+                                  Builder(builder: (context) {
+                                    final w = MediaQuery.of(context).size.width;
+                                    final double fs = w < 340
+                                        ? 9.sp
+                                        : (w < 380 ? 10.sp : 11.sp);
+                                    final double padH = w < 360 ? 6 : 8;
+                                    final double padV = w < 360 ? 2 : 3;
+                                    return Chip(
+                                      label:
+                                          Text('Streak: ${_hydrationStreak}d'),
+                                      visualDensity: VisualDensity.compact,
+                                      backgroundColor:
+                                          cs.primary.withValues(alpha: 0.12),
+                                      side: BorderSide(
+                                          color: cs.primary
+                                              .withValues(alpha: 0.3)),
+                                      labelPadding: EdgeInsets.symmetric(
+                                          horizontal: padH, vertical: padV),
+                                      labelStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: fs,
+                                          ),
+                                    );
+                                  }),
+                              ],
+                            ),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                TweenAnimationBuilder<double>(
+                                  key: ValueKey(_dailyData["waterMl"] as int?),
+                                  tween: Tween<double>(
+                                    begin: 0,
+                                    end: (_dailyData["waterMl"] as int)
+                                        .toDouble(),
+                                  ),
+                                  duration: _kAnimDuration,
+                                  curve: Curves.linear,
+                                  builder: (context, v, _) {
+                                    final int current =
+                                        _dailyData["waterMl"] as int;
+                                    final int goal =
+                                        _dailyData["waterGoalMl"] as int;
+                                    if (current <= 0) {
+                                      return Text(
+                                        '0/$goal ml',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: cs.primary,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      );
+                                    }
+                                    final p = (v / current).clamp(0.0, 1.0);
+                                    final delayed = p <= _kDelayRight
+                                        ? 0.0
+                                        : (p - _kDelayRight) /
+                                            (1.0 - _kDelayRight);
+                                    final eased =
+                                        _kAnimCurve.transform(delayed);
+                                    final shown = (current * eased).toInt();
+                                    return Text(
+                                      '$shown/$goal ml',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    );
+                                  },
+                                ),
+                                Builder(builder: (context) {
+                                  final int current = _dailyData["waterMl"] as int;
+                                  final int goal = _dailyData["waterGoalMl"] as int;
+                                  final int cups = (current / 250).floor();
+                                  final int totalCups = (goal / 250).floor();
+                                  return Text(
+                                    '$cups/$totalCups cups',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  );
+                                }),
+                                OutlinedButton.icon(
+                                  onPressed: ((_dailyData["waterMl"] as int? ??
+                                              0) >=
+                                          (_dailyData["waterGoalMl"] as int? ??
+                                              0))
+                                      ? null
+                                      : _addWater,
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('+250 ml'),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    minimumSize: const Size(0, 0),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    shape: const StadiumBorder(),
+                                    side: BorderSide(
+                                        color:
+                                            cs.primary.withValues(alpha: 0.5)),
+                                    foregroundColor: cs.primary,
+                                    textStyle: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Editar meta',
+                                  icon: Icon(Icons.edit_outlined,
+                                      color: cs.onSurfaceVariant, size: 18),
+                                  onPressed: _openEditWaterGoalDialog,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        // Emphasize hydration: progress + remaining hint
+                        const SizedBox(height: 8),
+                        Builder(builder: (context) {
+                          final int goal = (_dailyData["waterGoalMl"] as int);
+                          final int current = (_dailyData["waterMl"] as int);
+                          final double ratio =
+                              goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: TweenAnimationBuilder<double>(
+                                  key: ValueKey(ratio),
+                                  tween: Tween<double>(begin: 0, end: ratio),
+                                  duration: _kAnimDuration,
+                                  curve: Curves.linear,
+                                  builder: (context, val, _) {
+                                    if (ratio <= 0) {
+                                      return LinearProgressIndicator(
+                                        value: 0,
+                                        minHeight: 12,
+                                        backgroundColor: cs.outlineVariant
+                                            .withValues(alpha: 0.25),
+                                        color: cs.primary,
+                                      );
+                                    }
+                                    final p = (val / ratio).clamp(0.0, 1.0);
+                                    final eased = _kAnimCurve.transform(p);
+                                    return LinearProgressIndicator(
+                                      value: eased * ratio,
+                                      minHeight: 12,
+                                      backgroundColor: cs.outlineVariant
+                                          .withValues(alpha: 0.20),
+                                      color: cs.primary,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: PillButton(
+                                label: '1 Cup',
+                                backgroundColor: AppColors.primary50,
+                                color: AppColors.primary600,
+                                onTap: () async {
+                                  final ml = await NutritionStorage.addWaterMl(
+                                      _selectedDate, 250);
+                                  if (!mounted) return;
+                                  setState(() => _dailyData["waterMl"] = ml);
+                                  _updateHydrationAchievements();
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: PillButton(
+                                label: '2 Cups',
+                                backgroundColor: AppColors.primary50,
+                                color: AppColors.primary600,
+                                onTap: () async {
+                                  final ml = await NutritionStorage.addWaterMl(
+                                      _selectedDate, 500);
+                                  if (!mounted) return;
+                                  setState(() => _dailyData["waterMl"] = ml);
+                                  _updateHydrationAchievements();
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: PillButton(
+                                label: '3 Cups',
+                                backgroundColor: AppColors.primary50,
+                                color: AppColors.primary600,
+                                onTap: () async {
+                                  final ml = await NutritionStorage.addWaterMl(
+                                      _selectedDate, 750);
+                                  if (!mounted) return;
+                                  setState(() => _dailyData["waterMl"] = ml);
+                                  _updateHydrationAchievements();
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ));
+                }),*/
+
+                // Thin divider between activities and notes
+                const SizedBox(height: AppSpacing.md),
+                Padding(
+                  padding: const EdgeInsets.symmetric(

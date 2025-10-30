@@ -1,0 +1,101 @@
+  static const bool _kMacroBarsDebug = false;
+
+  // Mock data for daily tracking
+  final Map<String, dynamic> _dailyData = {
+    "consumedCalories": 1450,
+    "totalCalories": 2000,
+    "spentCalories": 0,
+    "waterMl": 0,
+    "waterGoalMl": 2000,
+    "macronutrients": {
+      "carbohydrates": {"consumed": 180, "total": 250},
+      "proteins": {"consumed": 95, "total": 120},
+      "fats": {"consumed": 65, "total": 80},
+    },
+  };
+
+  // Simple ISO-like week number (Mon-first). Good enough for UI label.
+  int _computeIsoWeekNumber(DateTime date) {
+    final d = DateTime(date.year, date.month, date.day);
+    // Thursday in current week determines the year.
+    final thursday = d.add(Duration(days: 3 - ((d.weekday + 6) % 7)));
+    final firstThursday = DateTime(thursday.year, 1, 4);
+    final firstThursdayAdj =
+        firstThursday.add(Duration(days: -((firstThursday.weekday + 6) % 7)));
+    final week =
+        1 + ((thursday.difference(firstThursdayAdj).inDays) / 7).floor();
+    return week;
+  }
+
+  int? _nextMilestoneFor(int current, List<int> thresholds) {
+    for (final t in thresholds) {
+      if (current < t) return t;
+    }
+    return null;
+  }
+
+  Widget _buildStreakChip({
+    required IconData icon,
+    required Color baseColor,
+    required String label,
+    required bool highlightStar,
+    required int? next,
+  }) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: baseColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: baseColor.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: baseColor, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: textTheme.labelSmall?.copyWith(
+              color: colors.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (highlightStar) ...[
+            const SizedBox(width: 6),
+            Icon(Icons.star, color: baseColor, size: 14),
+          ],
+          if (_showNextMilestoneCaptions && next != null) ...[
+            const SizedBox(width: 6),
+            Text(
+              AppLocalizations.of(context) !.streakNext(next), 
+              style: textTheme.labelSmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  ButtonStyle _pillActionStyle(ColorScheme cs) {
+    return OutlinedButton.styleFrom(
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      minimumSize: const Size(0, 0),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      shape: const StadiumBorder(),
+      side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
+      foregroundColor: cs.primary,
+      textStyle: Theme.of(context)
+          .textTheme
+          .labelSmall
+          ?.copyWith(fontWeight: FontWeight.w700),
+    );
+  }
+
+  Widget _quickActivityChip(String label, VoidCallback onTap) {
+    final w = MediaQuery.of(context).size.width;
