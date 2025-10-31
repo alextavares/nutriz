@@ -1624,6 +1624,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           row('Lanches', 'snack'),
         ],
       ),
+        ),
+      ],
     );
   }
 
@@ -1839,8 +1841,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             _badge(icon: Icons.calendar_month, value: 0,
                 color: Theme.of(context).colorScheme.onSurface),
           ],
-        )
-      ],
         ),
       ],
     );
