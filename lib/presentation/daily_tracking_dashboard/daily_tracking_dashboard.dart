@@ -1511,19 +1511,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     },
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: Material(
-                      color: AppTheme.activeBlue,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: () => _goToLoggingForMeal(mealKey),
-                        child: const Icon(Icons.add,
-                            size: 20, color: Colors.white),
-                      ),
-                    ),
+                  AddButton(
+                    onPressed: () => _goToLoggingForMeal(mealKey),
+                    size: AppDimensions.addButtonSize,
                   ),
                   // Removed trailing chevron to match YAZIO-like layout
                 ],
@@ -1609,7 +1599,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    return Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'Nutrition', trailingText: 'More'),
+        const SizedBox(height: AppDimensions.sm),
+        Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 3.2.w),
       decoration: BoxDecoration(
@@ -1809,6 +1804,15 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
   // Removed unused local helpers: _goToday, _openSearch
 
+  // Header DS helpers
+  Widget _badge({required IconData icon, required int value, required Color color}) {
+    return Row(children: [
+      Icon(icon, size: AppIcons.size20, color: color),
+      const SizedBox(width: 4),
+      Text(value.toString(), style: AppTextStyles.body2(context).copyWith(fontWeight: FontWeight.w600)),
+    ]);
+  }
+
   // Header DS (Today / Week + small badges on the right)
   Widget _buildHeaderDS(BuildContext context) {
     final week = _currentWeek;
@@ -1837,15 +1841,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           ],
         )
       ],
+        ),
+      ],
     );
-  }
-
-  Widget _badge({required IconData icon, required int value, required Color color}) {
-    return Row(children: [
-      Icon(icon, size: AppIcons.size20, color: color),
-      const SizedBox(width: 4),
-      Text(value.toString(), style: AppTextStyles.body2(context).copyWith(fontWeight: FontWeight.w600)),
-    ]);
   }
 
     return Scaffold(
