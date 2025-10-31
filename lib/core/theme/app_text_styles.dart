@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutriz/theme/app_text_theme.dart' as legacy;
+import 'app_colors.dart';
 
 /// Typography shortcuts for the dashboard refactor.
 ///
@@ -10,24 +11,62 @@ class AppTextStyles {
 
   static const String fontFamily = legacy.AppTextTheme.fontFamily;
 
-  // Headings
-  static TextStyle h1(BuildContext context) =>
-      Theme.of(context).textTheme.headlineMedium!; // 28 / bold
+  // Headings (refined)
+  static TextStyle h1(BuildContext context) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        height: 1.2,
+        color: AppColorsDS.textPrimary(context),
+      );
 
-  static TextStyle h2(BuildContext context) =>
-      Theme.of(context).textTheme.titleLarge!; // 18 / medium
+  static TextStyle h2(BuildContext context) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
+        color: AppColorsDS.textPrimary(context),
+      );
+
+  // Large number for key metrics
+  static TextStyle largeNumber(BuildContext context) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        height: 1.0,
+        color: AppColorsDS.textPrimary(context),
+      );
 
   // Body
-  static TextStyle body1(BuildContext context) =>
-      Theme.of(context).textTheme.bodyLarge!; // 15 / medium
+  static TextStyle body1(BuildContext context) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        color: AppColorsDS.textPrimary(context),
+      );
 
-  static TextStyle body2(BuildContext context) =>
-      Theme.of(context).textTheme.bodyMedium!; // 15 / regular
+  static TextStyle body2(BuildContext context) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        height: 1.4,
+        color: AppColorsDS.textSecondary(context),
+      );
 
-  static TextStyle caption(BuildContext context) =>
-      Theme.of(context).textTheme.bodySmall!; // 13 / regular
+  static TextStyle caption(BuildContext context) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        height: 1.3,
+        color: AppColorsDS.textHint(context),
+      );
 
-  static TextStyle button(BuildContext context) =>
-      Theme.of(context).textTheme.labelLarge!; // 16 / semibold
+  static TextStyle button(BuildContext context) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 1.0,
+        color: Colors.white,
+      );
 }
-
