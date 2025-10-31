@@ -1800,27 +1800,74 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       _loadWeek();
     }
 
-    void _nextDay() {
-      setState(
-          () => _selectedDate = _selectedDate.add(const Duration(days: 1)));
-      _loadToday();
-      _loadWeek();
-    }
+  void _nextDay() {
+    setState(
+        () => _selectedDate = _selectedDate.add(const Duration(days: 1)));
+    _loadToday();
+    _loadWeek();
+  }
 
-    // Removed unused local helpers: _goToday, _openSearch
+  // Removed unused local helpers: _goToday, _openSearch
+
+  // Header DS (Today / Week + small badges on the right)
+  Widget _buildHeaderDS(BuildContext context) {
+    final week = _currentWeek;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Today', style: AppTextStyles.h1(context)),
+            const SizedBox(height: 4),
+            Text('Week $week', style: AppTextStyles.caption(context)),
+          ],
+        ),
+        Row(
+          children: [
+            _badge(icon: Icons.water_drop, value: (_dailyData["waterMl"] as int? ?? 0) ~/ 250,
+                color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            _badge(icon: Icons.local_fire_department, value: _exerciseStreak,
+                color: Theme.of(context).colorScheme.secondary),
+            const SizedBox(width: 12),
+            _badge(icon: Icons.calendar_month, value: 0,
+                color: Theme.of(context).colorScheme.onSurface),
+          ],
+        )
+      ],
+    );
+  }
+
+  Widget _badge({required IconData icon, required int value, required Color color}) {
+    return Row(children: [
+      Icon(icon, size: AppIcons.size20, color: color),
+      const SizedBox(width: 4),
+      Text(value.toString(), style: AppTextStyles.body2(context).copyWith(fontWeight: FontWeight.w600)),
+    ]);
+  }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: AppColorsDS.pureWhite,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refreshData,
           color: Theme.of(context).colorScheme.primary,
           backgroundColor: Theme.of(context).colorScheme.surface,
           child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.horizontalPadding,
+                vertical: AppDimensions.sm,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header DS (Today / Week + badges)
+                  _buildHeaderDS(context),
+                  const SizedBox(height: AppDimensions.sectionGap),
                 // Top actions (icons)
                 _topActionsRow(context),
                 SizedBox(height: 0.6.h),
@@ -1896,6 +1943,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 SizedBox(height: 1.2.h),
 
                 // Water progress
+                const SectionHeader(title: 'Water Tracker'),
+                const SizedBox(height: AppDimensions.sm),
                 // Water tracker (modern card)
                 AnimatedCard(
                   delay: 150,
@@ -2795,7 +2844,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
                 // YAZIO-like: omit weekly progress and floating actions from top area
                 SizedBox(height: 0.6.h),
-              ],
+                ],
+              ),
             ),
           ),
         ),
