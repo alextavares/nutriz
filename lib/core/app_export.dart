@@ -13,3 +13,4 @@ export 'theme/app_icons.dart';
 export 'widgets/primary_button.dart';
 export 'widgets/add_button.dart';
 export 'widgets/section_header.dart';
+export 'widgets/nutriz_card.dart';
