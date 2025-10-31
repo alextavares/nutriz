@@ -1510,10 +1510,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                       );
                     },
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   SizedBox(
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
                     child: Material(
                       color: AppTheme.activeBlue,
                       shape: const CircleBorder(),
@@ -1521,14 +1521,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         customBorder: const CircleBorder(),
                         onTap: () => _goToLoggingForMeal(mealKey),
                         child: const Icon(Icons.add,
-                            size: 18, color: Colors.white),
+                            size: 20, color: Colors.white),
                       ),
                     ),
                   ),
                   // Removed trailing chevron to match YAZIO-like layout
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
@@ -1541,7 +1541,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   color: color,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               // Compact preview of items for this meal (tap to editar)
               ...(() {
                 final all = _todayEntries
@@ -1598,7 +1598,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         child: Text(expanded ? 'Mostrar menos' : 'Ver todos'),
                       ),
                     ),
-                  SizedBox(height: 0.8.h),
+                  const SizedBox(height: 10),
                 ];
               }()),
             ],
@@ -1611,7 +1611,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final cs = theme.colorScheme;
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 2.4.w),
+      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 3.2.w),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(10),
@@ -1622,7 +1622,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // YAZIO-like: no section header; list meals directly
-          SizedBox(height: 0.6.h),
+          const SizedBox(height: 8),
           row('Café da manhã', 'breakfast'),
           row('Almoço', 'lunch'),
           row('Jantar', 'dinner'),
