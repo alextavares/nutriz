@@ -1474,9 +1474,14 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 children: [
                   Builder(builder: (context) {
                     final ic = barColorFor(mealKey);
-                    return CircleAvatar(
-                      radius: 16,
-                      backgroundColor: ic.withValues(alpha: 0.12),
+                    return Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: AppColorsDS.divider,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
                       child: Icon(
                         mealIconFor(mealKey),
                         color: ic,
@@ -1604,16 +1609,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       children: [
         const SectionHeader(title: 'Nutrition', trailingText: 'More'),
         const SizedBox(height: AppDimensions.sm),
-        Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.symmetric(horizontal: 3.2.w, vertical: 3.2.w),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-        boxShadow: const [],
-      ),
-      child: Column(
+        NutrizCard(
+          padding: const EdgeInsets.all(AppDimensions.cardPadding),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // YAZIO-like: no section header; list meals directly
