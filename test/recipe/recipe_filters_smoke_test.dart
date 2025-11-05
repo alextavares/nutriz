@@ -7,6 +7,11 @@ import 'package:sizer/sizer.dart';
 
 void main() {
   testWidgets('Filter bottom sheet shows localized title', (tester) async {
+    // Fixed surface size to stabilize layout.
+    final binding = TestWidgetsFlutterBinding.ensureInitialized() as TestWidgetsFlutterBinding;
+    binding.window.physicalSizeTestValue = const Size(390, 844);
+    binding.window.devicePixelRatioTestValue = 1.0;
+
     await tester.pumpWidget(Sizer(builder: (context, orientation, deviceType) {
       return MaterialApp(
       localizationsDelegates: const [
@@ -20,13 +25,13 @@ void main() {
     );
     }));
 
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 150));
 
     // Tap filter button (tune icon)
     final filterIcon = find.byIcon(Icons.tune);
     expect(filterIcon, findsOneWidget);
     await tester.tap(filterIcon);
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text('Filters'), findsOneWidget);
     expect(find.text('Meal Type'), findsOneWidget);
