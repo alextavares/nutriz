@@ -4,12 +4,14 @@ import 'package:nutriz/presentation/streaks/streak_overview_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sizer/sizer.dart';
 
 void main() {
   testWidgets('Streak Overview NUX shows once and persists', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(Sizer(builder: (context, orientation, deviceType) {
+      return MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -18,7 +20,8 @@ void main() {
       ],
       supportedLocales: const [Locale('en')],
       home: const StreakOverviewScreen(),
-    ));
+    );
+    }));
     // Allow async + post-frame callbacks
     await tester.pumpAndSettle();
 
@@ -33,7 +36,8 @@ void main() {
     expect(find.text('Got it'), findsNothing);
 
     // Rebuild screen; NUX should not show again
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(Sizer(builder: (context, orientation, deviceType) {
+      return MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -42,7 +46,8 @@ void main() {
       ],
       supportedLocales: const [Locale('en')],
       home: const StreakOverviewScreen(),
-    ));
+    );
+    }));
     await tester.pumpAndSettle();
 
     expect(find.text('Got it'), findsNothing);

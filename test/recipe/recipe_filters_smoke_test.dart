@@ -3,10 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nutriz/presentation/recipe_browser/recipe_browser.dart';
 import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sizer/sizer.dart';
 
 void main() {
   testWidgets('Filter bottom sheet shows localized title', (tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(Sizer(builder: (context, orientation, deviceType) {
+      return MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -15,7 +17,8 @@ void main() {
       ],
       supportedLocales: const [Locale('en')],
       home: const RecipeBrowser(),
-    ));
+    );
+    }));
 
     await tester.pumpAndSettle();
 
