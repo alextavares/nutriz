@@ -20,6 +20,10 @@ import '../presentation/exercise_logging_screen/exercise_logging_screen.dart';
 import '../presentation/achievements/all_achievements_screen.dart';
 import '../presentation/onboarding/onboarding_flow.dart';
 import '../presentation/onboarding/new_onboarding_v2.dart';
+import '../presentation/onboarding_v3/screens/01_splash_screen.dart';
+import '../presentation/onboarding_v3/screens/02_welcome_screen.dart';
+import '../presentation/onboarding_v3/screens/03_goal_selection_screen.dart';
+import '../presentation/onboarding_v3/onboarding_v3_debug_screen.dart';
 import '../presentation/streaks/streak_overview_screen.dart';
 import '../presentation/ai_coach_chat/ai_coach_chat_screen.dart';
 import '../presentation/pro_subscription/pro_subscription_screen.dart';
@@ -54,6 +58,12 @@ class AppRoutes {
   static const String streakOverview = '/streak-overview';
   static const String proSubscription = '/pro-subscription';
 
+  // Onboarding V3 routes
+  static const String onboardingV3Debug = '/onboarding-v3-debug';
+  static const String onboardingV3Splash = '/onboarding/splash';
+  static const String onboardingV3Welcome = '/onboarding/welcome';
+  static const String onboardingV3Goal = '/onboarding/goal';
+
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
     splash: (context) => const SplashScreen(),
@@ -80,6 +90,12 @@ class AppRoutes {
     newOnboardingV2: (context) => const NewOnboardingV2(),
     streakOverview: (context) => const StreakOverviewScreen(),
     proSubscription: (context) => const ProSubscriptionScreen(),
+
+    // Onboarding V3 routes
+    onboardingV3Debug: (context) => const OnboardingV3DebugScreen(),
+    onboardingV3Splash: (context) => const OnboardingV3SplashScreen(),
+    onboardingV3Welcome: (context) => const WelcomeScreen(),
+    onboardingV3Goal: (context) => const GoalSelectionScreen(),
     // TODO: Add your other routes here
   };
 }

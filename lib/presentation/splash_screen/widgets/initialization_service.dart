@@ -5,6 +5,7 @@ import '../../../services/purchase_service.dart';
 class InitializationService {
   static const String _keyIsFirstLaunch = 'is_first_launch';
   static const String _keyOnboardingCompleted = 'onboarding_completed_v1';
+  static const String _keyOnboardingV3Completed = 'onboarding_v3_completed';
   static const String _keyIsAuthenticated = 'is_authenticated';
   static const String _keyPremiumStatus = 'premium_status';
   static const String _keyUserPreferences = 'user_preferences';
@@ -43,11 +44,11 @@ class InitializationService {
 
       // Determine navigation destination
       String nextRoute;
-      final bool onboardingCompleted =
-          prefs.getBool(_keyOnboardingCompleted) ?? false;
-      if (isFirstLaunch || !onboardingCompleted) {
-        // First run or onboarding not completed yet
-        nextRoute = '/new-onboarding-v2'; // NEW: Updated to use new onboarding
+      final bool onboardingV3Completed =
+          prefs.getBool(_keyOnboardingV3Completed) ?? false;
+      if (isFirstLaunch || !onboardingV3Completed) {
+        // First run or onboarding V3 not completed yet
+        nextRoute = '/onboarding/splash'; // NEW: Redirect to Onboarding V3
       } else if (!isAuthenticated) {
         nextRoute = '/login-screen';
       } else {

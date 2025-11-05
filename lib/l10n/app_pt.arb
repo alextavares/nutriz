@@ -354,5 +354,36 @@
   "remindersReactivated": "Lembretes reativados",
   "remindersMutedTomorrow": "Lembretes silenciados até amanhã 08:00",
   "startFastButton": "Iniciar jejum",
-  "endFastButton": "Encerrar jejum"
+  "endFastButton": "Encerrar jejum",
+  "onbV3SplashTitle": "nutriZ",
+  "onbV3WelcomeTitle": "nutriZ",
+  "onbV3Welcome85Million": "85 milhões de usuários felizes",
+  "onbV3Welcome20Million": "20 milhões de alimentos para rastreamento de calorias",
+  "onbV3WelcomeSubtitle": "Vamos fazer cada dia valer a pena!",
+  "onbV3WelcomeGetStarted": "Começar",
+  "onbV3WelcomeAlreadyHaveAccount": "Já tenho uma conta",
+  "onbV3GoalTitle": "Qual é o seu objetivo principal?",
+  "onbV3GoalLoseWeight": "Perder peso",
+  "onbV3GoalGainWeight": "Ganhar peso",
+  "onbV3GoalMaintain": "Manter peso",
+  "onbV3GoalContinue": "Continuar",
+  "onbV3AppBarSetup": "Configuração",
+  "onbV3ProgressStep": "{current}/{total}",
+  "notifFastingOpenTitle": "Janela de alimentação aberta",
+  "notifFastingOpenBody": "Você pode começar a comer agora.",
+  "notifFastingStartTitle": "Janela de jejum iniciada",
+  "notifFastingStartBody": "Pare de comer para iniciar seu jejum.",
+  "notifFastingEndTitle": "Jejum concluído",
+  "notifFastingEndBody": "Seu jejum {method} foi concluído.",
+  "@notifFastingEndBody": {
+    "placeholders": {
+      "method": { "type": "String" }
+    }
+  },
+  "channelFastingName": "Jejum",
+  "channelFastingDescription": "Notificações de jejum intermitente",
+  "notifHydrationTitle": "Lembrete de hidratação",
+  "notifHydrationBody": "Hora de beber água.",
+  "channelHydrationName": "Hidratação",
+  "channelHydrationDescription": "Lembretes de hidratação"
 }

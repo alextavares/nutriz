@@ -1775,4 +1775,87 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get endFastButton => 'Encerrar jejum';
+
+  @override
+  String get onbV3SplashTitle => 'nutriZ';
+
+  @override
+  String get onbV3WelcomeTitle => 'nutriZ';
+
+  @override
+  String get onbV3Welcome85Million => '85 milhões de usuários felizes';
+
+  @override
+  String get onbV3Welcome20Million =>
+      '20 milhões de alimentos para rastreamento de calorias';
+
+  @override
+  String get onbV3WelcomeSubtitle => 'Vamos fazer cada dia valer a pena!';
+
+  @override
+  String get onbV3WelcomeGetStarted => 'Começar';
+
+  @override
+  String get onbV3WelcomeAlreadyHaveAccount => 'Já tenho uma conta';
+
+  @override
+  String get onbV3GoalTitle => 'Qual é o seu objetivo principal?';
+
+  @override
+  String get onbV3GoalLoseWeight => 'Perder peso';
+
+  @override
+  String get onbV3GoalGainWeight => 'Ganhar peso';
+
+  @override
+  String get onbV3GoalMaintain => 'Manter peso';
+
+  @override
+  String get onbV3GoalContinue => 'Continuar';
+
+  @override
+  String get onbV3AppBarSetup => 'Configuração';
+
+  @override
+  String onbV3ProgressStep(Object current, Object total) {
+    return '$current/$total';
+  }
+
+  @override
+  String get notifFastingOpenTitle => 'Janela de alimentação aberta';
+
+  @override
+  String get notifFastingOpenBody => 'Você pode começar a comer agora.';
+
+  @override
+  String get notifFastingStartTitle => 'Janela de jejum iniciada';
+
+  @override
+  String get notifFastingStartBody => 'Pare de comer para iniciar seu jejum.';
+
+  @override
+  String get notifFastingEndTitle => 'Jejum concluído';
+
+  @override
+  String notifFastingEndBody(String method) {
+    return 'Seu jejum $method foi concluído.';
+  }
+
+  @override
+  String get channelFastingName => 'Jejum';
+
+  @override
+  String get channelFastingDescription => 'Notificações de jejum intermitente';
+
+  @override
+  String get notifHydrationTitle => 'Lembrete de hidratação';
+
+  @override
+  String get notifHydrationBody => 'Hora de beber água.';
+
+  @override
+  String get channelHydrationName => 'Hidratação';
+
+  @override
+  String get channelHydrationDescription => 'Lembretes de hidratação';
 }

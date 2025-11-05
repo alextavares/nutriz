@@ -3373,6 +3373,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'End fast'**
   String get endFastButton;
+
+  /// No description provided for @onbV3SplashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'nutriZ'**
+  String get onbV3SplashTitle;
+
+  /// No description provided for @onbV3WelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'nutriZ'**
+  String get onbV3WelcomeTitle;
+
+  /// No description provided for @onbV3Welcome85Million.
+  ///
+  /// In en, this message translates to:
+  /// **'85 million happy users'**
+  String get onbV3Welcome85Million;
+
+  /// No description provided for @onbV3Welcome20Million.
+  ///
+  /// In en, this message translates to:
+  /// **'20 million foods for calorie tracking'**
+  String get onbV3Welcome20Million;
+
+  /// No description provided for @onbV3WelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s make every day count!'**
+  String get onbV3WelcomeSubtitle;
+
+  /// No description provided for @onbV3WelcomeGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onbV3WelcomeGetStarted;
+
+  /// No description provided for @onbV3WelcomeAlreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I Already Have an Account'**
+  String get onbV3WelcomeAlreadyHaveAccount;
+
+  /// No description provided for @onbV3GoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your main goal?'**
+  String get onbV3GoalTitle;
+
+  /// No description provided for @onbV3GoalLoseWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Lose weight'**
+  String get onbV3GoalLoseWeight;
+
+  /// No description provided for @onbV3GoalGainWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain weight'**
+  String get onbV3GoalGainWeight;
+
+  /// No description provided for @onbV3GoalMaintain.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain weight'**
+  String get onbV3GoalMaintain;
+
+  /// No description provided for @onbV3GoalContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get onbV3GoalContinue;
+
+  /// No description provided for @onbV3AppBarSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup'**
+  String get onbV3AppBarSetup;
+
+  /// No description provided for @onbV3ProgressStep.
+  ///
+  /// In en, this message translates to:
+  /// **'{current}/{total}'**
+  String onbV3ProgressStep(Object current, Object total);
+
+  /// No description provided for @notifFastingOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating Window Open'**
+  String get notifFastingOpenTitle;
+
+  /// No description provided for @notifFastingOpenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can start eating now.'**
+  String get notifFastingOpenBody;
+
+  /// No description provided for @notifFastingStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Window Started'**
+  String get notifFastingStartTitle;
+
+  /// No description provided for @notifFastingStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop eating to begin your fast.'**
+  String get notifFastingStartBody;
+
+  /// No description provided for @notifFastingEndTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting Complete'**
+  String get notifFastingEndTitle;
+
+  /// No description provided for @notifFastingEndBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {method} fast is complete.'**
+  String notifFastingEndBody(String method);
+
+  /// No description provided for @channelFastingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting'**
+  String get channelFastingName;
+
+  /// No description provided for @channelFastingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermittent fasting notifications'**
+  String get channelFastingDescription;
+
+  /// No description provided for @notifHydrationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration Reminder'**
+  String get notifHydrationTitle;
+
+  /// No description provided for @notifHydrationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to drink some water.'**
+  String get notifHydrationBody;
+
+  /// No description provided for @channelHydrationName.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration'**
+  String get channelHydrationName;
+
+  /// No description provided for @channelHydrationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration reminders'**
+  String get channelHydrationDescription;
 }
 
 class _AppLocalizationsDelegate

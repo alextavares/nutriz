@@ -31,6 +31,8 @@ import 'package:nutriz/util/upload_stub.dart'
     if (dart.library.html) 'package:nutriz/util/upload_web.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
+import '../../core/l10n_ext.dart';
 
 class DailyTrackingDashboard extends StatefulWidget {
   const DailyTrackingDashboard({super.key});
@@ -169,7 +171,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           if (_showNextMilestoneCaptions && next != null) ...[
             const SizedBox(width: 6),
             Text(
-              '• próx: ${next}d',
+              context.l10n.streakNext(next!),
               style: textTheme.labelSmall?.copyWith(
                 color: colors.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
@@ -210,8 +212,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   // Achievements are loaded dynamically from AchievementService
 
   String _localizedTodayLabel(BuildContext context) {
-    final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-    return lang == 'pt' ? 'Hoje' : 'Today';
+    return context.l10n.appbarToday;
   }
 
   @override
@@ -269,8 +270,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final milestones = const [3, 5, 7, 14, 30];
     final isMilestone = milestones.toSet().contains(_hydrationStreak);
     final next = _nextMilestoneFor(_hydrationStreak, milestones);
-    final label =
-        _hydrationStreak > 0 ? '${_hydrationStreak}d água' : 'Sem streak';
+    final label = _hydrationStreak > 0
+        ? context.l10n.streakDays(_hydrationStreak)
+        : context.l10n.streakNoStreak;
     return _buildStreakChip(
       icon: Icons.local_fire_department,
       baseColor: context.semanticColors.warning,
@@ -284,8 +286,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final milestones = const [3, 5, 7, 14, 30];
     final isMilestone = milestones.toSet().contains(_fastingStreak);
     final next = _nextMilestoneFor(_fastingStreak, milestones);
-    final label =
-        _fastingStreak > 0 ? '${_fastingStreak}d jejum' : 'Sem streak jejum';
+    final label = _fastingStreak > 0
+        ? context.l10n.streakDays(_fastingStreak)
+        : context.l10n.streakNoStreak;
     return _buildStreakChip(
       icon: Icons.local_fire_department,
       baseColor: context.semanticColors.warning,
@@ -300,8 +303,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final isMilestone = milestones.toSet().contains(_caloriesStreak);
     final next = _nextMilestoneFor(_caloriesStreak, milestones);
     final label = _caloriesStreak > 0
-        ? '${_caloriesStreak}d calorias ok'
-        : 'Sem streak calorias';
+        ? context.l10n.streakDays(_caloriesStreak)
+        : context.l10n.streakNoStreak;
     return _buildStreakChip(
       icon: Icons.check_circle,
       baseColor: context.semanticColors.success,
@@ -316,8 +319,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     final isMilestone = milestones.toSet().contains(_proteinStreak);
     final next = _nextMilestoneFor(_proteinStreak, milestones);
     final label = _proteinStreak > 0
-        ? '${_proteinStreak}d proteína ok'
-        : 'Sem streak proteína';
+        ? context.l10n.streakDays(_proteinStreak)
+        : context.l10n.streakNoStreak;
     return _buildStreakChip(
       icon: Icons.set_meal,
       baseColor: context.colors.primary,
@@ -348,19 +351,19 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     color: AppTheme.premiumGold,
                     size: 22),
                 const SizedBox(width: 8),
-                Text('Conquista',
+                Text(context.l10n.achievementsDefaultTitle,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
                         ?.copyWith(color: AppTheme.textPrimary)),
               ]),
               const SizedBox(height: 8),
-              Text(a['title'] as String? ?? 'Conquista',
+              Text(a['title'] as String? ?? context.l10n.achievementsDefaultTitle,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppTheme.textPrimary,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('Obtida em: $when',
+              Text(context.l10n.badgeEarnedOn(when),
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall
@@ -373,7 +376,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.successGreen,
                       foregroundColor: AppTheme.textPrimary),
-                  child: const Text('Fechar'),
+                  child: Text(context.l10n.close),
                 ),
               )
             ],
@@ -557,28 +560,17 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 if (isToday) {
                   label = _localizedTodayLabel(context);
                 } else {
-                  final lang = Localizations.localeOf(context)
-                      .languageCode
-                      .toLowerCase();
-                  final wdPt = const [
-                    'Seg',
-                    'Ter',
-                    'Qua',
-                    'Qui',
-                    'Sex',
-                    'Sáb',
-                    'Dom'
+                  final l10n = context.l10n;
+                  final weekDays = [
+                    l10n.weekMon,
+                    l10n.weekTue,
+                    l10n.weekWed,
+                    l10n.weekThu,
+                    l10n.weekFri,
+                    l10n.weekSat,
+                    l10n.weekSun,
                   ];
-                  final wdEn = const [
-                    'Mon',
-                    'Tue',
-                    'Wed',
-                    'Thu',
-                    'Fri',
-                    'Sat',
-                    'Sun'
-                  ];
-                  final wd = (lang == 'pt' ? wdPt : wdEn)[sel.weekday - 1];
+                  final wd = weekDays[sel.weekday - 1];
                   final dd = sel.day.toString().padLeft(2, '0');
                   final mm = sel.month.toString().padLeft(2, '0');
                   label = ultraCompact ? '$dd/$mm' : '$wd $dd/$mm';
@@ -624,7 +616,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           // Ações do dia (abre bottom sheet com duplicar, templates e visão de streaks)
           action(
               Icons.local_fire_department, 'Ações do dia', _openDayActionsMenu),
-          action(Icons.emoji_events_outlined, 'Conquistas', () {
+          action(Icons.emoji_events_outlined, context.l10n.achievementsTitle, () {
             Navigator.pushNamed(context, AppRoutes.achievements);
           }),
           if (!compact) ...[
@@ -910,8 +902,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
   Widget _overallMacrosRow(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final double fsLabel = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
-    final double fsValue = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
+    final double fsLabel = w < 340 ? 10.sp : (w < 380 ? 11.sp : 12.sp);
+    final double fsValue = w < 340 ? 11.sp : (w < 380 ? 12.sp : 13.sp);
     final double barH = w < 360 ? 3 : 4;
     final double vspace = w < 360 ? 4 : 6;
 
@@ -924,9 +916,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             label,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                  fontSize: fsLabel,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                  fontSize: fsLabel + 3,
                 ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1001,9 +993,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.textSecondary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
-                  fontSize: fsValue,
+                  fontSize: fsValue + 1,
                 ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1030,11 +1022,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-            child: cell('Carboidratos', carbsC, carbsT, AppTheme.warningAmber)),
+            child:
+                cell('Carboidratos', carbsC, carbsT, AppColorsDS.macroCarb)),
         SizedBox(width: hgap),
-        Expanded(child: cell('Proteína', protC, protT, AppTheme.successGreen)),
+        Expanded(
+            child: cell('Proteína', protC, protT, AppColorsDS.macroProtein)),
         SizedBox(width: hgap),
-        Expanded(child: cell('Gordura', fatC, fatT, AppTheme.activeBlue)),
+        Expanded(child: cell('Gordura', fatC, fatT, AppColorsDS.macroFat)),
       ],
     );
   }
@@ -1209,12 +1203,27 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               startEatingMinute: t.startMinute!,
                               stopEatingHour: t.stopHour!,
                               stopEatingMinute: t.stopMinute!,
+                              openTitle: context.l10n.notifFastingOpenTitle,
+                              openBody: context.l10n.notifFastingOpenBody,
+                              startTitle: context.l10n.notifFastingStartTitle,
+                              startBody: context.l10n.notifFastingStartBody,
+                              channelName: context.l10n.channelFastingName,
+                              channelDescription:
+                                  context.l10n.channelFastingDescription,
                             );
                           }
                           // Also schedule end-of-fast if still active
                           if (_fastEndAt != null) {
                             NotificationsService.scheduleFastingEnd(
-                                endAt: _fastEndAt!, method: _fastMethod);
+                              endAt: _fastEndAt!,
+                              method: _fastMethod,
+                              title: context.l10n.notifFastingEndTitle,
+                              body: context.l10n
+                                  .notifFastingEndBody(_fastMethod),
+                              channelName: context.l10n.channelFastingName,
+                              channelDescription:
+                                  context.l10n.channelFastingDescription,
+                            );
                           }
                           _refreshFastingBanner();
                         },
@@ -1617,10 +1626,17 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           // YAZIO-like: no section header; list meals directly
           const SizedBox(height: 8),
           row('Café da manhã', 'breakfast'),
+          // subtle divider after breakfast (aligns after the icon)
+          const Divider(
+            height: 24,
+            thickness: 1,
+            color: AppColorsDS.divider,
+            indent: 64,
+          ),
           row('Almoço', 'lunch'),
-          const Divider(height: 24, thickness: 1, color: AppColorsDS.divider, indent: 56),
+          const Divider(height: 24, thickness: 1, color: AppColorsDS.divider, indent: 64),
           row('Jantar', 'dinner'),
-          const Divider(height: 24, thickness: 1, color: AppColorsDS.divider, indent: 56),
+          const Divider(height: 24, thickness: 1, color: AppColorsDS.divider, indent: 64),
           row('Lanches', 'snack'),
         ],
       ),
@@ -1755,7 +1771,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       if (!mounted) return false;
       // Notificação local
       await NotificationsService.showHydrationReminder(
-        body: 'Registre +250 ml ou um copo de água agora',
+        title: context.l10n.notifHydrationTitle,
+        body: context.l10n.notifHydrationBody,
+        channelName: context.l10n.channelHydrationName,
+        channelDescription: context.l10n.channelHydrationDescription,
       );
       return true;
     });
@@ -1825,9 +1844,20 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Today', style: AppTextStyles.h1(context)),
+            Text(
+              'Today',
+              style: AppTextStyles.h1(context).copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text('Week $week', style: AppTextStyles.caption(context)),
+            Text(
+              'Week $week',
+              style: AppTextStyles.caption(context).copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
         Row(
@@ -1866,13 +1896,16 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   // Header DS (Today / Week + badges)
                   _buildHeaderDS(context),
                   const SizedBox(height: AppDimensions.sectionGap),
-                // Top actions (icons)
-                _topActionsRow(context),
-                SizedBox(height: 0.6.h),
                 // Show fasting banner prominently below header/top actions
                 _fastingMuteBanner(context),
                 SizedBox(height: 0.6.h),
 
+                // Summary section (ring + macros)
+                SectionHeader(
+                  title: 'Summary',
+                  trailingText: 'Details',
+                  onTrailingTap: _showCalorieBreakdown,
+                ),
                 // Top dashboard header estilo imagem de referência
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
@@ -1882,11 +1915,25 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                     padding:
                         EdgeInsets.symmetric(vertical: 1.0.h, horizontal: 4.w),
                     decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(14),
+                      // Subtle bluish background like YAZIO
+                      color: AppColorsDS.waterTrackerBackground,
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: cs.outlineVariant.withValues(alpha: 0.2)),
-                      boxShadow: const [],
+                        color: cs.outlineVariant.withValues(alpha: 0.20),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cs.primary.withValues(alpha: 0.06),
+                          blurRadius: 18,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -1992,7 +2039,31 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         final dd = DateTime(u.year, u.month, u.day);
                         if (dd == today) countToday++;
                       }
+                      // last note preview (most recent by updatedAt/createdAt)
+                      Map<String, dynamic>? last;
+                      DateTime best = DateTime(1970);
+                      for (final n in list) {
+                        final u = DateTime.tryParse(
+                              (n['updatedAt'] ?? n['createdAt']) as String? ?? '') ??
+                            DateTime(1970);
+                        if (u.isAfter(best)) {
+                          best = u;
+                          last = n;
+                        }
+                      }
+                      final preview = (last != null)
+                          ? NoteSummary(
+                              id: (last!['id']?.toString() ?? ''),
+                              text: (last!['text'] as String?) ??
+                                  (last!['content'] as String?) ??
+                                  '-',
+                              createdAt: best,
+                            )
+                          : null;
+
                       return NotesCard(
+                        lastNote: preview,
+                        isLoading: snap.connectionState == ConnectionState.waiting,
                         noteCount: countToday,
                         onAddNote: () {
                           Navigator.pushNamed(
@@ -2004,6 +2075,16 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                             },
                           );
                         },
+                        onViewAll: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.notes,
+                            arguments: {
+                              'date': _selectedDate.toIso8601String(),
+                            },
+                          );
+                        },
+                        onImpression: () {},
                       );
                     },
                   ),
@@ -2484,10 +2565,10 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                                                     _kAnimCurve.transform(p);
                                                 return LinearProgressIndicator(
                                                   value: eased * ratio,
-                                                  minHeight: 6,
+                                                  minHeight: 4,
                                                   backgroundColor: cs
                                                       .outlineVariant
-                                                      .withValues(alpha: 0.25),
+                                                      .withValues(alpha: 0.20),
                                                   color: AppTheme.successGreen,
                                                 );
                                               },
@@ -2812,7 +2893,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               ["carbohydrates"]["consumed"] as int),
                           total: (_dailyData["macronutrients"]["carbohydrates"]
                               ["total"] as int),
-                          color: AppTheme.warningAmber,
+                          color: AppColorsDS.macroCarb,
                           onLongPress: () =>
                               _showMacronutrientDetails('carbohydrates'),
                         ),
@@ -2822,7 +2903,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               ["consumed"] as int),
                           total: (_dailyData["macronutrients"]["proteins"]
                               ["total"] as int),
-                          color: AppTheme.successGreen,
+                          color: AppColorsDS.macroProtein,
                           onLongPress: () =>
                               _showMacronutrientDetails('proteins'),
                         ),
@@ -2832,7 +2913,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                               ["consumed"] as int),
                           total: (_dailyData["macronutrients"]["fats"]["total"]
                               as int),
-                          color: AppTheme.activeBlue,
+                          color: AppColorsDS.macroFat,
                           onLongPress: () => _showMacronutrientDetails('fats'),
                         ),
                       ],
@@ -3067,7 +3148,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Fechar',
+                context.l10n.close,
                 style: TextStyle(color: AppTheme.activeBlue),
               ),
             ),
@@ -3120,7 +3201,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Fechar',
+                context.l10n.close,
                 style: TextStyle(color: AppTheme.activeBlue),
               ),
             ),
@@ -4901,8 +4982,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:
-                Text('Fechar', style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text(context.l10n.close,
+                style: TextStyle(color: AppTheme.textSecondary)),
           ),
         ],
       ),

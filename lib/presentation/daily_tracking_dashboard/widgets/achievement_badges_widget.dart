@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
+import '../../../core/l10n_ext.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/design_tokens.dart';
@@ -28,7 +30,7 @@ class AchievementBadgesWidget extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Conquistas Recentes',
+                context.l10n.achievementsTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: colors.onSurface,
                   fontWeight: FontWeight.w600,
@@ -36,8 +38,7 @@ class AchievementBadgesWidget extends StatelessWidget {
               ),
               SizedBox(width: 2.w),
               Tooltip(
-                message:
-                    'Beba a meta de água por 3/5/7 dias seguidos para ganhar faixas',
+                message: context.l10n.streakMilestonesTitle,
                 child: CustomIconWidget(
                   iconName: 'water_drop',
                   color: colors.primary,

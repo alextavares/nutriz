@@ -1771,4 +1771,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get endFastButton => 'End fast';
+
+  @override
+  String get onbV3SplashTitle => 'nutriZ';
+
+  @override
+  String get onbV3WelcomeTitle => 'nutriZ';
+
+  @override
+  String get onbV3Welcome85Million => '85 million happy users';
+
+  @override
+  String get onbV3Welcome20Million => '20 million foods for calorie tracking';
+
+  @override
+  String get onbV3WelcomeSubtitle => 'Let\'s make every day count!';
+
+  @override
+  String get onbV3WelcomeGetStarted => 'Get Started';
+
+  @override
+  String get onbV3WelcomeAlreadyHaveAccount => 'I Already Have an Account';
+
+  @override
+  String get onbV3GoalTitle => 'What\'s your main goal?';
+
+  @override
+  String get onbV3GoalLoseWeight => 'Lose weight';
+
+  @override
+  String get onbV3GoalGainWeight => 'Gain weight';
+
+  @override
+  String get onbV3GoalMaintain => 'Maintain weight';
+
+  @override
+  String get onbV3GoalContinue => 'Continue';
+
+  @override
+  String get onbV3AppBarSetup => 'Setup';
+
+  @override
+  String onbV3ProgressStep(Object current, Object total) {
+    return '$current/$total';
+  }
+
+  @override
+  String get notifFastingOpenTitle => 'Eating Window Open';
+
+  @override
+  String get notifFastingOpenBody => 'You can start eating now.';
+
+  @override
+  String get notifFastingStartTitle => 'Fasting Window Started';
+
+  @override
+  String get notifFastingStartBody => 'Stop eating to begin your fast.';
+
+  @override
+  String get notifFastingEndTitle => 'Fasting Complete';
+
+  @override
+  String notifFastingEndBody(String method) {
+    return 'Your $method fast is complete.';
+  }
+
+  @override
+  String get channelFastingName => 'Fasting';
+
+  @override
+  String get channelFastingDescription => 'Intermittent fasting notifications';
+
+  @override
+  String get notifHydrationTitle => 'Hydration Reminder';
+
+  @override
+  String get notifHydrationBody => 'Time to drink some water.';
+
+  @override
+  String get channelHydrationName => 'Hydration';
+
+  @override
+  String get channelHydrationDescription => 'Hydration reminders';
 }

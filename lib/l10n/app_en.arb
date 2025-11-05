@@ -354,5 +354,36 @@
   "remindersReactivated": "Reminders reactivated",
   "remindersMutedTomorrow": "Reminders muted until tomorrow 08:00",
   "startFastButton": "Start fasting",
-  "endFastButton": "End fast"
+  "endFastButton": "End fast",
+  "onbV3SplashTitle": "nutriZ",
+  "onbV3WelcomeTitle": "nutriZ",
+  "onbV3Welcome85Million": "85 million happy users",
+  "onbV3Welcome20Million": "20 million foods for calorie tracking",
+  "onbV3WelcomeSubtitle": "Let's make every day count!",
+  "onbV3WelcomeGetStarted": "Get Started",
+  "onbV3WelcomeAlreadyHaveAccount": "I Already Have an Account",
+  "onbV3GoalTitle": "What's your main goal?",
+  "onbV3GoalLoseWeight": "Lose weight",
+  "onbV3GoalGainWeight": "Gain weight",
+  "onbV3GoalMaintain": "Maintain weight",
+  "onbV3GoalContinue": "Continue",
+  "onbV3AppBarSetup": "Setup",
+  "onbV3ProgressStep": "{current}/{total}",
+  "notifFastingOpenTitle": "Eating Window Open",
+  "notifFastingOpenBody": "You can start eating now.",
+  "notifFastingStartTitle": "Fasting Window Started",
+  "notifFastingStartBody": "Stop eating to begin your fast.",
+  "notifFastingEndTitle": "Fasting Complete",
+  "notifFastingEndBody": "Your {method} fast is complete.",
+  "@notifFastingEndBody": {
+    "placeholders": {
+      "method": { "type": "String" }
+    }
+  },
+  "channelFastingName": "Fasting",
+  "channelFastingDescription": "Intermittent fasting notifications",
+  "notifHydrationTitle": "Hydration Reminder",
+  "notifHydrationBody": "Time to drink some water.",
+  "channelHydrationName": "Hydration",
+  "channelHydrationDescription": "Hydration reminders"
 }

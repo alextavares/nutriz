@@ -26,7 +26,10 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(title, style: text.copyWith(fontWeight: FontWeight.w700)),
+            child: Text(
+              title,
+              style: text.copyWith(fontWeight: FontWeight.w800),
+            ),
           ),
           if (trailingText != null)
             InkWell(
@@ -36,8 +39,11 @@ class SectionHeader extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   trailingText!,
-                  style: AppTextStyles.body2(context)
-                      .copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
+                  style: AppTextStyles.body2(context).copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
                 ),
               ),
             ),
@@ -46,4 +52,3 @@ class SectionHeader extends StatelessWidget {
     );
   }
 }
-

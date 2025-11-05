@@ -551,7 +551,15 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
         NotificationsService.cancelFastingEnd();
         final endAt = _fastingStartTime!.add(_activeTarget!);
         NotificationsService.scheduleFastingEnd(
-            endAt: endAt, method: _selectedMethod);
+          endAt: endAt,
+          method: _selectedMethod,
+          title: AppLocalizations.of(context)!.notifFastingEndTitle,
+          body: AppLocalizations.of(context)!
+              .notifFastingEndBody(_selectedMethod),
+          channelName: AppLocalizations.of(context)!.channelFastingName,
+          channelDescription:
+              AppLocalizations.of(context)!.channelFastingDescription,
+        );
       }
     }
   }
@@ -622,7 +630,15 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
       final mutedActive = _muteUntil != null && now.isBefore(_muteUntil!);
       if (!mutedActive) {
         NotificationsService.scheduleFastingEnd(
-            endAt: endAt, method: _selectedMethod);
+          endAt: endAt,
+          method: _selectedMethod,
+          title: AppLocalizations.of(context)!.notifFastingEndTitle,
+          body: AppLocalizations.of(context)!
+              .notifFastingEndBody(_selectedMethod),
+          channelName: AppLocalizations.of(context)!.channelFastingName,
+          channelDescription:
+              AppLocalizations.of(context)!.channelFastingDescription,
+        );
       } else {
         // Warn user that notifications are muted
         final u = _muteUntil!;
@@ -641,7 +657,15 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 _updateDailyFastingReminders();
                 // schedule end-of-fast now
                 NotificationsService.scheduleFastingEnd(
-                    endAt: endAt, method: _selectedMethod);
+                  endAt: endAt,
+                  method: _selectedMethod,
+                  title: AppLocalizations.of(context)!.notifFastingEndTitle,
+                  body: AppLocalizations.of(context)!
+                      .notifFastingEndBody(_selectedMethod),
+                  channelName: AppLocalizations.of(context)!.channelFastingName,
+                  channelDescription: AppLocalizations.of(context)!
+                      .channelFastingDescription,
+                );
               },
               textColor: context.semanticColors.success,
             ),
@@ -897,6 +921,13 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
       startEatingMinute: se.minute,
       stopEatingHour: st.hour,
       stopEatingMinute: st.minute,
+      openTitle: AppLocalizations.of(context)!.notifFastingOpenTitle,
+      openBody: AppLocalizations.of(context)!.notifFastingOpenBody,
+      startTitle: AppLocalizations.of(context)!.notifFastingStartTitle,
+      startBody: AppLocalizations.of(context)!.notifFastingStartBody,
+      channelName: AppLocalizations.of(context)!.channelFastingName,
+      channelDescription:
+          AppLocalizations.of(context)!.channelFastingDescription,
     );
   }
 
@@ -1203,7 +1234,16 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                     _activeTarget != null) {
                   final endAt = _fastingStartTime!.add(_activeTarget!);
                   NotificationsService.scheduleFastingEnd(
-                      endAt: endAt, method: _selectedMethod);
+                    endAt: endAt,
+                    method: _selectedMethod,
+                    title: AppLocalizations.of(context)!.notifFastingEndTitle,
+                    body: AppLocalizations.of(context)!
+                        .notifFastingEndBody(_selectedMethod),
+                    channelName:
+                        AppLocalizations.of(context)!.channelFastingName,
+                    channelDescription: AppLocalizations.of(context)!
+                        .channelFastingDescription,
+                  );
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -1327,5 +1367,4 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 ])));
   }
 }
-
 

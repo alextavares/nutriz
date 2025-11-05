@@ -46,52 +46,61 @@ class NotificationsService {
         ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
-  static Future<void> showHydrationReminder({required String body}) async {
+  static Future<void> showHydrationReminder({
+    required String title,
+    required String body,
+    String channelName = 'Hydration',
+    String channelDescription = 'Drink water reminders',
+  }) async {
     await initialize();
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'hydration_channel',
-      'Hidratação',
-      channelDescription: 'Lembretes de beber água',
+      channelName,
+      channelDescription: channelDescription,
       importance: Importance.high,
       priority: Priority.high,
       playSound: true,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details =
+    final details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
-    await _plugin.show(1001, 'Hora de beber água', body, details);
+    await _plugin.show(1001, title, body, details);
   }
 
   // Schedule a notification for fasting end
   static Future<void> scheduleFastingEnd({
     required DateTime endAt,
     required String method,
+    required String title,
+    required String body,
+    String channelName = 'Fasting',
+    String channelDescription = 'Intermittent fasting notifications',
   }) async {
     await initialize();
     await _ensureTimezone();
     final now = DateTime.now();
     final diff = endAt.difference(now);
     if (diff.inSeconds <= 0) {
-      await _showFastingEndNow(method: method);
+      await _showFastingEndNow(title: title, body: body);
       return;
     }
     final scheduleTime = tz.TZDateTime.now(tz.local).add(diff);
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'fasting_channel',
-      'Jejum',
-      channelDescription: 'Notificações do jejum intermitente',
+      channelName,
+      channelDescription: channelDescription,
       importance: Importance.high,
       priority: Priority.high,
       playSound: true,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details =
+    final details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
     try {
       await _plugin.zonedSchedule(
         2001,
-        'Jejum concluido',
-        'Voce completou seu jejum $method.',
+        title,
+        body,
         scheduleTime,
         details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -110,20 +119,24 @@ class NotificationsService {
     await _plugin.cancel(2001);
   }
 
-  static Future<void> _showFastingEndNow({required String method}) async {
-    const androidDetails = AndroidNotificationDetails(
+  static Future<void> _showFastingEndNow({
+    required String title,
+    required String body,
+    String channelName = 'Fasting',
+    String channelDescription = 'Intermittent fasting notifications',
+  }) async {
+    final androidDetails = AndroidNotificationDetails(
       'fasting_channel',
-      'Jejum',
-      channelDescription: 'Notificações do jejum intermitente',
+      channelName,
+      channelDescription: channelDescription,
       importance: Importance.high,
       priority: Priority.high,
       playSound: true,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details =
+    final details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
-    await _plugin.show(2001, 'Jejum concluído',
-        'Você completou seu jejum $method. 🎉', details);
+    await _plugin.show(2001, title, body, details);
   }
 
   // Daily reminders at specific local times
@@ -133,6 +146,8 @@ class NotificationsService {
     required String body,
     required int hour,
     required int minute,
+    String channelName = 'Fasting',
+    String channelDescription = 'Intermittent fasting notifications',
   }) async {
     await initialize();
     await _ensureTimezone();
@@ -144,16 +159,16 @@ class NotificationsService {
     final diff = target.difference(nowLocal);
     final nowTz = tz.TZDateTime.now(tz.local);
     final scheduled = nowTz.add(diff);
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'fasting_channel',
-      'Jejum',
-      channelDescription: 'Notificações do jejum intermitente',
+      channelName,
+      channelDescription: channelDescription,
       importance: Importance.high,
       priority: Priority.high,
       playSound: true,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details =
+    final details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
     try {
       await _plugin.zonedSchedule(
@@ -184,21 +199,31 @@ class NotificationsService {
     required int startEatingMinute,
     required int stopEatingHour,
     required int stopEatingMinute,
+    required String openTitle,
+    required String openBody,
+    required String startTitle,
+    required String startBody,
+    String channelName = 'Fasting',
+    String channelDescription = 'Intermittent fasting notifications',
   }) async {
     await _ensureTimezone();
     await scheduleDailyReminder(
       id: 2002,
-      title: 'Romper jejum',
-      body: 'Hora de abrir a janela de alimentação.',
+      title: openTitle,
+      body: openBody,
       hour: startEatingHour,
       minute: startEatingMinute,
+      channelName: channelName,
+      channelDescription: channelDescription,
     );
     await scheduleDailyReminder(
       id: 2003,
-      title: 'Iniciar jejum',
-      body: 'Hora de encerrar a alimentação e iniciar o jejum.',
+      title: startTitle,
+      body: startBody,
       hour: stopEatingHour,
       minute: stopEatingMinute,
+      channelName: channelName,
+      channelDescription: channelDescription,
     );
   }
 

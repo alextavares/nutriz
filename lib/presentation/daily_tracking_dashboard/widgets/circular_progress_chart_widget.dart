@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
 
 import '../../../theme/design_tokens.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class CircularProgressChartWidget extends StatefulWidget {
@@ -93,7 +95,7 @@ class _CircularProgressChartWidgetState
       final w = MediaQuery.of(context).size.width;
       // Responsive number size similar to YAZIO side stats
       final double numFs = w < 360 ? 14.0 : 16.0;
-      final double labFs = w < 360 ? 10.0 : 12.0;
+      final double labFs = w < 360 ? 12.0 : 13.0;
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: align == TextAlign.right
@@ -116,7 +118,7 @@ class _CircularProgressChartWidgetState
                   textAlign: align,
                   style: textTheme.titleLarge?.copyWith(
                     color: color,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     fontFeatures: const [FontFeature.tabularFigures()],
                     fontSize: numFs,
                   ),
@@ -134,7 +136,7 @@ class _CircularProgressChartWidgetState
                 textAlign: align,
                 style: textTheme.titleLarge?.copyWith(
                   color: color,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
                   fontSize: numFs,
                 ),
@@ -148,9 +150,9 @@ class _CircularProgressChartWidgetState
             label,
             textAlign: align,
             style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              fontSize: labFs,
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
+              fontSize: labFs + 3.0,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -178,7 +180,7 @@ class _CircularProgressChartWidgetState
                 // Garantir altura consistente entre colunas laterais e anel sem IntrinsicHeight
                 LayoutBuilder(builder: (context, rowConstraints) {
                   final totalW = rowConstraints.maxWidth;
-                  const gap = 12.0; // espaçamento fixo entre colunas e anel
+                  const gap = 16.0; // espaçamento fixo entre colunas e anel
                   // Dimensão alvo do anel central como fração do total, responsivo
                   // YAZIO-like: anel central um pouco maior no cartão
                   final double ringTarget = totalW * 0.52; // antes 0.50
@@ -204,7 +206,7 @@ class _CircularProgressChartWidgetState
                         totalCalories: widget.totalCalories,
                         animationValue: _animation.value,
                         backgroundColor:
-                            colorScheme.outlineVariant.withValues(alpha: 0.28),
+                            colorScheme.outlineVariant.withValues(alpha: 0.40),
                         progressColor: colorScheme.primary,
                         exceededColor: colorScheme.error,
                       ),
@@ -228,14 +230,16 @@ class _CircularProgressChartWidgetState
                                         exceeded
                                             ? '-${_fmtInt(0)}'
                                             : _fmtInt(0),
-                                        style:
-                                            textTheme.headlineMedium?.copyWith(
+                                        style: GoogleFonts.manrope(
                                           color: exceeded
                                               ? colorScheme.error
-                                              : colorScheme.primary,
+                                              : AppColorsDS.primaryButton,
                                           fontWeight: FontWeight.w800,
-                                          fontSize: 16.sp,
-                                          letterSpacing: -0.5,
+                                          fontSize: 40,
+                                          letterSpacing: -0.6,
+                                          fontFeatures: const [
+                                            FontFeature.tabularFigures(),
+                                          ],
                                         ),
                                       );
                                     }
@@ -253,14 +257,16 @@ class _CircularProgressChartWidgetState
                                       exceeded
                                           ? '-${_fmtInt(shown)}'
                                           : _fmtInt(shown),
-                                      style: textTheme.headlineMedium?.copyWith(
+                                      style: GoogleFonts.manrope(
                                         color: exceeded
                                             ? colorScheme.error
-                                            : colorScheme.primary,
+                                            : AppColorsDS.primaryButton,
                                         fontWeight: FontWeight.w800,
-                                        fontSize: 18
-                                            .sp, // número central ligeiramente maior
+                                        fontSize: 40,
                                         letterSpacing: -0.6,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
                                       ),
                                     );
                                   },
@@ -271,11 +277,11 @@ class _CircularProgressChartWidgetState
                             Builder(builder: (context) {
                               return Text(
                                 _tRemaining(exceeded),
-                                style: textTheme.bodyMedium?.copyWith(
+                                style: textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurface,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: -0.2,
-                                  fontSize: 12.0,
+                                  fontSize: 15.0,
                                   height: 1.0,
                                 ),
                               );
@@ -357,23 +363,24 @@ class CircularProgressPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    // Traço mais espesso, próximo ao YAZIO
-    final stroke = (size.width * 0.11).clamp(10.0, 22.0);
-    final radius = size.width / 2 - stroke;
+    // Separar espessuras: fundo fino (2px) e arco mais espesso (YAZIO-like)
+    final double bgStroke = 6.0;
+    final double ringStroke = (size.width * 0.14).clamp(12.0, 26.0);
+    final radius = size.width / 2 - ringStroke;
 
-    // Background circle
+    // Background circle (fino)
     final backgroundPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
+      ..strokeWidth = bgStroke
       ..strokeCap = StrokeCap.round;
 
     canvas.drawCircle(center, radius, backgroundPaint);
 
-    // Progress arc
+    // Progress arc (espesso)
     final progressPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
+      ..strokeWidth = ringStroke
       ..strokeCap = StrokeCap.round;
 
     final raw = (totalCalories <= 0) ? 0.0 : (consumedCalories / totalCalories);
@@ -384,7 +391,7 @@ class CircularProgressPainter extends CustomPainter {
     final sweepAngle = progress * 2 * math.pi * animationValue;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2, // Start from top
+      math.pi / 2, // Start from bottom
       sweepAngle,
       false,
       progressPaint,
@@ -392,12 +399,12 @@ class CircularProgressPainter extends CustomPainter {
 
     // Marcador (bolinha) na ponta do progresso — típico do YAZIO
     final double headAngle =
-        (-math.pi / 2) + (sweepAngle <= 0 ? 0.0001 : sweepAngle);
+        (math.pi / 2) + (sweepAngle <= 0 ? 0.0001 : sweepAngle);
     final Offset head = Offset(
       center.dx + radius * math.cos(headAngle),
       center.dy + radius * math.sin(headAngle),
     );
-    final double dotR = math.max(2.0, stroke * 0.20);
+    final double dotR = math.max(2.0, ringStroke * 0.20);
     final Paint dotPaint = Paint()
       ..color = exceeded ? exceededColor : progressColor
       ..style = PaintingStyle.fill;
