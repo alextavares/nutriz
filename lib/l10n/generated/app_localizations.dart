@@ -3529,6 +3529,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hydration reminders'**
   String get channelHydrationDescription;
+
+  /// No description provided for @carbsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Carb'**
+  String get carbsShort;
+
+  /// No description provided for @proteinShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Prot'**
+  String get proteinShort;
+
+  /// No description provided for @fatShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get fatShort;
+
+  /// No description provided for @eatenShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Eaten'**
+  String get eatenShort;
+
+  /// No description provided for @burnedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Burned'**
+  String get burnedShort;
+
+  /// No description provided for @remainingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get remainingShort;
+
+  /// No description provided for @weekShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Wk'**
+  String get weekShort;
+
+  /// No description provided for @nowEating.
+  ///
+  /// In en, this message translates to:
+  /// **'Now: Eating'**
+  String get nowEating;
+
+  /// No description provided for @nowFasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Now: Fasting'**
+  String get nowFasting;
+
+  /// No description provided for @notesYourLastNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your last note'**
+  String get notesYourLastNote;
+
+  /// No description provided for @notesHowAreYouToday.
+  ///
+  /// In en, this message translates to:
+  /// **'How was your day?'**
+  String get notesHowAreYouToday;
+
+  /// No description provided for @notesTrackMoodAndMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your health & feelings'**
+  String get notesTrackMoodAndMeals;
+
+  /// No description provided for @notesViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get notesViewAll;
+
+  /// No description provided for @notesNoRecordsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No records yet.'**
+  String get notesNoRecordsYet;
+
+  /// No description provided for @notesWriteMyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Write my day'**
+  String get notesWriteMyDay;
+
+  /// No description provided for @notesRegisterNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Register now'**
+  String get notesRegisterNow;
+
+  /// No description provided for @notesTodayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {count} note(s)'**
+  String notesTodayCount(int count);
+
+  /// No description provided for @notesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get notesToday;
+
+  /// No description provided for @notesNotesSingular.
+  ///
+  /// In en, this message translates to:
+  /// **'note'**
+  String get notesNotesSingular;
+
+  /// No description provided for @notesNotesPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'notes'**
+  String get notesNotesPlural;
+
+  /// No description provided for @waterGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get waterGoal;
+
+  /// No description provided for @waterToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get waterToday;
+
+  /// No description provided for @waterRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get waterRemaining;
+
+  /// No description provided for @waterAdd100.
+  ///
+  /// In en, this message translates to:
+  /// **'+ 100 mL'**
+  String get waterAdd100;
+
+  /// No description provided for @waterAdd200.
+  ///
+  /// In en, this message translates to:
+  /// **'+ 200 mL'**
+  String get waterAdd200;
+
+  /// No description provided for @waterReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get waterReset;
+
+  /// No description provided for @waterFromFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Water from food'**
+  String get waterFromFood;
+
+  /// No description provided for @waterTipTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: tap the buttons to add quickly.'**
+  String get waterTipTap;
+
+  /// No description provided for @waterAddWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Add water'**
+  String get waterAddWater;
+
+  /// No description provided for @waterCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get waterCancel;
+
+  /// No description provided for @waterAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get waterAdd;
+
+  /// No description provided for @waterCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get waterCustom;
+
+  /// No description provided for @waterMotivation0.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a glass 💙'**
+  String get waterMotivation0;
+
+  /// No description provided for @waterMotivation30.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going! Your body thanks you 💧'**
+  String get waterMotivation30;
+
+  /// No description provided for @waterMotivation70.
+  ///
+  /// In en, this message translates to:
+  /// **'Great! You\'re doing well 👏'**
+  String get waterMotivation70;
+
+  /// No description provided for @waterMotivation100Less.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there! Just a bit more 🏁'**
+  String get waterMotivation100Less;
+
+  /// No description provided for @waterMotivation100.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal achieved! 🎉'**
+  String get waterMotivation100;
+
+  /// No description provided for @bodyMetricsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Metrics'**
+  String get bodyMetricsTitle;
+
+  /// No description provided for @bodyMetricsViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get bodyMetricsViewAll;
+
+  /// No description provided for @bodyMetricsGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get bodyMetricsGoal;
+
+  /// No description provided for @bodyMetricsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'this week'**
+  String get bodyMetricsThisWeek;
+
+  /// No description provided for @bodyMetricsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How\'s your progress today?'**
+  String get bodyMetricsEmptyTitle;
+
+  /// No description provided for @bodyMetricsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your weight to stay focused ✨'**
+  String get bodyMetricsEmptySubtitle;
+
+  /// No description provided for @bodyMetricsAddWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Weight'**
+  String get bodyMetricsAddWeight;
+
+  /// No description provided for @bodyMetricsBloodPressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Pressure'**
+  String get bodyMetricsBloodPressure;
+
+  /// No description provided for @bodyMetricsBloodGlucose.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Glucose'**
+  String get bodyMetricsBloodGlucose;
+
+  /// No description provided for @bodyMetricsBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Fat'**
+  String get bodyMetricsBodyFat;
+
+  /// No description provided for @bodyMetricsMuscleMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Mass'**
+  String get bodyMetricsMuscleMass;
 }
 
 class _AppLocalizationsDelegate

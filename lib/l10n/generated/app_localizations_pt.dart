@@ -1858,4 +1858,153 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get channelHydrationDescription => 'Lembretes de hidratação';
+
+  @override
+  String get carbsShort => 'Carb';
+
+  @override
+  String get proteinShort => 'Prot';
+
+  @override
+  String get fatShort => 'Gord';
+
+  @override
+  String get eatenShort => 'Comido';
+
+  @override
+  String get burnedShort => 'Queimado';
+
+  @override
+  String get remainingShort => 'Restante';
+
+  @override
+  String get weekShort => 'Sem';
+
+  @override
+  String get nowEating => 'Agora: Comendo';
+
+  @override
+  String get nowFasting => 'Agora: Jejum';
+
+  @override
+  String get notesYourLastNote => 'Sua última nota';
+
+  @override
+  String get notesHowAreYouToday => 'Como você está hoje?';
+
+  @override
+  String get notesTrackMoodAndMeals =>
+      'Registre humor, refeições e aprendizados.';
+
+  @override
+  String get notesViewAll => 'Ver todas';
+
+  @override
+  String get notesNoRecordsYet => 'Sem registros ainda.';
+
+  @override
+  String get notesWriteMyDay => 'Escrever meu dia';
+
+  @override
+  String get notesRegisterNow => 'Registrar agora';
+
+  @override
+  String notesTodayCount(int count) {
+    return 'Hoje: $count nota(s)';
+  }
+
+  @override
+  String get notesToday => 'Hoje';
+
+  @override
+  String get notesNotesSingular => 'nota';
+
+  @override
+  String get notesNotesPlural => 'notas';
+
+  @override
+  String get waterGoal => 'Meta';
+
+  @override
+  String get waterToday => 'hoje';
+
+  @override
+  String get waterRemaining => 'Faltam';
+
+  @override
+  String get waterAdd100 => '+ 100 mL';
+
+  @override
+  String get waterAdd200 => '+ 200 mL';
+
+  @override
+  String get waterReset => 'Redefinir';
+
+  @override
+  String get waterFromFood => 'Água dos alimentos';
+
+  @override
+  String get waterTipTap =>
+      'Dica: toque nos botões para adicionar rapidamente.';
+
+  @override
+  String get waterAddWater => 'Adicionar água';
+
+  @override
+  String get waterCancel => 'Cancelar';
+
+  @override
+  String get waterAdd => 'Adicionar';
+
+  @override
+  String get waterCustom => 'Customizar';
+
+  @override
+  String get waterMotivation0 => 'Comece com um copo 💙';
+
+  @override
+  String get waterMotivation30 => 'Continue! Seu corpo agradece 💧';
+
+  @override
+  String get waterMotivation70 => 'Boa! Você está indo bem 👏';
+
+  @override
+  String get waterMotivation100Less => 'Quase lá! Só mais um pouco 🏁';
+
+  @override
+  String get waterMotivation100 => 'Meta atingida! 🎉';
+
+  @override
+  String get bodyMetricsTitle => 'Valores Corporais';
+
+  @override
+  String get bodyMetricsViewAll => 'Ver Tudo';
+
+  @override
+  String get bodyMetricsGoal => 'Meta';
+
+  @override
+  String get bodyMetricsThisWeek => 'esta semana';
+
+  @override
+  String get bodyMetricsEmptyTitle => 'Como está seu progresso hoje?';
+
+  @override
+  String get bodyMetricsEmptySubtitle =>
+      'Registrar ajuda você a manter o foco ✨';
+
+  @override
+  String get bodyMetricsAddWeight => 'Registrar Peso';
+
+  @override
+  String get bodyMetricsBloodPressure => 'Pressão Arterial';
+
+  @override
+  String get bodyMetricsBloodGlucose => 'Glicemia';
+
+  @override
+  String get bodyMetricsBodyFat => 'Gordura Corporal';
+
+  @override
+  String get bodyMetricsMuscleMass => 'Massa Muscular';
 }

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+import '../../../core/app_export.dart';
+import '../../../core/haptic_helper.dart';
+import '../../../services/analytics_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
+
 class BodyMetricsCard extends StatelessWidget {
   final VoidCallback onAddMetrics;
   final double? currentWeight;
@@ -28,59 +33,213 @@ class BodyMetricsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.screenPaddingH, vertical: AppDimensions.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Title Section
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppLocalizations.of(context)!.bodyMetricsTitle,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await HapticHelper.light();
+                  AnalyticsService.track('body_metrics_view_all_click');
+                  onAddMetrics();
+                },
+                child: Text(
+                  AppLocalizations.of(context)!.bodyMetricsViewAll,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Card principal de peso (branco estilo YAZIO)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.grey[300]!,
+                width: 1.5,
+              ),
+            ),
+            child: hasEntry ? _buildWeightTracker(context) : _buildEmptyState(context),
+          ),
+
+          // Grid de outras métricas corporais (sempre visível)
+          const SizedBox(height: 16),
+          _buildAdditionalMetricsGrid(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdditionalMetricsGrid(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.4,
+      children: [
+        _buildMetricCard(
+          context,
+          icon: Icons.favorite_outline,
+          iconColor: const Color(0xFFE91E63),
+          backgroundColor: const Color(0xFFFCE4EC),
+          title: AppLocalizations.of(context)!.bodyMetricsBloodPressure,
+          value: '--/--',
+          unit: 'mmHg',
+          onTap: () {
+            AnalyticsService.track('body_metrics_blood_pressure_click');
+            onAddMetrics();
+          },
+        ),
+        _buildMetricCard(
+          context,
+          icon: Icons.water_drop_outlined,
+          iconColor: const Color(0xFF2196F3),
+          backgroundColor: const Color(0xFFE3F2FD),
+          title: AppLocalizations.of(context)!.bodyMetricsBloodGlucose,
+          value: '--',
+          unit: 'mg/dL',
+          onTap: () {
+            AnalyticsService.track('body_metrics_blood_glucose_click');
+            onAddMetrics();
+          },
+        ),
+        _buildMetricCard(
+          context,
+          icon: Icons.percent_outlined,
+          iconColor: const Color(0xFFFF9800),
+          backgroundColor: const Color(0xFFFFF3E0),
+          title: AppLocalizations.of(context)!.bodyMetricsBodyFat,
+          value: '--',
+          unit: '%',
+          onTap: () {
+            AnalyticsService.track('body_metrics_body_fat_click');
+            onAddMetrics();
+          },
+        ),
+        _buildMetricCard(
+          context,
+          icon: Icons.fitness_center_outlined,
+          iconColor: const Color(0xFF4CAF50),
+          backgroundColor: const Color(0xFFE8F5E9),
+          title: AppLocalizations.of(context)!.bodyMetricsMuscleMass,
+          value: '--',
+          unit: 'kg',
+          onTap: () {
+            AnalyticsService.track('body_metrics_muscle_mass_click');
+            onAddMetrics();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required Color backgroundColor,
+    required String title,
+    required String value,
+    required String unit,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: () async {
+        await HapticHelper.light();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey[300]!,
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 18),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Body Metrics',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A1A1A),
-                      ),
+                  value,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    letterSpacing: -0.5,
+                  ),
                 ),
-                TextButton(
-                  onPressed: onAddMetrics,
-                  child: const Text(
-                    'More',
+                const SizedBox(width: 4),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 3),
+                  child: Text(
+                    unit,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF5B7FFF),
+                      color: Colors.grey[600],
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-
-          // Card principal (gradiente escuro)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4A5568), Color(0xFF2D3748)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: hasEntry ? _buildWeightTracker(context) : _buildEmptyState(context),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -91,25 +250,116 @@ class BodyMetricsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'Weight',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+        // Weight display with +/- buttons - YAZIO style
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildControlButton(
+              context: context,
+              icon: Icons.remove,
+              onPressed: () async {
+                await HapticHelper.medium();
+                AnalyticsService.track('body_metrics_decrease_weight');
+                onAdjustWeight?.call(-0.1);
+              },
+            ),
+            const SizedBox(width: 20),
+            Column(
+              children: [
+                Text(
+                  '${(currentWeight ?? 0).toStringAsFixed(1)}',
+                  style: TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    letterSpacing: -1,
+                  ),
+                ),
+                Text(
+                  weightUnit,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 20),
+            _buildControlButton(
+              context: context,
+              icon: Icons.add,
+              onPressed: () async {
+                await HapticHelper.medium();
+                AnalyticsService.track('body_metrics_increase_weight');
+                onAdjustWeight?.call(0.1);
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        if (goalWeight != null)
-          Text(
-            'Goal: ${goalWeight!.toStringAsFixed(1)} $weightUnit',
-            style: const TextStyle(fontSize: 13, color: Color(0xFFB8C5D6)),
-          ),
+
         const SizedBox(height: 16),
 
-        if (weeklyWeights != null && weeklyWeights!.isNotEmpty)
-          SizedBox(
-            height: 40,
+        // Goal display
+        if (goalWeight != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${AppLocalizations.of(context)!.bodyMetricsGoal}: ${goalWeight!.toStringAsFixed(1)} $weightUnit',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+
+        const SizedBox(height: 16),
+
+        // Weekly change indicator
+        if (change != null && lastWeight != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDown ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isDown ? Icons.trending_down : Icons.trending_up,
+                  size: 18,
+                  color: isDown ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${change.abs().toStringAsFixed(1)} $weightUnit ${AppLocalizations.of(context)!.bodyMetricsThisWeek}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDown ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                  ),
+                ),
+                if (isDown) const Text(' 💪', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+
+        // Mini chart if available
+        if (weeklyWeights != null && weeklyWeights!.length > 1) ...[
+          const SizedBox(height: 16),
+          Container(
+            height: 60,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: LineChart(
               LineChartData(
                 gridData: const FlGridData(show: false),
@@ -123,76 +373,24 @@ class BodyMetricsCard extends StatelessWidget {
                         .map((e) => FlSpot(e.key.toDouble(), e.value))
                         .toList(),
                     isCurved: true,
-                    color: Colors.white70,
-                    barWidth: 2,
-                    dotData: const FlDotData(show: false),
+                    color: Theme.of(context).colorScheme.primary,
+                    barWidth: 2.5,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 3,
+                          color: Theme.of(context).colorScheme.primary,
+                          strokeWidth: 0,
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-        const SizedBox(height: 12),
-
-        if (lastWeight != null)
-          Column(
-            children: [
-              Text(
-                'Último: ${lastWeight!.toStringAsFixed(1)} $weightUnit (Ontem)',
-                style: const TextStyle(fontSize: 13, color: Color(0xFFB8C5D6)),
-              ),
-              if (change != null) ...[
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(isDown ? Icons.arrow_downward : Icons.arrow_upward,
-                        size: 16,
-                        color: isDown
-                            ? const Color(0xFF4CAF50)
-                            : const Color(0xFFFF9800)),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${change.abs().toStringAsFixed(1)} $weightUnit esta semana',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDown
-                            ? const Color(0xFF4CAF50)
-                            : const Color(0xFFFF9800),
-                      ),
-                    ),
-                    if (isDown) const Text(' 💪', style: TextStyle(fontSize: 13)),
-                  ],
-                ),
-              ],
-            ],
-          ),
-
-        const SizedBox(height: 16),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildControlButton(
-              icon: Icons.remove,
-              onPressed: () => onAdjustWeight?.call(-0.1),
-            ),
-            const SizedBox(width: 24),
-            Text(
-              '${(currentWeight ?? 0).toStringAsFixed(1)} $weightUnit',
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 24),
-            _buildControlButton(
-              icon: Icons.add,
-              onPressed: () => onAdjustWeight?.call(0.1),
-            ),
-          ],
-        ),
+        ],
       ],
     );
   }
@@ -200,79 +398,57 @@ class BodyMetricsCard extends StatelessWidget {
   Widget _buildEmptyState(BuildContext context) {
     return Column(
       children: [
-        if (weeklyWeights != null && weeklyWeights!.isNotEmpty) ...[
-          SizedBox(
-            height: 40,
-            child: LineChart(
-              LineChartData(
-                gridData: const FlGridData(show: false),
-                titlesData: const FlTitlesData(show: false),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: weeklyWeights!
-                        .asMap()
-                        .entries
-                        .map((e) => FlSpot(e.key.toDouble(), e.value))
-                        .toList(),
-                    isCurved: true,
-                    color: Colors.white70,
-                    barWidth: 2,
-                    dotData: const FlDotData(show: false),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-
         Container(
-          width: 64,
-          height: 64,
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.grey[100],
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.monitor_weight_outlined,
-            size: 32,
-            color: Colors.white70,
+            size: 40,
+            color: Colors.grey[400],
           ),
         ),
 
         const SizedBox(height: 16),
-        const Text(
-          'Como está seu progresso hoje?',
+        Text(
+          AppLocalizations.of(context)!.bodyMetricsEmptyTitle,
           style: TextStyle(
             fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Registrar agora ajuda você a\nmanter o foco ✨',
+        Text(
+          AppLocalizations.of(context)!.bodyMetricsEmptySubtitle,
           style: TextStyle(
-            fontSize: 13,
-            color: Color(0xFFB8C5D6),
+            fontSize: 14,
+            color: Colors.grey[600],
             height: 1.5,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
+
         ElevatedButton.icon(
-          onPressed: onAddMetrics,
-          icon: const Icon(Icons.straighten, size: 20),
-          label: const Text(
-            'Registrar Peso',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          onPressed: () async {
+            await HapticHelper.medium();
+            AnalyticsService.track('body_metrics_add_weight_click');
+            onAddMetrics();
+          },
+          icon: const Icon(Icons.add, size: 20),
+          label: Text(
+            AppLocalizations.of(context)!.bodyMetricsAddWeight,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5B7FFF),
+            backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -281,21 +457,39 @@ class BodyMetricsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildControlButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildControlButton({
+    required BuildContext context,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey[300]!,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(12),
-          child: Icon(icon, color: Colors.white, size: 24),
+          borderRadius: BorderRadius.circular(16),
+          child: Icon(
+            icon,
+            color: Theme.of(context).colorScheme.primary,
+            size: 28,
+          ),
         ),
       ),
     );
