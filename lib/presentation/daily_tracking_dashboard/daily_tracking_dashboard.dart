@@ -14,6 +14,7 @@ import '../../widgets/notes_card.dart';
 import '../../components/animated_card.dart';
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
+import '../../services/dashboard_overview_service.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../services/notes_storage.dart';
 import '../../services/body_metrics_storage.dart';
@@ -42,12 +43,15 @@ class DailyTrackingDashboard extends StatefulWidget {
 }
 
 class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
-  DateTime _selectedDate = DateTime.now();
-  bool _initArgsHandled = false;
-  int _currentWeek = 32;
-  // Removed old day/week toggle state — we follow YAZIO-like date nav
-  final Set<String> _expandedMealKeys = <String>{};
-  List<Map<String, dynamic>> _todayEntries = [];
+ DateTime _selectedDate = DateTime.now();
+ bool _initArgsHandled = false;
+ int _currentWeek = 32;
+ // Removed old day/week toggle state — we follow YAZIO-like date nav
+ final Set<String> _expandedMealKeys = <String>{};
+ List<Map<String, dynamic>> _todayEntries = [];
+
+ // Serviço centralizado para overview diário (entradas, gamificação, etc.)
+ final DailyOverviewService _overviewService = const DailyOverviewService();
   List<int> _weeklyCalories = List.filled(7, 0);
   List<int> _weeklyWater = List.filled(7, 0);
   Map<String, dynamic> _lastExerciseMeta = const {};
@@ -102,19 +106,18 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   static const double _kDelayCenter = 0.06; // ~54ms
   static const double _kDelayRight = 0.09; // ~81ms
 
-  // Mock data for daily tracking
-  final Map<String, dynamic> _dailyData = {
-    "consumedCalories": 1450,
-    "totalCalories": 2000,
-    "spentCalories": 0,
-    "waterMl": 0,
-    "waterGoalMl": 2000,
-    "macronutrients": {
-      "carbohydrates": {"consumed": 180, "total": 250},
-      "proteins": {"consumed": 95, "total": 120},
-      "fats": {"consumed": 65, "total": 80},
-    },
-  };
+  // Estado derivado de overview diário (fonte única para UI)
+  int _consumedCalories = 0;
+  int _exerciseCalories = 0;
+  int _calorieGoal = 2000;
+  int _waterMl = 0;
+  int _waterGoalMl = 2000;
+  int _carbsConsumed = 0;
+  int _carbsGoal = 0;
+  int _proteinConsumed = 0;
+  int _proteinGoal = 0;
+  int _fatConsumed = 0;
+  int _fatGoal = 0;
 
   // Simple ISO-like week number (Mon-first). Good enough for UI label.
   int _computeIsoWeekNumber(DateTime date) {
@@ -227,43 +230,37 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           try {
             final d = DateTime.parse(s);
             _selectedDate = DateTime(d.year, d.month, d.day);
-            _loadToday();
-            _loadWeek();
-          } catch (_) {}
+          } catch (_) {
+            // Se der erro no parse, mantemos a data atual.
+          }
         }
       }
       _initArgsHandled = true;
     }
+    // Após definir a data inicial (por args ou hoje), carregamos dados reais.
+    _loadToday();
+    _loadWeek();
     _refreshGamificationRow();
   }
 
   Future<void> _refreshGamificationRow() async {
-    final streak = await StreakService.currentStreak('water');
-    final fast = await StreakService.currentStreak('fasting');
-    final cal = await StreakService.currentStreak('calories_ok_day');
-    final prot = await StreakService.currentStreak('protein');
-    final ach = await AchievementService.listAll();
+    final snapshot = await _overviewService.loadGamificationSnapshot();
     if (!mounted) return;
     setState(() {
-      _hydrationStreak = streak;
-      _fastingStreak = fast;
-      _caloriesStreak = cal;
-      _proteinStreak = prot;
-      ach.sort((a, b) =>
-          (b['dateIso'] as String?)?.compareTo(a['dateIso'] as String? ?? '') ??
-          0);
-      _achievements = ach.take(6).toList();
+      _hydrationStreak = snapshot.waterStreak;
+      _fastingStreak = snapshot.fastingStreak;
+      _caloriesStreak = snapshot.caloriesStreak;
+      _proteinStreak = snapshot.proteinStreak;
+      _achievements = snapshot.latestAchievements;
     });
 
-    // Celebrate newly added achievements (optional)
-    final lastAdded = await AchievementService.getLastAddedTs();
-    final lastSeen = await AchievementService.getLastSeenTs();
-    if (lastAdded > 0 && lastAdded > lastSeen) {
-      // Use overlay only; respect reduce animations handled inside
-      await CelebrationOverlay.maybeShow(context,
-          variant: CelebrationVariant.achievement);
-      await AchievementService.setLastSeenTs(lastAdded);
-    }
+    // Verifica se há conquistas novas e dispara celebração se necessário.
+    final hasNew = await _overviewService.markAndCheckNewAchievementsSeen();
+    if (!mounted || !hasNew) return;
+    await CelebrationOverlay.maybeShow(
+      context,
+      variant: CelebrationVariant.achievement,
+    );
   }
 
   Widget _waterStreakChip() {
@@ -875,6 +872,76 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     _loadMealGoals(); // reload per-meal goals
   }
 
+  Future<void> _loadToday() async {
+    final date = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final overview = await _overviewService.loadForDate(date);
+    if (!mounted) return;
+
+    // Atualiza entradas do dia
+    final entries = overview.entries;
+    // Recalcular totais por refeição
+    final Map<String, Map<String, int>> mealTotals = {
+      'breakfast': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+      'lunch': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+      'dinner': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+      'snack': {'kcal': 0, 'carbs': 0, 'proteins': 0, 'fats': 0},
+    };
+
+    int consumedKcal = 0;
+    int carbs = 0;
+    int protein = 0;
+    int fat = 0;
+    int waterMl = overview.waterMl ?? 0;
+
+    for (final e in entries) {
+      final mealKey = (e['mealTime'] as String?) ?? 'snack';
+      final kcal = (e['calories'] as num?)?.toInt() ?? 0;
+      final c = (e['carbs'] as num?)?.toInt() ?? 0;
+      final p = (e['protein'] as num?)?.toInt() ?? 0;
+      final f = (e['fat'] as num?)?.toInt() ?? 0;
+
+      consumedKcal += kcal;
+      carbs += c;
+      protein += p;
+      fat += f;
+
+      final bucket = mealTotals.putIfAbsent(mealKey, () => {
+            'kcal': 0,
+            'carbs': 0,
+            'proteins': 0,
+            'fats': 0,
+          });
+      bucket['kcal'] = (bucket['kcal'] ?? 0) + kcal;
+      bucket['carbs'] = (bucket['carbs'] ?? 0) + c;
+      bucket['proteins'] = (bucket['proteins'] ?? 0) + p;
+      bucket['fats'] = (bucket['fats'] ?? 0) + f;
+    }
+
+    // Goals globais/macros (se existirem no overview; caso contrário, mantemos valores atuais)
+    final calorieGoal = overview.calorieGoal ?? _calorieGoal;
+    final waterGoal = overview.waterGoalMl ?? _waterGoalMl;
+    final carbsGoal = overview.carbsGoal ?? _carbsGoal;
+    final proteinGoal = overview.proteinGoal ?? _proteinGoal;
+    final fatGoal = overview.fatGoal ?? _fatGoal;
+
+    if (!mounted) return;
+    setState(() {
+      _todayEntries = entries;
+      _mealTotals = mealTotals;
+      _consumedCalories = consumedKcal;
+      _exerciseCalories = overview.exerciseCalories ?? _exerciseCalories;
+      _calorieGoal = calorieGoal;
+      _waterMl = waterMl;
+      _waterGoalMl = waterGoal;
+      _carbsConsumed = carbs;
+      _carbsGoal = carbsGoal;
+      _proteinConsumed = protein;
+      _proteinGoal = proteinGoal;
+      _fatConsumed = fat;
+      _fatGoal = fatGoal;
+    });
+  }
+
   @override
   void dispose() {
     NutritionStorage.changes.removeListener(_onStorageChanged);
@@ -1004,18 +1071,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       );
     }
 
-    final carbsC =
-        (_dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ??
-            0);
-    final carbsT =
-        (_dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 0);
-    final protC =
-        (_dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0);
-    final protT =
-        (_dailyData["macronutrients"]["proteins"]["total"] as int? ?? 0);
-    final fatC =
-        (_dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0);
-    final fatT = (_dailyData["macronutrients"]["fats"]["total"] as int? ?? 0);
+    // Dados reais agregados de macros calculados em _loadToday()
+    final int carbsC = _carbsConsumed;
+    final int carbsT = _carbsGoal;
+    final int protC = _proteinConsumed;
+    final int protT = _proteinGoal;
+    final int fatC = _fatConsumed;
+    final int fatT = _fatGoal;
 
     final double hgap = w < 360 ? 8 : 12;
     return Row(
@@ -1689,8 +1751,9 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   Widget _waterCupsRow(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     const int cupSize = 250;
-    final int goal = (_dailyData["waterGoalMl"] as int);
-    final int current = (_dailyData["waterMl"] as int);
+
+    final int goal = _waterGoalMl;
+    final int current = _waterMl;
     // UIv3: use fixed 8 cups for a consistent look (YAZIO-like)
     const int totalCups = 8;
     final int filled = (current / cupSize).floor().clamp(0, totalCups);
@@ -1705,7 +1768,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
           final next = await NutritionStorage.addWaterMl(
               _selectedDate, targetMl - current);
           if (!mounted) return;
-          setState(() => _dailyData["waterMl"] = next);
+          setState(() => _waterMl = next);
         },
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 0.8.w, vertical: 0.4.h),
@@ -1801,8 +1864,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final remainingCalories = (_dailyData["totalCalories"] as int? ?? 0) -
-        (_dailyData["consumedCalories"] as int? ?? 0);
+    final remainingCalories = _calorieGoal - _consumedCalories;
 
     String _fmtDate(DateTime d) {
       String two(int n) => n < 10 ? '0$n' : '$n';
@@ -1862,8 +1924,8 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         ),
         Row(
           children: [
-            _badge(icon: Icons.water_drop, value: (_dailyData["waterMl"] as int? ?? 0) ~/ 250,
-                color: Theme.of(context).colorScheme.primary),
+           _badge(icon: Icons.water_drop, value: (_waterMl) ~/ 250,
+               color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 12),
             _badge(icon: Icons.local_fire_department, value: _exerciseStreak,
                 color: Theme.of(context).colorScheme.secondary),
@@ -1943,13 +2005,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                         // Chip "Semana N" removido (YAZIO-like)
                         SizedBox(height: 0.2.h),
                         CircularProgressChartWidget(
-                          consumedCalories: _dailyData["consumedCalories"],
-                          remainingCalories: remainingCalories +
-                              ((_dailyData["spentCalories"] as int?) ?? 0),
-                          spentCalories: _dailyData["spentCalories"],
-                          totalCalories: _dailyData["totalCalories"],
+                          consumedCalories: _consumedCalories,
+                          remainingCalories: remainingCalories + _exerciseCalories,
+                          spentCalories: _exerciseCalories,
+                          totalCalories: _calorieGoal,
                           onTap: _showCalorieBreakdown,
-                          waterMl: _dailyData["waterMl"] as int,
+                          waterMl: _waterMl,
                         ),
 
                         // Removed equation card under ring to match YAZIO (no text under the ring)
@@ -1995,13 +2056,13 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   delay: 150,
                   child: Builder(builder: (context) {
                     return WaterTrackerCardV2(
-                      currentMl: _dailyData["waterMl"] as int? ?? 0,
-                      goalMl: _dailyData["waterGoalMl"] as int? ?? 2000,
+                      currentMl: _waterMl,
+                      goalMl: _waterGoalMl,
                       onEditGoal: _openEditWaterGoalDialog,
                       onChange: (delta) async {
                         final ml = await NutritionStorage.addWaterMl(_selectedDate, delta);
                         if (!mounted) return ml;
-                        setState(() => _dailyData["waterMl"] = ml);
+                        setState(() => _waterMl = ml);
                         try { _updateHydrationAchievements(); } catch (_) {}
                         return ml;
                       },
@@ -2324,7 +2385,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 // Exercise / Activities (simple)
                 Builder(builder: (context) {
                   final cs = Theme.of(context).colorScheme;
-                  final int spent = _dailyData["spentCalories"] as int? ?? 0;
+                  final int spent = _exerciseCalories;
                   return Container(
                     margin:
                         EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
