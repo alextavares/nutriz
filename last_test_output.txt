@@ -1,0 +1,17 @@
+00:00 +0: loading C:/Users/alext/Downloads/nutritracker/nutritracker/test/achievements/achievements_smoke_test.dart
+00:00 +0: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/activities_section_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily
+00:00 +0 ~1: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/add_food_entry_screen_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily
+00:00 +0 ~2: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/ai_food_detection_results_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily
+00:00 +0 ~3: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/logged_meals_list_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily
+00:00 +0 ~4: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/manual_entry_widget_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily
+00:00 +0 ~5: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/meal_plan_section_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily
+00:00 +0 ~6: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/reference_dashboard_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily
+00:00 +0 ~7: C:/Users/alext/Downloads/nutritracker/nutritracker/test/goldens/steps_connect_card_golden_test.dart: (suite)
+  Skip: Golden tests disabled temporarily

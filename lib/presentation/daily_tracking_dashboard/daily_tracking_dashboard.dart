@@ -1023,12 +1023,12 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
       children: [
         Expanded(
             child:
-                cell('Carboidratos', carbsC, carbsT, AppColorsDS.macroCarb)),
+                cell(context.l10n.carbsShort, carbsC, carbsT, AppColorsDS.macroCarb)),
         SizedBox(width: hgap),
         Expanded(
-            child: cell('Proteína', protC, protT, AppColorsDS.macroProtein)),
+            child: cell(context.l10n.proteinShort, protC, protT, AppColorsDS.macroProtein)),
         SizedBox(width: hgap),
-        Expanded(child: cell('Gordura', fatC, fatT, AppColorsDS.macroFat)),
+        Expanded(child: cell(context.l10n.fatShort, fatC, fatT, AppColorsDS.macroFat)),
       ],
     );
   }
@@ -1852,7 +1852,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Week $week',
+              '${context.l10n.weekShort} $week',
               style: AppTextStyles.caption(context).copyWith(
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

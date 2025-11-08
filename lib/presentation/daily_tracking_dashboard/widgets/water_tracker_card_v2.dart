@@ -6,6 +6,7 @@ import '../../../theme/design_tokens.dart';
 import '../../../theme/app_colors.dart';
 import '../../common/celebration_overlay.dart';
 import '../../../core/haptic_helper.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Modern water tracker card adapted from the provided HTML.
 /// Self‑contained visuals + simple callbacks to mutate the day total.
@@ -163,7 +164,7 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Água',
+                        AppLocalizations.of(context)!.water,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: textColor,
@@ -174,7 +175,7 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
                   InkWell(
                     onTap: widget.onEditGoal,
                     child: Text(
-                      'Meta: ${(_goal / 1000).toStringAsFixed(2)} L',
+                      '${AppLocalizations.of(context)!.waterGoal}: ${(_goal / 1000).toStringAsFixed(2)} L',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w600,
@@ -216,7 +217,7 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
-                        const TextSpan(text: 'hoje', style: TextStyle(fontSize: 16, color: AppColors.textSecondary)),
+                        TextSpan(text: AppLocalizations.of(context)!.waterToday, style: const TextStyle(fontSize: 16, color: AppColors.textSecondary)),
                       ]),
                     );
                   },
@@ -268,7 +269,7 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
                           .textTheme
                           .labelSmall
                           ?.copyWith(color: AppColors.textSecondary)),
-                  Text('Faltam $_remainingText',
+                  Text('${AppLocalizations.of(context)!.waterRemaining} $_remainingText',
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall
@@ -283,7 +284,10 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
                 currentMl: _current,
                 goalMl: _goal,
                 cheers: _cheers,
-                onCupTap: (isFilled, index) {
+                onCupTap: (isFilled, index) async {
+                  // Haptic feedback
+                  await HapticHelper.light();
+
                   if (isFilled) {
                     // Remove 250 mL ao tocar em copo cheio
                     final remove = min(250, _current);
@@ -303,9 +307,23 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _actionButton(context, label: '+ 100 mL', onTap: () => _applyDelta(100)),
-                  _actionButton(context, label: '+ 200 mL', onTap: () => _applyDelta(200)),
-                  _actionButton(context, label: 'Redefinir', onTap: () {
+                  _actionButton(context, label: AppLocalizations.of(context)!.waterAdd100, onTap: () async {
+                    await HapticHelper.light();
+                    _applyDelta(100);
+                  }),
+                  _actionButton(context, label: AppLocalizations.of(context)!.waterAdd200, onTap: () async {
+                    await HapticHelper.light();
+                    _applyDelta(200);
+                  }),
+                  _actionButton(context, label: AppLocalizations.of(context)!.waterCustom, onTap: () async {
+                    await HapticHelper.light();
+                    final amount = await _askMl(context);
+                    if (amount != null && amount > 0) {
+                      _applyDelta(amount);
+                    }
+                  }),
+                  _actionButton(context, label: AppLocalizations.of(context)!.waterReset, onTap: () async {
+                    await HapticHelper.light();
                     _applyDelta(-_current);
                   }),
                 ],
@@ -315,12 +333,12 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Água dos alimentos: ${widget.foodWaterMl} mL',
+                  Text('${AppLocalizations.of(context)!.waterFromFood}: ${widget.foodWaterMl} mL',
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
                           ?.copyWith(color: AppColors.textSecondary)),
-                  Text(_motivationText(),
+                  Text(_motivationText(context),
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
@@ -330,7 +348,7 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
               const SizedBox(height: 6),
               Center(
                 child: Text(
-                  'Dica: toque nos botões para adicionar rapidamente.',
+                  AppLocalizations.of(context)!.waterTipTap,
                   style: Theme.of(context)
                       .textTheme
                       .labelSmall
@@ -366,13 +384,13 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
     );
   }
 
-  String _motivationText() {
+  String _motivationText(BuildContext context) {
     final p = _pct * 100;
-    if (p == 0) return 'Comece com um copo 💙';
-    if (p < 30) return 'Continue! Seu corpo agradece 💧';
-    if (p < 70) return 'Boa! Você está indo bem 👏';
-    if (p < 100) return 'Quase lá! Só mais um pouco 🏁';
-    return 'Meta atingida! 🎉';
+    if (p == 0) return AppLocalizations.of(context)!.waterMotivation0;
+    if (p < 30) return AppLocalizations.of(context)!.waterMotivation30;
+    if (p < 70) return AppLocalizations.of(context)!.waterMotivation70;
+    if (p < 100) return AppLocalizations.of(context)!.waterMotivation100Less;
+    return AppLocalizations.of(context)!.waterMotivation100;
   }
 
   Future<int?> _askMl(BuildContext context) async {
@@ -380,20 +398,20 @@ class _WaterTrackerCardV2State extends State<WaterTrackerCardV2>
     final r = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Adicionar água'),
+        title: Text(AppLocalizations.of(context)!.waterAddWater),
         content: TextField(
           controller: ctl,
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(hintText: 'mL (ex.: 250)'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.waterCancel)),
           TextButton(
             onPressed: () {
               final v = int.tryParse(ctl.text.trim());
               Navigator.pop(ctx, v);
             },
-            child: const Text('Adicionar'),
+            child: Text(AppLocalizations.of(context)!.waterAdd),
           ),
         ],
       ),
@@ -474,9 +492,10 @@ class _CupsGrid extends StatelessWidget {
       ),
       itemBuilder: (context, i) {
         final isFilled = i < filled;
-        final bounce = cheers.contains(i) ? 1.12 : 1.0;
+        final bounce = cheers.contains(i) ? 1.15 : 1.0;
         return AnimatedScale(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.elasticOut,
           scale: bounce,
           child: _Cup(
             isFilled: isFilled,
@@ -496,7 +515,7 @@ class _Cup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: isFilled ? 'Remover 250 mL' : 'Adicionar 250 mL',
+      label: isFilled ? '- 250 mL' : '+ 250 mL',
       button: true,
       child: InkWell(
         onTap: onTap,
