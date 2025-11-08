@@ -347,9 +347,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
       final bytes = await file.readAsBytes();
       final b64 = base64Encode(bytes);
       setState(() => _items.add(_ChatTyping()));
-      // Mantém uso direto do backend coach para visão (integração existente).
-      final cands =
-          await coach.CoachApiService.instance.analyzePhoto(imageBase64: b64);
+      // Usa AiGateway para centralizar visão (continua usando backend atual por baixo).
+      final cands = await AiGateway.instance.analyzePhoto(imageBase64: b64);
       if (!mounted) return;
       setState(() {
         // remove typing

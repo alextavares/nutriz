@@ -67,19 +67,24 @@ class AiGateway {
     return CoachReply.fromCoach(reply);
   }
 
-  /// Espaço reservado para futura análise de imagens de alimentos via gateway unificado.
-  /// Implementação concreta será adicionada em fases posteriores.
-  Future<Map<String, dynamic>> analyzeFoodImageStub({
-    required String imagePath,
+  /// Analisa foto de alimento usando o backend atual do CoachApiService.
+  /// Mantém compatibilidade com a API existente (`analyzePhoto`) mas expõe
+  /// via gateway para facilitar troca futura (ex.: outro modelo/fornecedor).
+  Future<List<Map<String, dynamic>>> analyzePhoto({
+    String? imageBase64,
+    String? imageUrl,
   }) async {
-    if (kDebugMode) {
-      return {
-        'status': 'not_implemented',
-        'message': 'Food vision not wired yet in AiGateway.',
-      };
-    }
-    return {
-      'status': 'not_implemented',
-    };
+    final list = await coach.CoachApiService.instance.analyzePhoto(
+      imageBase64: imageBase64,
+      imageUrl: imageUrl,
+    );
+    // Garante saída tipada consistente.
+    return list
+        .map<Map<String, dynamic>>(
+          (e) => (e as Map).map(
+            (k, v) => MapEntry(k.toString(), v),
+          ),
+        )
+        .toList();
   }
 }
