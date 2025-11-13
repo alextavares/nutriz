@@ -11,11 +11,12 @@ import '../presentation/recipe_browser/recipe_browser.dart';
 import '../presentation/intermittent_fasting_tracker/intermittent_fasting_tracker.dart';
 import '../presentation/detailed_meal_tracking_screen/detailed_meal_tracking_screen.dart';
 import '../presentation/ai_food_detection_screen/ai_food_detection_screen.dart';
-import '../presentation/profile_screen/profile_screen.dart';
+import '../presentation/profile_screen/profile_screen_v2.dart';
 import '../presentation/weekly_progress_screen/weekly_progress_screen.dart';
 import '../presentation/design_preview/design_preview_screen.dart';
 import '../presentation/progress_overview/progress_overview.dart';
 import '../presentation/goals_wizard/goals_wizard.dart';
+import '../presentation/profile_screen/goals_overview_screen.dart';
 import '../presentation/exercise_logging_screen/exercise_logging_screen.dart';
 import '../presentation/achievements/all_achievements_screen.dart';
 import '../presentation/onboarding/onboarding_flow.dart';
@@ -27,6 +28,7 @@ import '../presentation/onboarding_v3/onboarding_v3_debug_screen.dart';
 import '../presentation/streaks/streak_overview_screen.dart';
 import '../presentation/ai_coach_chat/ai_coach_chat_screen.dart';
 import '../presentation/pro_subscription/pro_subscription_screen.dart';
+import '../presentation/profile_screen/tools_and_backup_screen.dart';
 
 class AppRoutes {
   // TODO: Add your routes here
@@ -57,6 +59,8 @@ class AppRoutes {
   static const String newOnboardingV2 = '/new-onboarding-v2';
   static const String streakOverview = '/streak-overview';
   static const String proSubscription = '/pro-subscription';
+  static const String toolsBackup = '/tools-backup';
+  static const String goalsOverview = '/goals-overview';
 
   // Onboarding V3 routes
   static const String onboardingV3Debug = '/onboarding-v3-debug';
@@ -76,7 +80,7 @@ class AppRoutes {
     detailedMealTrackingScreen: (context) => const DetailedMealTrackingScreen(),
     aiFoodDetection: (context) => const AiFoodDetectionScreen(),
     aiCoachChat: (context) => const AiCoachChatScreen(),
-    profile: (context) => const ProfileScreen(),
+    profile: (context) => const ProfileScreenV2(),
     weeklyProgress: (context) => const WeeklyProgressScreen(),
     designPreview: (context) => const DesignPreviewScreen(),
     progressOverview: (context) => const ProgressOverviewScreen(),
@@ -90,6 +94,8 @@ class AppRoutes {
     newOnboardingV2: (context) => const NewOnboardingV2(),
     streakOverview: (context) => const StreakOverviewScreen(),
     proSubscription: (context) => const ProSubscriptionScreen(),
+    toolsBackup: (context) => const ToolsAndBackupScreen(),
+    goalsOverview: (context) => const GoalsOverviewScreen(),
 
     // Onboarding V3 routes
     onboardingV3Debug: (context) => const OnboardingV3DebugScreen(),
