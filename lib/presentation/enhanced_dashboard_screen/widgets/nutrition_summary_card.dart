@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../components/calorie_ring.dart';
 
 class NutritionSummaryCard extends StatelessWidget {
   final int consumedCalories;
@@ -179,88 +180,17 @@ class NutritionSummaryCard extends StatelessWidget {
 
   Widget _buildRemainingRing(ThemeData theme, {double? size}) {
     final double w = size ?? 28.w;
-    final double progress = caloriesProgress.clamp(0.0, 1.0);
     return SizedBox(
       width: w,
       height: w,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: w,
-            height: w,
-          child: TweenAnimationBuilder<double>(
-            key: ValueKey(progress),
-            tween: Tween<double>(begin: 0, end: progress),
-            duration: _kAnimDuration,
-            curve: Curves.linear,
-            builder: (context, v, _) {
-              if (progress <= 0) {
-                return CircularProgressIndicator(
-                  value: 0,
-                  strokeWidth: 9,
-                  backgroundColor: AppTheme.dividerGray.withValues(alpha: 0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.activeBlue),
-                );
-              }
-              final p = (v / progress).clamp(0.0, 1.0);
-              final delayed = p; // no delay for ring progress
-              final eased = _kAnimCurve.transform(delayed);
-              return CircularProgressIndicator(
-                value: eased * progress,
-                strokeWidth: 9,
-                backgroundColor: AppTheme.dividerGray.withValues(alpha: 0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.activeBlue),
-              );
-            },
-          ),
-        ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TweenAnimationBuilder<double>(
-                key: ValueKey(remainingCalories),
-                tween: Tween<double>(begin: 0, end: remainingCalories.toDouble()),
-                duration: _kAnimDuration,
-                curve: Curves.linear,
-                builder: (context, v, _) {
-                  if (remainingCalories <= 0) {
-                    return Text(
-                      '0',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20.sp,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    );
-                  }
-                  final p = (v / remainingCalories).clamp(0.0, 1.0);
-                  final delayed = p <= _kDelayCenter
-                      ? 0.0
-                      : (p - _kDelayCenter) / (1.0 - _kDelayCenter);
-                  final eased = _kAnimCurve.transform(delayed);
-                  final shown = (remainingCalories * eased).toInt();
-                  return Text(
-                    shown.toString(),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20.sp,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  );
-                },
-              ),
-              Text(
-                'Restantes',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ],
+      child: CalorieRing(
+        goal: totalCalories.toDouble(),
+        eaten: consumedCalories.toDouble(),
+        burned: 0,
+        size: w,
+        thickness: (w * 0.10).clamp(10.0, 18.0),
+        showTicks: false,
+        gapDegrees: 40,
       ),
     );
   }

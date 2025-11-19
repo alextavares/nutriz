@@ -29,3 +29,10 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2025-08-11
 - Initial release.
 
+
+
+## 2025-11-05 - Fix: i18n & notifications
+- Add ARB keys for fasting/hydration (EN/PT)
+- Update NotificationsService calls with required title/body/channel
+- Regenerate l10n outputs
+

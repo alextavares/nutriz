@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:nutriz/l10n/generated/app_localizations.dart';
 import '../../../core/l10n_ext.dart';
 
 import '../../../core/app_export.dart';
-import '../../../theme/design_tokens.dart';
 
 class AchievementBadgesWidget extends StatelessWidget {
   final List<Map<String, dynamic>> achievements;

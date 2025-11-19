@@ -22,9 +22,9 @@ class RippleButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: borderRadius ?? BorderRadius.circular(12),
         splashColor: (rippleColor ?? Theme.of(context).primaryColor)
-            .withOpacity(0.3),
+            .withValues(alpha: 0.3),
         highlightColor: (rippleColor ?? Theme.of(context).primaryColor)
-            .withOpacity(0.1),
+            .withValues(alpha: 0.1),
         child: child,
       ),
     );

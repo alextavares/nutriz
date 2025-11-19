@@ -4,12 +4,14 @@ import 'package:nutriz/presentation/onboarding/onboarding_flow.dart';
 import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sizer/sizer.dart';
 
 void main() {
   testWidgets('Onboarding shows EN copy and navigates steps', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(Sizer(builder: (context, orientation, deviceType) {
+      return MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -18,7 +20,8 @@ void main() {
       ],
       supportedLocales: const [Locale('en')],
       home: const OnboardingFlow(),
-    ));
+    );
+    }));
 
     await tester.pumpAndSettle();
 

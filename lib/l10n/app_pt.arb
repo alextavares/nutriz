@@ -1,4 +1,335 @@
-{  "@@locale": "pt",  "streakOverviewTitle": "Visão geral da sequência",  "streakCurrentLabel": "Sequência atual",  "streakDays": "{count} dias",  "streakNoStreak": "Sem sequência",  "streakLogFood": "Registrar alimento",  "streakMilestonesTitle": "Marcos",  "streakDayProgress": "Dia {current}/{next}",  "streakGoalCompleted": "Meta concluída",  "streakWeeklyOverviewTitle": "Visão semanal",  "streakLongestTitle": "Maior sequência",  "weekMon": "Seg",  "weekTue": "Ter",  "weekWed": "Qua",  "weekThu": "Qui",  "weekFri": "Sex",  "weekSat": "Sáb",  "weekSun": "Dom",  "gotIt": "Entendi",  "streakNuxBody": "Toque nos pontos para ir a um dia específico.\nSua sequência cresce quando você registra qualquer alimento no dia.",  "@streakDays": {    "placeholders": {      "count": { "type": "int" }    }  },  "@streakDayProgress": {    "placeholders": {      "current": { "type": "int" },      "next": { "type": "int" }    }  },  "achievementsTitle": "Conquistas",  "achievementsTabAll": "Todas",  "achievementsTabWater": "Água",  "achievementsTabFasting": "Jejum",  "achievementsTabCalories": "Calorias",  "achievementsTabProtein": "Proteína",  "achievementsTabFood": "Alimentos",  "achievementsTabTest": "Teste",  "achievementsTabFavorites": "Favoritos",  "achievementsListView": "Ver em lista",  "achievementsGridView": "Ver em grade",  "achievementsEmpty": "Sem conquistas ainda",  "achievementsDefaultTitle": "Conquista",  "achievementsType": "Tipo",  "achievementsGoal": "Meta",  "achievementsNewBadge": "Novo",  "achievementsFavorite": "Favoritar",  "achievementsRemoveFavorite": "Remover dos favoritos",  "achievementsTotal": "Total: {count}",  "@achievementsTotal": {    "placeholders": {      "count": { "type": "int" }    }  },  "filterTypeLabel": "Tipo",  "filterTypeAll": "Todos",  "filterTypeSuccess": "Sucesso",  "filterTypeStreak": "Streak",  "filterTypePremium": "Premium",  "filterTypeGeneral": "Genérico",  "filterGoalLabel": "Meta",  "filterGoalAll": "Todas",  "filterGoalWater": "Água",  "filterGoalFasting": "Jejum",  "filterGoalCalories": "Calorias",  "filterGoalProtein": "Proteína",  "filterGoalFood": "Alimentos",  "filterGoalTest": "Teste",  "filterSortLabel": "Ordenar",  "sortRecent": "Recentes",  "sortOldest": "Antigas",  "sortType": "Tipo",  "navDiary": "Diário",  "navSearch": "Buscar",  "navAdd": "Adicionar",  "navProgress": "Progresso",  "navProfile": "Perfil",  "addSheetAddFood": "Adicionar alimento",  "addSheetAddBreakfast": "Adicionar ao Café da manhã",  "addSheetAddLunch": "Adicionar ao Almoço",  "addSheetAddDinner": "Adicionar ao Jantar",  "addSheetAddSnacks": "Adicionar aos Lanches",  "addSheetAddWater250": "Adicionar Água (+250 ml)",  "addSheetAddedWater250": "Adicionado 250 ml de Água",  "addSheetAddWater500": "Adicionar Água (+500 ml)",  "addSheetAddedWater500": "Adicionado 500 ml de Água",  "addSheetFoodScanner": "Scanner/IA de alimento",  "addSheetExploreRecipes": "Explorar receitas",  "addSheetIntermittentFasting": "Jejum intermitente",  "appbarPrevDay": "Dia anterior",  "appbarToday": "Hoje",  "appbarToggleDashboardOriginal": "Dashboard Original",  "appbarToggleDashboardV1": "Dashboard v1",  "appbarGamificationTooltip": "Gamificação",  "appbarGamificationSoon": "Gamificação em breve",  "appbarStreakTooltip": "Sequência",  "appbarStreakSoon": "Sequência/Conquistas em breve",  "appbarStatisticsTooltip": "Estatísticas",  "appbarSelectDate": "Selecionar data",  "splashUnexpectedError": "Erro inesperado durante a inicialização",  "splashForceUpdateTitle": "Atualização Necessária",  "splashForceUpdateBody": "Uma nova versão do NutriTracker está disponível. Por favor, atualize o aplicativo para continuar.",  "splashUpdate": "Atualizar",  "splashUnknownError": "Erro desconhecido",  "splashRetry": "Tentar Novamente",  "versionLabel": "Versão {version}",  "@versionLabel": {    "placeholders": {      "version": { "type": "String" }    }  },  "dowMon": "Segunda-feira",  "dowTue": "Terça-feira",  "dowWed": "Quarta-feira",  "dowThu": "Quinta-feira",  "dowFri": "Sexta-feira",  "dowSat": "Sábado",  "dowSun": "Domingo",  "dashboardTitle": "Painel",  "dashboardQuickActions": "Ações Rápidas",  "dashboardTodaysMeals": "Refeições de Hoje",  "dashboardViewAll": "Ver Todas",  "dashboardAddMeal": "Adicionar Refeição",  "streakNext": "→ próx: {next}d",  "@streakNext": {    "placeholders": {      "next": { "type": "int" }    }  },  "badgeEarnedOn": "Obtida em: {date}",  "@badgeEarnedOn": {    "placeholders": {      "date": { "type": "String" }    }  },  "close": "Fechar",  "weeklyProgressTitle": "Progresso semanal",  "menu": "Menu",  "exportCsv": "Export CSV",  "downloadCsv": "Download CSV",  "importCsv": "Import CSV",  "saveWeekAsTemplate": "Salvar semana como template",  "applyWeekTemplate": "Aplicar template de semana",  "duplicateWeekNext": "Duplicar semana → próxima",  "duplicateWeekPickDate": "Duplicar semana → escolher data",  "installApp": "Instalar app",  "caloriesPerDay": "Calorias por dia",  "daysWithNew": "{count} dia(s) com itens novos",  "@daysWithNew": {    "placeholders": {      "count": { "type": "int" }    }  },  "perMealAverages": "Médias por refeição (kcal/dia)",  "weeklyMacroAverages": "Médias semanais de macros",  "carbsAvg": "Carboidratos (média)",  "proteinAvg": "Proteína (média)",  "fatAvg": "Gordura (média)",  "waterPerDay": "Água por dia",  "exercisePerDay": "Exercício por dia",  "dailySummary": "Resumo diário",  "mealBreakfast": "Café",  "mealLunch": "Almoço",  "mealDinner": "Jantar",  "mealSnack": "Lanche",  "weekCsvCopied": "CSV da semana copiado/compartilhado",  "fileName": "Nome do arquivo",  "fileHint": "arquivo.csv",  "cancel": "Cancelar",  "save": "Salvar",  "templateApplied": "Template aplicado ao dia",  "duplicateTomorrow": "Duplicar → amanhã",  "weekActions": "Ações da semana",  "hdrDate": "Data",  "hdrWater": "Água",  "hdrExercise": "Exerc.",  "hdrCarb": "Carb",  "hdrProt": "Prot",  "hdrFat": "Gord",  "overGoal": "Excedeu",  "onbWelcome": "Bem-vindo",  "onbInfoTitle": "Tudo bem não ser perfeito",  "onbInfoBody": "Vamos construir hábitos aos poucos. Foque na consistência, não na perfeição.",  "continueLabel": "Continuar",  "finishLabel": "Concluir",  "onbCommitToday": "Compromisso marcado para hoje",  "dayStreak": "Sequência de dias",  "onbCongratsStreak": "Parabéns, você começou seu streak. Mantenha o ritmo!",  "onbImCommitted": "Estou comprometido",  "goalsSet": "Metas definidas",  "defineGoalsTitle": "Defina suas metas",  "defineGoalsBody": "Ajuste calorias e macros para o seu objetivo. Você pode alterar depois.",  "openGoalsWizard": "Abrir assistente de metas",  "notificationsConfigured": "Notificações configuradas",  "remindersSaved": "Lembretes salvos",  "remindersTitle": "Lembretes e Notificações",  "remindersBody": "Ative lembretes de hidratação para ajudar na consistência diária. Você pode alterar nas configurações depois.",  "enableHydrationReminders": "Ativar lembretes de hidratação",  "intervalMinutes": "Intervalo (min)",  "requesting": "Solicitando...",  "allowNotifications": "Permitir notificações",  "recipesTitle": "Receitas",  "recipesEmptyFiltered": "Nenhuma receita encontrada",  "recipesLoadingTitle": "Carregando receitas...",  "recipesEmptySubtitle": "Tente ajustar seus filtros ou termo de busca",  "recipesLoadingSubtitle": "Aguarde enquanto carregamos as melhores receitas para você",  "clearFilters": "Limpar Filtros",  "refresh": "Atualizar",  "recipeAddedToFavorites": "Receita adicionada aos favoritos",  "recipeRemovedFromFavorites": "Receita removida dos favoritos",  "openingRecipe": "Abrindo receita: {name}",  "@openingRecipe": {    "placeholders": {      "name": { "type": "String" }    }  },  "addedToMealPlan": "{name} adicionada ao plano de refeições",  "@addedToMealPlan": {    "placeholders": {      "name": { "type": "String" }    }  },  "sharingRecipe": "Compartilhando receita: {name}",  "@sharingRecipe": {    "placeholders": {      "name": { "type": "String" }    }  },  "findingSimilar": "Buscando receitas similares a: {name}",  "@findingSimilar": {    "placeholders": {      "name": { "type": "String" }    }  },  "qaAddToMealPlan": "Adicionar ao Plano de Refeições",  "qaScheduleThisRecipe": "Agendar esta receita para uma refeição",  "qaShareRecipe": "Compartilhar Receita",  "qaShareWithFriends": "Enviar para amigos e família",  "qaSimilarRecipes": "Receitas Similares",  "qaFindSimilar": "Encontrar receitas parecidas",  "filtersTitle": "Filtros",  "clearAll": "Limpar Tudo",  "apply": "Aplicar",  "mealType": "Tipo de Refeição",  "dietaryRestrictions": "Restrições Alimentares",  "prepTime": "Tempo de Preparo",  "calories": "Calorias",  "dietVegetarian": "Vegetariano",  "dietVegan": "Vegano",  "dietGlutenFree": "Sem Glúten",  "prepLt15": "< 15 min",  "prep15to30": "15-30 min",  "prep30to60": "30-60 min",  "prepGt60": "> 60 min",  "calLt200": "< 200 cal",  "cal200to400": "200-400 cal",  "cal400to600": "400-600 cal",  "calGt600": "> 600 cal",  "searchRecipesHint": "Buscar receitas...",  "dashboardSummary": "Resumo",  "dashboardDetails": "Detalhes",  "dashboardWeek": "Semana",  "dashboardNutrition": "Nutrição",  "dismissToday": "Dispensar hoje",  "notesTitle": "Anotações",  "addNote": "Adicionar anotação",  "addNoteHint": "Abre editor para criar nova anotação do dia",  "todayNotesCount": "Hoje: {count} anotação(ões)",  "@todayNotesCount": {"placeholders": {"count": {"type": "int"}}},  "addBodyMetrics": "Adicionar valores corporais",  "noEntryTodayTapToLog": "Sem registro hoje - toque para registrar",  "noMealsToDuplicateToday": "Sem refeições para duplicar hoje",  "duplicateLastMealTitle": "Duplicar última refeição",  "mealDuplicated": "Refeição duplicada ({meal})",  "@mealDuplicated": {"placeholders": {"meal": {"type": "String"}}},  "goalsPerMealTitle": "Metas por refeição",  "goalsPerMealUpdated": "Metas por refeição atualizadas",  "remainingPlural": "Restantes",  "remainingGrams": "Restante: {grams}g",  "@remainingGrams": {"placeholders": {"grams": {"type": "int"}}},  "duplicate": "Duplicar",  "duplicateDayTomorrowTitle": "Duplicar dia → amanhã",  "duplicateDayPickDateTitle": "Duplicar dia → escolher data",  "duplicateNewPickDateTitle": "Duplicar \"novos\" → escolher data",  "noNewItemsToDuplicate": "Nenhum item \"novo\" para duplicar",  "selectItemsToDuplicateTitle": "Selecionar itens para duplicar",  "chooseFileCsv": "Escolher arquivo (.csv)"  ,  "reviewItemsTitle": "Revisar itens",
+{
+  "@@locale": "pt",
+  "streakOverviewTitle": "Visão geral da sequência",
+  "streakCurrentLabel": "Sequência atual",
+  "streakDays": "{count} dias",
+  "streakNoStreak": "Sem sequência",
+  "streakLogFood": "Registrar alimento",
+  "streakMilestonesTitle": "Marcos",
+  "streakDayProgress": "Dia {current}/{next}",
+  "streakGoalCompleted": "Meta concluída",
+  "streakWeeklyOverviewTitle": "Visão semanal",
+  "streakLongestTitle": "Maior sequência",
+  "weekMon": "Seg",
+  "weekTue": "Ter",
+  "weekWed": "Qua",
+  "weekThu": "Qui",
+  "weekFri": "Sex",
+  "weekSat": "Sáb",
+  "weekSun": "Dom",
+  "gotIt": "Entendi",
+  "streakNuxBody": "Toque nos pontos para ir a um dia específico.\nSua sequência cresce quando você registra qualquer alimento no dia.",
+  "@streakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@streakDayProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsTitle": "Conquistas",
+  "achievementsTabAll": "Todas",
+  "achievementsTabWater": "Água",
+  "achievementsTabFasting": "Jejum",
+  "achievementsTabCalories": "Calorias",
+  "achievementsTabProtein": "Proteína",
+  "achievementsTabFood": "Alimentos",
+  "achievementsTabTest": "Teste",
+  "achievementsTabFavorites": "Favoritos",
+  "achievementsListView": "Ver em lista",
+  "achievementsGridView": "Ver em grade",
+  "achievementsEmpty": "Sem conquistas ainda",
+  "achievementsDefaultTitle": "Conquista",
+  "achievementsType": "Tipo",
+  "achievementsGoal": "Meta",
+  "achievementsNewBadge": "Novo",
+  "achievementsFavorite": "Favoritar",
+  "achievementsRemoveFavorite": "Remover dos favoritos",
+  "achievementsTotal": "Total: {count}",
+  "@achievementsTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterTypeLabel": "Tipo",
+  "filterTypeAll": "Todos",
+  "filterTypeSuccess": "Sucesso",
+  "filterTypeStreak": "Streak",
+  "filterTypePremium": "Premium",
+  "filterTypeGeneral": "Genérico",
+  "filterGoalLabel": "Meta",
+  "filterGoalAll": "Todas",
+  "filterGoalWater": "Água",
+  "filterGoalFasting": "Jejum",
+  "filterGoalCalories": "Calorias",
+  "filterGoalProtein": "Proteína",
+  "filterGoalFood": "Alimentos",
+  "filterGoalTest": "Teste",
+  "filterSortLabel": "Ordenar",
+  "sortRecent": "Recentes",
+  "sortOldest": "Antigas",
+  "sortType": "Tipo",
+  "navDiary": "Diário",
+  "navSearch": "Buscar",
+  "navAdd": "Adicionar",
+  "navProgress": "Progresso",
+  "navProfile": "Perfil",
+  "addSheetAddFood": "Adicionar alimento",
+  "addSheetAddBreakfast": "Adicionar ao Café da manhã",
+  "addSheetAddLunch": "Adicionar ao Almoço",
+  "addSheetAddDinner": "Adicionar ao Jantar",
+  "addSheetAddSnacks": "Adicionar aos Lanches",
+  "addSheetAddWater250": "Adicionar Água (+250 ml)",
+  "addSheetAddedWater250": "Adicionado 250 ml de Água",
+  "addSheetAddWater500": "Adicionar Água (+500 ml)",
+  "addSheetAddedWater500": "Adicionado 500 ml de Água",
+  "addSheetFoodScanner": "Scanner/IA de alimento",
+  "addSheetExploreRecipes": "Explorar receitas",
+  "addSheetIntermittentFasting": "Jejum intermitente",
+  "appbarPrevDay": "Dia anterior",
+  "appbarToday": "Hoje",
+  "appbarToggleDashboardOriginal": "Dashboard Original",
+  "appbarToggleDashboardV1": "Dashboard v1",
+  "appbarGamificationTooltip": "Gamificação",
+  "appbarGamificationSoon": "Gamificação em breve",
+  "appbarStreakTooltip": "Sequência",
+  "appbarStreakSoon": "Sequência/Conquistas em breve",
+  "appbarStatisticsTooltip": "Estatísticas",
+  "appbarSelectDate": "Selecionar data",
+  "splashUnexpectedError": "Erro inesperado durante a inicialização",
+  "splashForceUpdateTitle": "Atualização Necessária",
+  "splashForceUpdateBody": "Uma nova versão do NutriTracker está disponível. Por favor, atualize o aplicativo para continuar.",
+  "splashUpdate": "Atualizar",
+  "splashUnknownError": "Erro desconhecido",
+  "splashRetry": "Tentar Novamente",
+  "versionLabel": "Versão {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "dowMon": "Segunda-feira",
+  "dowTue": "Terça-feira",
+  "dowWed": "Quarta-feira",
+  "dowThu": "Quinta-feira",
+  "dowFri": "Sexta-feira",
+  "dowSat": "Sábado",
+  "dowSun": "Domingo",
+  "dashboardTitle": "Painel",
+  "dashboardQuickActions": "Ações Rápidas",
+  "dashboardTodaysMeals": "Refeições de Hoje",
+  "dashboardViewAll": "Ver Todas",
+  "dashboardAddMeal": "Adicionar Refeição",
+  "streakNext": "→ próx: {next}d",
+  "@streakNext": {
+    "placeholders": {
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  "badgeEarnedOn": "Obtida em: {date}",
+  "@badgeEarnedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "close": "Fechar",
+  "weeklyProgressTitle": "Progresso da semana",
+  "menu": "Menu",
+  "exportCsv": "Exportar CSV",
+  "downloadCsv": "Baixar CSV",
+  "importCsv": "Importar CSV",
+  "saveWeekAsTemplate": "Salvar semana como modelo",
+  "applyWeekTemplate": "Aplicar modelo de semana",
+  "duplicateWeekNext": "Duplicar esta semana para a próxima",
+  "duplicateWeekPickDate": "Duplicar esta semana escolhendo uma data",
+  "installApp": "Instalar app",
+  "caloriesPerDay": "Calorias por dia",
+  "daysWithNew": "{count} dia(s) com novos registros",
+  "@daysWithNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "perMealAverages": "Médias por refeição",
+  "weeklyMacroAverages": "Médias da semana (macros)",
+  "carbsAvg": "Carboidratos (média)",
+  "proteinAvg": "Proteína (média)",
+  "fatAvg": "Gordura (média)",
+  "waterPerDay": "Água por dia",
+  "exercisePerDay": "Exercício por dia",
+  "dailySummary": "Resumo diário",
+  "mealBreakfast": "Café",
+  "mealLunch": "Almoço",
+  "mealDinner": "Jantar",
+  "mealSnack": "Lanche",
+  "weekCsvCopied": "CSV da semana copiado/compartilhado",
+  "fileName": "Nome do arquivo",
+  "fileHint": "arquivo.csv",
+  "cancel": "Cancelar",
+  "save": "Salvar",
+  "templateApplied": "Template aplicado ao dia",
+  "duplicateTomorrow": "Duplicar → amanhã",
+  "weekActions": "Ações da semana",
+  "hdrDate": "Data",
+  "hdrWater": "Água",
+  "hdrExercise": "Exerc.",
+  "hdrCarb": "Carb",
+  "hdrProt": "Prot",
+  "hdrFat": "Gord",
+  "overGoal": "Excedeu",
+  "onbWelcome": "Bem-vindo",
+  "onbInfoTitle": "Tudo bem não ser perfeito",
+  "onbInfoBody": "Vamos construir hábitos aos poucos. Foque na consistência, não na perfeição.",
+  "continueLabel": "Continuar",
+  "finishLabel": "Concluir",
+  "onbCommitToday": "Compromisso marcado para hoje",
+  "dayStreak": "Sequência de dias",
+  "onbCongratsStreak": "Parabéns, você começou seu streak. Mantenha o ritmo!",
+  "onbImCommitted": "Estou comprometido",
+  "goalsSet": "Metas definidas",
+  "defineGoalsTitle": "Defina suas metas",
+  "defineGoalsBody": "Ajuste calorias e macros para o seu objetivo. Você pode alterar depois.",
+  "openGoalsWizard": "Abrir assistente de metas",
+  "notificationsConfigured": "Notificações configuradas",
+  "remindersSaved": "Lembretes salvos",
+  "remindersTitle": "Lembretes e Notificações",
+  "remindersBody": "Ative lembretes de hidratação para ajudar na consistência diária. Você pode alterar nas configurações depois.",
+  "enableHydrationReminders": "Ativar lembretes de hidratação",
+  "intervalMinutes": "Intervalo (min)",
+  "requesting": "Solicitando...",
+  "allowNotifications": "Permitir notificações",
+  "recipesTitle": "Receitas",
+  "recipesEmptyFiltered": "Nenhuma receita encontrada",
+  "recipesLoadingTitle": "Carregando receitas...",
+  "recipesEmptySubtitle": "Tente ajustar seus filtros ou termo de busca",
+  "recipesLoadingSubtitle": "Aguarde enquanto carregamos as melhores receitas para você",
+  "clearFilters": "Limpar Filtros",
+  "refresh": "Atualizar",
+  "recipeAddedToFavorites": "Receita adicionada aos favoritos",
+  "recipeRemovedFromFavorites": "Receita removida dos favoritos",
+  "openingRecipe": "Abrindo receita: {name}",
+  "@openingRecipe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addedToMealPlan": "{name} adicionada ao plano de refeições",
+  "@addedToMealPlan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sharingRecipe": "Compartilhando receita: {name}",
+  "@sharingRecipe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "findingSimilar": "Buscando receitas similares a: {name}",
+  "@findingSimilar": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "qaAddToMealPlan": "Adicionar ao Plano de Refeições",
+  "qaScheduleThisRecipe": "Agendar esta receita para uma refeição",
+  "qaShareRecipe": "Compartilhar Receita",
+  "qaShareWithFriends": "Enviar para amigos e família",
+  "qaSimilarRecipes": "Receitas Similares",
+  "qaFindSimilar": "Encontrar receitas parecidas",
+  "filtersTitle": "Filtros",
+  "clearAll": "Limpar Tudo",
+  "apply": "Aplicar",
+  "mealType": "Tipo de Refeição",
+  "dietaryRestrictions": "Restrições Alimentares",
+  "prepTime": "Tempo de Preparo",
+  "calories": "Calorias",
+  "dietVegetarian": "Vegetariano",
+  "dietVegan": "Vegano",
+  "dietGlutenFree": "Sem Glúten",
+  "prepLt15": "< 15 min",
+  "prep15to30": "15-30 min",
+  "prep30to60": "30-60 min",
+  "prepGt60": "> 60 min",
+  "calLt200": "< 200 cal",
+  "cal200to400": "200-400 cal",
+  "cal400to600": "400-600 cal",
+  "calGt600": "> 600 cal",
+  "searchRecipesHint": "Buscar receitas...",
+  "dashboardSummary": "Resumo",
+  "dashboardDetails": "Detalhes",
+  "dashboardWeek": "Semana",
+  "dashboardNutrition": "Nutrição",
+  "dismissToday": "Dispensar hoje",
+  "notesTitle": "Anotações",
+  "addNote": "Adicionar anotação",
+  "addNoteHint": "Abre editor para criar nova anotação do dia",
+  "todayNotesCount": "Hoje: {count} anotação(ões)",
+  "@todayNotesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addBodyMetrics": "Adicionar valores corporais",
+  "noEntryTodayTapToLog": "Sem registro hoje - toque para registrar",
+  "noMealsToDuplicateToday": "Sem refeições para duplicar hoje",
+  "duplicateLastMealTitle": "Duplicar última refeição",
+  "mealDuplicated": "Refeição duplicada ({meal})",
+  "@mealDuplicated": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "goalsPerMealTitle": "Metas por refeição",
+  "goalsPerMealUpdated": "Metas por refeição atualizadas",
+  "remainingPlural": "Restantes",
+  "remainingGrams": "Restante: {grams}g",
+  "@remainingGrams": {
+    "placeholders": {
+      "grams": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicate": "Duplicar",
+  "duplicateDayTomorrowTitle": "Duplicar dia → amanhã",
+  "duplicateDayPickDateTitle": "Duplicar dia → escolher data",
+  "duplicateNewPickDateTitle": "Duplicar \"novos\" → escolher data",
+  "noNewItemsToDuplicate": "Nenhum item \"novo\" para duplicar",
+  "selectItemsToDuplicateTitle": "Selecionar itens para duplicar",
+  "chooseFileCsv": "Escolher arquivo (.csv)",
+  "reviewItemsTitle": "Revisar itens",
   "addSelected": "Adicionar selecionados",
   "saveAndAdd": "Salvar e adicionar",
   "detectFoodHeadline": "Detectar Alimentos com IA",
@@ -13,15 +344,39 @@
   "detectionTip4": "Um alimento por vez funciona melhor",
   "onePortion": "1 porção",
   "itemsAdded": "{count} item(ns) adicionados",
-  "@itemsAdded": {"placeholders": {"count": {"type": "int"}}},
+  "@itemsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "portionApplied": "Porção aplicada",
   "addedToDiaryWithMeal": "Adicionado ao diário ({meal})",
-  "@addedToDiaryWithMeal": {"placeholders": {"meal": {"type": "String"}}},
+  "@addedToDiaryWithMeal": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "changesSaved": "Alterações salvas",
   "saveChangesWithMeal": "Salvar alterações - {meal}",
-  "@saveChangesWithMeal": {"placeholders": {"meal": {"type": "String"}}},
+  "@saveChangesWithMeal": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "addToDiaryWithMeal": "Adicionar ao diário - {meal}",
-  "@addToDiaryWithMeal": {"placeholders": {"meal": {"type": "String"}}},
+  "@addToDiaryWithMeal": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
   "addedToMyFoods": "Adicionado em Meus Alimentos",
   "addToMyFoods": "Adicionar aos meus alimentos",
   "noMyFoodsTitle": "Você ainda não tem Meus Alimentos",
@@ -34,7 +389,13 @@
   "fatLabel": "Gordura",
   "genericBrand": "Genérico",
   "addWithCalories": "Adicionar - {kcal} kcal",
-  "@addWithCalories": {"placeholders": {"kcal": {"type": "int"}}},
+  "@addWithCalories": {
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
   "analyzingFoods": "Analisando alimentos...",
   "pleaseWait": "Aguarde alguns segundos",
   "retakePhoto": "Nova foto",
@@ -45,28 +406,41 @@
   "addedShort": "Adicionado!",
   "noFoodDetectedInImage": "Nenhum alimento detectado na imagem",
   "saveAsMyFoodOptional": "Salvar como alimento (rótulo opcional)",
-  "mealBreakfast": "Café",
-  "mealLunch": "Almoço",
-  "mealDinner": "Jantar",
-  "mealSnack": "Lanche",
   "download": "Download",
   "copy": "Copiar",
   "importDayCsv": "Importar CSV do dia",
   "clearDayBeforeApply": "Limpar dia antes de aplicar",
   "untitled": "sem nome",
-  "continueLabel": "Continuar",
   "duplicateNewPickDate": "Duplicar novos → escolher data",
   "dayDuplicatedTo": "Dia duplicado para {date}",
-  "@dayDuplicatedTo": {"placeholders": {"date": {"type": "String"}}}
-  ,"exerciseAdded100": "Exercício registrado: +100 kcal",
+  "@dayDuplicatedTo": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "exerciseAdded100": "Exercício registrado: +100 kcal",
   "waterAdjustedMinus250": "Água ajustada: -250ml (total {total}ml)",
-  "@waterAdjustedMinus250": {"placeholders": {"total": {"type": "int"}}},
+  "@waterAdjustedMinus250": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "weekDuplicatedNext": "Semana duplicada para a próxima",
   "weekDuplicatedToStart": "Semana duplicada para iniciar em {date}",
-  "@weekDuplicatedToStart": {"placeholders": {"date": {"type": "String"}}},
+  "@weekDuplicatedToStart": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "noItemsThisMeal": "Sem itens nesta refeição",
-  "tapAddToLog": "Toque em + Adicionar para registrar alimentos rapidamente."
-  ,"viewDay": "Ver dia",
+  "tapAddToLog": "Toque em + Adicionar para registrar alimentos rapidamente.",
+  "viewDay": "Ver dia",
   "onlyNew": "Somente novos",
   "dayCsvDownloaded": "CSV do dia baixado",
   "dayCsvCopied": "CSV do dia copiado",
@@ -87,8 +461,8 @@
   "stopFasting": "Parar Jejum",
   "startFasting": "Iniciar Jejum",
   "openFilters": "Abrir filtros",
-  "details": "Detalhes"
-  ,"addToDiary": "Adicionar ao diário",
+  "details": "Detalhes",
+  "addToDiary": "Adicionar ao diário",
   "prepMode": "Modo de preparo",
   "prepDetailsUnavailable": "Detalhes de preparo não disponíveis nesta versão (mock).",
   "proRecipe": "Receita PRO",
@@ -190,11 +564,29 @@
   "defineGoal": "DEFINIR META",
   "edit": "EDITAR",
   "dietType": "Alimentação: {type}",
-  "@dietType": {"placeholders": {"type": {"type": "String"}}},
+  "@dietType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "goalObjective": "Objetivo: {objective}",
-  "@goalObjective": {"placeholders": {"objective": {"type": "String"}}},
+  "@goalObjective": {
+    "placeholders": {
+      "objective": {
+        "type": "String"
+      }
+    }
+  },
   "unexpectedErrorMessage": "Erro inesperado: {error}",
-  "@unexpectedErrorMessage": {"placeholders": {"error": {"type": "String"}}},
+  "@unexpectedErrorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "dataSourceQA": "Mostrar fonte dos dados (OFF/FDC/NLQ)",
   "qaDebugging": "QA / Depuração",
   "achievementsStreaksCleared": "Conquistas e streaks limpos",
@@ -211,7 +603,13 @@
   "aiCacheCopied": "Cache de IA copiado",
   "aiCacheImported": "Cache de IA importado",
   "invalidJSON": "JSON inválido: {error}",
-  "@invalidJSON": {"placeholders": {"error": {"type": "String"}}},
+  "@invalidJSON": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "mealGoalsSaved": "Metas por refeição salvas!",
   "dataSource": "Mostrar fonte dos dados (OFF/FDC/NLQ)",
   "me": "EU",
@@ -234,16 +632,34 @@
   "proRecipes": "Receitas PRO",
   "proSubscriptionActivated": "Assinatura PRO ativada com sucesso!",
   "unexpectedError": "Erro inesperado: {error}",
-  "@unexpectedError": {"placeholders": {"error": {"type": "String"}}},
+  "@unexpectedError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "terminatePro": "Encerrar PRO",
   "terminateProConfirmMessage": "Essa ação está disponível apenas para testes. Confirmar cancelamento da assinatura PRO?",
   "connectWithFriends": "Conecte-se com amigos para comparar progresso. Em breve.",
   "goalReached": "Meta atingida!",
   "noVariationYet": "Sem variação ainda",
   "youGainedWeight": "Você ganhou {weight} kg",
-  "@youGainedWeight": {"placeholders": {"weight": {"type": "String"}}},
+  "@youGainedWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
   "youLostWeight": "Você perdeu {weight} kg",
-  "@youLostWeight": {"placeholders": {"weight": {"type": "String"}}},
+  "@youLostWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
   "defineWeightGoalMessage": "Defina sua meta de peso para acompanhar a barra",
   "weightGoalKg": "Meta de peso (kg)",
   "startingWeightKg": "Peso inicial (kg)",
@@ -255,7 +671,6 @@
   "showNextMilestoneDescription": "Mostra '• próx: Nd' nos chips de streak",
   "interpretQuantitiesInText": "Interpretar quantidades no texto (NLQ)",
   "quantitiesExample": "Ex.: '150g frango', '2 ovos e 1 banana'",
-  "recalculateStreaks60": "Recalcular streaks (60 dias)",
   "mealGoalsPerMeal": "Metas por refeição",
   "kcal": "kcal",
   "carbGrams": "Carb. (g)",
@@ -267,17 +682,35 @@
   "clearMealGoalsMessage": "Esta ação zera as metas de Café, Almoço, Jantar e Lanches.\nPara confirmar, digite: CONFIRMAR",
   "diaryExported": "Diário exportado para a área de transferência",
   "exportFailed": "Falha ao exportar: {error}",
-  "@exportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "importDiary": "Importar Diário (JSON)",
   "diaryImported": "Diário importado com sucesso",
   "templatesExported": "Templates copiados para a área de transferência",
   "exportTemplatesFailed": "Falha ao exportar templates: {error}",
-  "@exportTemplatesFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@exportTemplatesFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "importTemplates": "Importar Templates (JSON)",
   "templatesImported": "Templates importados com sucesso",
   "foodsExported": "Alimentos copiados para a área de transferência",
   "exportFoodsFailed": "Falha ao exportar alimentos: {error}",
-  "@exportFoodsFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@exportFoodsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "importFoods": "Importar Alimentos (JSON)",
   "foodsImported": "Alimentos importados com sucesso",
   "foodsCleared": "Alimentos limpos",
@@ -304,11 +737,29 @@
   "statistics": "Estatísticas",
   "moreActions": "Mais ações",
   "walkingMinutes": "Caminhada {minutes}m",
-  "@walkingMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@walkingMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "runningMinutes": "Corrida {minutes}m",
-  "@runningMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@runningMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "cyclingMinutes": "Bike {minutes}m",
-  "@cyclingMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@cyclingMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "macronutrients": "Macronutrientes",
   "goals": "Metas",
   "adjustMacroGoals": "Ajustar metas de macros",
@@ -316,39 +767,117 @@
   "intermittentFasting": "Jejum Intermitente",
   "fastingSchedules": "Horários de jejum",
   "eatingWindow": "Janela de alimentação: {stop} - {start}",
-  "@eatingWindow": {"placeholders": {"stop": {"type": "String"}, "start": {"type": "String"}}},
+  "@eatingWindow": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      }
+    }
+  },
   "fastingMethod168": "Método 16:8",
   "fastingMethod186": "Método 18:6",
   "fastingMethod204": "Método 20:4",
   "fastingMethodCustom": "Custom • {hours}h",
-  "@fastingMethodCustom": {"placeholders": {"hours": {"type": "int"}}},
+  "@fastingMethodCustom": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "fastingMethodLabel": "Método {method}",
-  "@fastingMethodLabel": {"placeholders": {"method": {"type": "String"}}},
+  "@fastingMethodLabel": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
   "timezone": "Fuso: {timezone}",
-  "@timezone": {"placeholders": {"timezone": {"type": "String"}}},
+  "@timezone": {
+    "placeholders": {
+      "timezone": {
+        "type": "String"
+      }
+    }
+  },
   "endsAt": "Termina às {time}",
-  "@endsAt": {"placeholders": {"time": {"type": "String"}}},
+  "@endsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "fastingDays": "{days}d jejum",
-  "@fastingDays": {"placeholders": {"days": {"type": "int"}}},
+  "@fastingDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "noFastingStreak": "Sem streak jejum",
   "defineCustomMethod": "Definir método personalizado",
   "fastingDuration": "Duração do jejum",
   "minutes": "Minutos",
   "fastStarted": "Jejum iniciado! Método {method}",
-  "@fastStarted": {"placeholders": {"method": {"type": "String"}}},
+  "@fastStarted": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
   "fastCompleted": "Jejum finalizado! Duração: {hours}h {minutes}min",
-  "@fastCompleted": {"placeholders": {"hours": {"type": "int"}, "minutes": {"type": "int"}}},
+  "@fastCompleted": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "congratulations": "Parabéns!",
   "fastCompletedSuccess": "Você completou seu jejum {method} com sucesso! 🎉",
-  "@fastCompletedSuccess": {"placeholders": {"method": {"type": "String"}}},
+  "@fastCompletedSuccess": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
   "notificationsMutedUntil": "Notificações silenciadas até {time}",
-  "@notificationsMutedUntil": {"placeholders": {"time": {"type": "String"}}},
+  "@notificationsMutedUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "reactivate": "Reativar",
   "stopCurrentFastToChangeMethod": "Finalize o jejum atual para alterar o método",
   "fastingOfDay": "Jejum de {date}",
-  "@fastingOfDay": {"placeholders": {"date": {"type": "String"}}},
+  "@fastingOfDay": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "duration": "Duração: {hours}h",
-  "@duration": {"placeholders": {"hours": {"type": "int"}}},
+  "@duration": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "fastCompletedSuccessfully": "Jejum completado com sucesso",
   "remindersMuted24h": "Lembretes silenciados por 24h",
   "remindersReactivated": "Lembretes reativados",
@@ -356,13 +885,13 @@
   "startFastButton": "Iniciar jejum",
   "endFastButton": "Encerrar jejum",
   "onbV3SplashTitle": "nutriZ",
-  "onbV3WelcomeTitle": "nutriZ",
-  "onbV3Welcome85Million": "85 milhões de usuários felizes",
-  "onbV3Welcome20Million": "20 milhões de alimentos para rastreamento de calorias",
-  "onbV3WelcomeSubtitle": "Vamos fazer cada dia valer a pena!",
+  "onbV3WelcomeTitle": "Bem-vindo ao NutriTracker",
+  "onbV3Welcome85Million": "Milhares de pessoas cuidando da saúde.",
+  "onbV3Welcome20Million": "Alimentos do dia a dia, na palma da mão.",
+  "onbV3WelcomeSubtitle": "Vamos cuidar da sua saúde, um dia de cada vez.",
   "onbV3WelcomeGetStarted": "Começar",
-  "onbV3WelcomeAlreadyHaveAccount": "Já tenho uma conta",
-  "onbV3GoalTitle": "Qual é o seu objetivo principal?",
+  "onbV3WelcomeAlreadyHaveAccount": "Já tenho conta",
+  "onbV3GoalTitle": "Qual é o seu objetivo com o NutriTracker?",
   "onbV3GoalLoseWeight": "Perder peso",
   "onbV3GoalGainWeight": "Ganhar peso",
   "onbV3GoalMaintain": "Manter peso",
@@ -377,7 +906,9 @@
   "notifFastingEndBody": "Seu jejum {method} foi concluído.",
   "@notifFastingEndBody": {
     "placeholders": {
-      "method": { "type": "String" }
+      "method": {
+        "type": "String"
+      }
     }
   },
   "channelFastingName": "Jejum",
@@ -385,5 +916,60 @@
   "notifHydrationTitle": "Lembrete de hidratação",
   "notifHydrationBody": "Hora de beber água.",
   "channelHydrationName": "Hidratação",
-  "channelHydrationDescription": "Lembretes de hidratação"
+  "channelHydrationDescription": "Lembretes de hidratação",
+  "carbsShort": "Carb",
+  "proteinShort": "Prot",
+  "fatShort": "Gord",
+  "eatenShort": "Comido",
+  "burnedShort": "Queimado",
+  "remainingShort": "Restante",
+  "weekShort": "Sem",
+  "nowEating": "Agora: Comendo",
+  "nowFasting": "Agora: Jejum",
+  "notesYourLastNote": "Sua última nota",
+  "notesHowAreYouToday": "Como você está hoje?",
+  "notesTrackMoodAndMeals": "Registre humor, refeições e aprendizados.",
+  "notesViewAll": "Ver todas",
+  "notesNoRecordsYet": "Sem registros ainda.",
+  "notesWriteMyDay": "Escrever meu dia",
+  "notesRegisterNow": "Registrar agora",
+  "notesTodayCount": "Hoje: {count} nota(s)",
+  "@notesTodayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesToday": "Hoje",
+  "notesNotesSingular": "nota",
+  "notesNotesPlural": "notas",
+  "waterGoal": "Meta",
+  "waterToday": "hoje",
+  "waterRemaining": "Faltam",
+  "waterAdd100": "+ 100 mL",
+  "waterAdd200": "+ 200 mL",
+  "waterReset": "Redefinir",
+  "waterFromFood": "Água dos alimentos",
+  "waterTipTap": "Dica: toque nos botões para adicionar rapidamente.",
+  "waterAddWater": "Adicionar água",
+  "waterCancel": "Cancelar",
+  "waterAdd": "Adicionar",
+  "waterCustom": "Customizar",
+  "waterMotivation0": "Comece com um copo 💙",
+  "waterMotivation30": "Continue! Seu corpo agradece 💧",
+  "waterMotivation70": "Boa! Você está indo bem 👏",
+  "waterMotivation100Less": "Quase lá! Só mais um pouco 🏁",
+  "waterMotivation100": "Meta atingida! 🎉",
+  "bodyMetricsTitle": "Valores Corporais",
+  "bodyMetricsViewAll": "Ver Tudo",
+  "bodyMetricsGoal": "Meta",
+  "bodyMetricsThisWeek": "esta semana",
+  "bodyMetricsEmptyTitle": "Como está seu progresso hoje?",
+  "bodyMetricsEmptySubtitle": "Registrar ajuda você a manter o foco ✨",
+  "bodyMetricsAddWeight": "Registrar Peso",
+  "bodyMetricsBloodPressure": "Pressão Arterial",
+  "bodyMetricsBloodGlucose": "Glicemia",
+  "bodyMetricsBodyFat": "Gordura Corporal",
+  "bodyMetricsMuscleMass": "Massa Muscular"
 }

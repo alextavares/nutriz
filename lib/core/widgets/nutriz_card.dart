@@ -10,6 +10,7 @@ class NutrizCard extends StatelessWidget {
   final Color? backgroundColor;
   final bool hasBorder;
   final VoidCallback? onTap;
+  final double elevation;
 
   const NutrizCard({
     super.key,
@@ -19,12 +20,12 @@ class NutrizCard extends StatelessWidget {
     this.backgroundColor,
     this.hasBorder = true,
     this.onTap,
+    this.elevation = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final card = Container(
-      margin: margin ?? const EdgeInsets.symmetric(vertical: AppDimensions.sm),
+    final cardContent = Container(
       padding: padding ?? const EdgeInsets.all(AppDimensions.cardPadding),
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColorsDS.pureWhite,
@@ -35,8 +36,22 @@ class NutrizCard extends StatelessWidget {
                 width: AppDimensions.cardBorderWidth,
               )
             : null,
+        boxShadow: elevation > 0
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: elevation * 2,
+                  offset: Offset(0, elevation / 2),
+                ),
+              ]
+            : null,
       ),
       child: child,
+    );
+
+    final card = Container(
+      margin: margin ?? const EdgeInsets.symmetric(vertical: AppDimensions.sm),
+      child: cardContent,
     );
 
     if (onTap == null) return card;

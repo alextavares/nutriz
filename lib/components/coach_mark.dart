@@ -67,7 +67,7 @@ class _CoachMarkState extends State<CoachMark>
                   borderRadius: BorderRadius.circular(AppRadii.lg),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -86,7 +86,7 @@ class _CoachMarkState extends State<CoachMark>
                       child: ElevatedButton(
                         onPressed: widget.onDismiss,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.18),
+                          backgroundColor: Colors.white.withValues(alpha: 0.18),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 12),

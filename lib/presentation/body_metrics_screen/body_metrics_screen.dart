@@ -274,6 +274,9 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
   late TextEditingController waist;
   late TextEditingController hip;
   late TextEditingController chest;
+  late TextEditingController bpSys;
+  late TextEditingController bpDia;
+  late TextEditingController glucose;
 
   @override
   void initState() {
@@ -284,6 +287,9 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
     waist = TextEditingController(text: _get(widget.initial['waistCm']));
     hip = TextEditingController(text: _get(widget.initial['hipCm']));
     chest = TextEditingController(text: _get(widget.initial['chestCm']));
+    bpSys = TextEditingController(text: _get(widget.initial['bloodPressureSys']));
+    bpDia = TextEditingController(text: _get(widget.initial['bloodPressureDia']));
+    glucose = TextEditingController(text: _get(widget.initial['bloodGlucoseMgDl']));
   }
 
   String _get(dynamic v) {
@@ -330,6 +336,22 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
                 Expanded(child: _field('Peito (cm)', chest)),
               ],
             ),
+            SizedBox(height: 0.8.h),
+            Row(
+              children: [
+                Expanded(child: _field('Pressão sistólica (mmHg)', bpSys)),
+                SizedBox(width: 3.w),
+                Expanded(child: _field('Pressão diastólica (mmHg)', bpDia)),
+              ],
+            ),
+            SizedBox(height: 0.8.h),
+            Row(
+              children: [
+                Expanded(child: _field('Glicose (mg/dL)', glucose)),
+                SizedBox(width: 3.w),
+                const Expanded(child: SizedBox.shrink()),
+              ],
+            ),
             SizedBox(height: 1.2.h),
             SizedBox(
               width: double.infinity,
@@ -349,6 +371,12 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
                   if (hc != null) m['hipCm'] = hc;
                   final cc = n(chest.text);
                   if (cc != null) m['chestCm'] = cc;
+                  final bs = n(bpSys.text)?.round();
+                  final bd = n(bpDia.text)?.round();
+                  if (bs != null) m['bloodPressureSys'] = bs;
+                  if (bd != null) m['bloodPressureDia'] = bd;
+                  final glu = n(glucose.text)?.round();
+                  if (glu != null) m['bloodGlucoseMgDl'] = glu;
                   widget.onSaved(m);
                 },
                 icon: const Icon(Icons.save),
@@ -371,7 +399,6 @@ class _BodyMetricsEditorState extends State<_BodyMetricsEditor> {
         decoration: InputDecoration(labelText: label, isDense: true),
       );
 }
-
 
 
 

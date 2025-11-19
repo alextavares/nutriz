@@ -37,7 +37,10 @@ class AppColorsDS {
       Theme.of(context).colorScheme.onSurfaceVariant;
   static const Color textInverse = Colors.white;
   static Color textHint(BuildContext context) =>
-      Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7);
+      Theme.of(context)
+          .colorScheme
+          .onSurfaceVariant
+          .withValues(alpha: 0.7);
 
   /// Semantic colors
   static Color success(BuildContext context) =>

@@ -69,7 +69,7 @@ class _AchievementToastState extends State<AchievementToast>
               border: const Border(left: BorderSide(color: AppColors.success, width: 4)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),

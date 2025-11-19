@@ -39,14 +39,14 @@ class SoftButton extends StatelessWidget {
             fontSize: 13,
           ),
     ).copyWith(
-      backgroundColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.disabled)) return _bgDisabled;
-        if (states.contains(MaterialState.pressed)) return _bgActive;
-        if (states.contains(MaterialState.hovered)) return _bgHover;
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return _bgDisabled;
+        if (states.contains(WidgetState.pressed)) return _bgActive;
+        if (states.contains(WidgetState.hovered)) return _bgHover;
         return _bg;
       }),
-      foregroundColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.disabled)) return _fgDisabled;
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return _fgDisabled;
         return _fg;
       }),
     );

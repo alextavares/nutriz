@@ -153,6 +153,59 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
     setState(() => _showNextMilestoneCaptions = show);
   }
 
+  Widget _buildFastingStatsRow(BuildContext context) {
+    final colors = context.colors;
+    final text = context.textStyles;
+
+    Widget stat(String label, String value, {String? suffix}) {
+      return Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: text.labelSmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              suffix != null ? '$value $suffix' : value,
+              style: text.titleMedium?.copyWith(
+                color: colors.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            stat('Dias de jejum', _totalFastingDays.toString()),
+            SizedBox(width: 3.w),
+            stat('Sequência atual', _currentStreak.toString(), suffix: 'd'),
+            SizedBox(width: 3.w),
+            stat('Melhor sequência', _longestStreak.toString(), suffix: 'd'),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _journeyClockPanel() {
     final Duration target =
         _activeTarget ?? _getMethodDuration(_selectedMethod);
@@ -1031,7 +1084,7 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
             child: Column(children: [
           SizedBox(height: 2.h),
 
-          // Fasting Timer (YAZIO-like card)
+          // Fasting Timer (anel principal de jejum)
           Builder(builder: (context) {
             final total = _activeTarget ?? _getMethodDuration(_selectedMethod);
             // Compute dynamic remaining if active
@@ -1042,16 +1095,27 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 remaining.isNegative ? Duration.zero : remaining;
             final DateTime? startAt = _isFasting ? _fastingStartTime : null;
             final DateTime? endAt =
-                (_isFasting && _fastingStartTime != null) ? _fastingStartTime!.add(total) : null;
+                (_isFasting && _fastingStartTime != null)
+                    ? _fastingStartTime!.add(total)
+                    : null;
+            String? plannedStartLabel;
+            if (!_isFasting && _stopEatingTime != null) {
+              final hh = _stopEatingTime!.hour.toString().padLeft(2, '0');
+              final mm = _stopEatingTime!.minute.toString().padLeft(2, '0');
+              plannedStartLabel = 'Próximo jejum às $hh:$mm';
+            }
             return FastingTimerCard(
               isFasting: _isFasting,
               remainingTime: safeRemaining,
               totalDuration: total,
               onTimerComplete: _onTimerComplete,
               onPrimaryAction: _isFasting ? _stopFasting : _startFasting,
-              primaryActionLabel: _isFasting ? AppLocalizations.of(context)!.endFastButton : AppLocalizations.of(context)!.startFastButton,
+              primaryActionLabel: _isFasting
+                  ? AppLocalizations.of(context)!.endFastButton
+                  : AppLocalizations.of(context)!.startFastButton,
               startAt: startAt,
               endAt: endAt,
+              plannedStartLabel: plannedStartLabel,
             );
           }),
           SizedBox(height: 1.h),
@@ -1160,8 +1224,10 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
             ),
           ],
 
-          SizedBox(height: 3.h),
-          _journeyClockPanel(),
+           SizedBox(height: 3.h),
+           _buildFastingStatsRow(context),
+           SizedBox(height: 3.h),
+           _journeyClockPanel(),
           SizedBox(height: 3.h),
 
           // Fasting Method Selector
@@ -1367,4 +1433,3 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                 ])));
   }
 }
-

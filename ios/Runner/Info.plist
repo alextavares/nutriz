@@ -53,5 +53,10 @@
     <string>Precisamos da câmera para detectar alimentos via IA.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Precisamos acessar sua galeria para selecionar imagens de alimentos.</string>
+    <!-- HealthKit permissions -->
+    <key>NSHealthShareUsageDescription</key>
+    <string>Usamos seus dados de saúde (passos, energia) para contabilizar atividades.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>Usamos para gravar dados de atividades, caso opte por registrar.</string>
 </dict>
 </plist>

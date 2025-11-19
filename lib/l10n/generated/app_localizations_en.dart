@@ -1853,4 +1853,150 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get channelHydrationDescription => 'Hydration reminders';
+
+  @override
+  String get carbsShort => 'Carb';
+
+  @override
+  String get proteinShort => 'Prot';
+
+  @override
+  String get fatShort => 'Fat';
+
+  @override
+  String get eatenShort => 'Eaten';
+
+  @override
+  String get burnedShort => 'Burned';
+
+  @override
+  String get remainingShort => 'Remaining';
+
+  @override
+  String get weekShort => 'Wk';
+
+  @override
+  String get nowEating => 'Now: Eating';
+
+  @override
+  String get nowFasting => 'Now: Fasting';
+
+  @override
+  String get notesYourLastNote => 'Your last note';
+
+  @override
+  String get notesHowAreYouToday => 'How was your day?';
+
+  @override
+  String get notesTrackMoodAndMeals => 'Track your health & feelings';
+
+  @override
+  String get notesViewAll => 'View all';
+
+  @override
+  String get notesNoRecordsYet => 'No records yet.';
+
+  @override
+  String get notesWriteMyDay => 'Write my day';
+
+  @override
+  String get notesRegisterNow => 'Register now';
+
+  @override
+  String notesTodayCount(int count) {
+    return 'Today: $count note(s)';
+  }
+
+  @override
+  String get notesToday => 'Today';
+
+  @override
+  String get notesNotesSingular => 'note';
+
+  @override
+  String get notesNotesPlural => 'notes';
+
+  @override
+  String get waterGoal => 'Goal';
+
+  @override
+  String get waterToday => 'today';
+
+  @override
+  String get waterRemaining => 'Remaining';
+
+  @override
+  String get waterAdd100 => '+ 100 mL';
+
+  @override
+  String get waterAdd200 => '+ 200 mL';
+
+  @override
+  String get waterReset => 'Reset';
+
+  @override
+  String get waterFromFood => 'Water from food';
+
+  @override
+  String get waterTipTap => 'Tip: tap the buttons to add quickly.';
+
+  @override
+  String get waterAddWater => 'Add water';
+
+  @override
+  String get waterCancel => 'Cancel';
+
+  @override
+  String get waterAdd => 'Add';
+
+  @override
+  String get waterCustom => 'Custom';
+
+  @override
+  String get waterMotivation0 => 'Start with a glass 💙';
+
+  @override
+  String get waterMotivation30 => 'Keep going! Your body thanks you 💧';
+
+  @override
+  String get waterMotivation70 => 'Great! You\'re doing well 👏';
+
+  @override
+  String get waterMotivation100Less => 'Almost there! Just a bit more 🏁';
+
+  @override
+  String get waterMotivation100 => 'Goal achieved! 🎉';
+
+  @override
+  String get bodyMetricsTitle => 'Body Metrics';
+
+  @override
+  String get bodyMetricsViewAll => 'View All';
+
+  @override
+  String get bodyMetricsGoal => 'Goal';
+
+  @override
+  String get bodyMetricsThisWeek => 'this week';
+
+  @override
+  String get bodyMetricsEmptyTitle => 'How\'s your progress today?';
+
+  @override
+  String get bodyMetricsEmptySubtitle => 'Track your weight to stay focused ✨';
+
+  @override
+  String get bodyMetricsAddWeight => 'Add Weight';
+
+  @override
+  String get bodyMetricsBloodPressure => 'Blood Pressure';
+
+  @override
+  String get bodyMetricsBloodGlucose => 'Blood Glucose';
+
+  @override
+  String get bodyMetricsBodyFat => 'Body Fat';
+
+  @override
+  String get bodyMetricsMuscleMass => 'Muscle Mass';
 }

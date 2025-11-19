@@ -18,7 +18,8 @@ android {
     namespace = "com.nutriz.app"
     compileSdk = 36
     buildToolsVersion = "36.0.0"
-    ndkVersion = flutter.ndkVersion
+    // Override to match latest plugin requirements
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -28,13 +29,16 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17
+        // Work around Kotlin 2.0/K2 issues in some plugins
+        freeCompilerArgs += ["-Xuse-k2=false"]
     }
 
     defaultConfig {
         applicationId = "com.nutriz.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdkVersion flutter.minSdkVersion
+        // Health Connect (and other plugins) require minSdk >= 26
+        minSdkVersion 26
         targetSdkVersion 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName

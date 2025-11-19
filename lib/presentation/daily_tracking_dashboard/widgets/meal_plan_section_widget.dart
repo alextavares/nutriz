@@ -28,13 +28,12 @@ class MealPlanSectionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          for (final item in items) _MealRow(item: item),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Lista de refeições (sem header interno; o título fica na tela pai)
+        for (final item in items) _MealRow(item: item),
+      ],
     );
   }
 }
@@ -48,82 +47,64 @@ class _MealRow extends StatelessWidget {
     final kcal = '${item.consumedKcal} / ${item.goalKcal} kcal';
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
+
+    // V4.1: Layout de 2 linhas estilo YAZIO (ajustado)
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+      constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHigh,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _leadingIcon(context, item.title),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Row(
                   children: [
                     Text(
                       item.title,
-                      style: textTheme.titleSmall?.copyWith(
+                      style: textTheme.titleMedium?.copyWith(
                         color: colors.onSurface,
                         fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      kcal,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color:
+                          colors.onSurfaceVariant.withValues(alpha: 0.5),
                     ),
                   ],
                 ),
-                if (item.subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      if (item.ai)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: colors.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'AI',
-                            style: textTheme.labelSmall?.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: colors.primary,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ),
-                      if (item.ai) const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          item.subtitle!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colors.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 6),
+                Text(
+                  kcal,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
-                ]
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           _PlusButton(enabled: item.enabled, onPressed: item.onAdd),
         ],
       ),
@@ -133,23 +114,48 @@ class _MealRow extends StatelessWidget {
   Widget _leadingIcon(BuildContext context, String title) {
     final colors = context.colors;
     IconData data;
+    Color iconColor;
+    Color bgColor;
+
     switch (title.toLowerCase()) {
-      case 'almoço':
-        data = Icons.ramen_dining_rounded;
+      case 'caf\u00e9 da manh\u00e3':
+        data = Icons.coffee_rounded;
+        iconColor = const Color(0xFFD4A574);
+        bgColor = const Color(0xFFD4A574).withValues(alpha: 0.15);
+        break;
+      case 'almo\u00e7o':
+        data = Icons.restaurant_menu_rounded;
+        iconColor = const Color(0xFFFF7043);
+        bgColor = const Color(0xFFFF7043).withValues(alpha: 0.15);
         break;
       case 'jantar':
         data = Icons.dinner_dining_rounded;
+        iconColor = const Color(0xFFE57373);
+        bgColor = const Color(0xFFE57373).withValues(alpha: 0.15);
         break;
       case 'lanches':
-        data = Icons.emoji_food_beverage_rounded;
+        data = Icons.bakery_dining_rounded;
+        iconColor = const Color(0xFFFFB74D);
+        bgColor = const Color(0xFFFFB74D).withValues(alpha: 0.15);
         break;
       default:
         data = Icons.restaurant_rounded;
+        iconColor = colors.primary;
+        bgColor = colors.surfaceContainerHighest;
     }
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: colors.surfaceContainerHighest,
-      child: Icon(data, color: colors.primary),
+
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: bgColor,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        data,
+        size: 26,
+        color: iconColor,
+      ),
     );
   }
 }
@@ -163,21 +169,38 @@ class _PlusButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final Color bg =
-        enabled ? colors.primary : colors.outlineVariant.withValues(alpha: 0.6);
+        enabled ? colors.primary : colors.outlineVariant.withValues(alpha: 0.3);
     final Color fg = enabled
         ? colors.onPrimary
-        : colors.onSurfaceVariant.withValues(alpha: 0.7);
-    return Material(
-      color: bg,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: enabled ? onPressed : null,
-        child: SizedBox(
-          width: 36,
-          height: 36,
+        : colors.onSurfaceVariant.withValues(alpha: 0.5);
+
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: bg,
+        shape: BoxShape.circle,
+        boxShadow: enabled
+            ? [
+                BoxShadow(
+                  color: colors.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: enabled ? onPressed : null,
           child: Center(
-            child: Icon(Icons.add, size: 20, color: fg),
+            child: Icon(
+              Icons.add_rounded,
+              size: 20,
+              color: fg,
+            ),
           ),
         ),
       ),

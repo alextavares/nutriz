@@ -44,9 +44,9 @@ class CoachApiService {
         'content-type': 'application/json',
         if (token != null && token.isNotEmpty) 'X-App-Token': token,
       },
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 30),
-      sendTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 30), // Aumentado para 30s (era 15s)
+      receiveTimeout: const Duration(seconds: 60), // Aumentado para 60s (era 30s)
+      sendTimeout: const Duration(seconds: 60), // Aumentado para 60s (era 30s)
     ));
   }
 
@@ -76,9 +76,9 @@ class CoachApiService {
         'content-type': 'application/json',
         if (token != null && token.isNotEmpty) 'X-App-Token': token,
       },
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 30),
-      sendTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 30), // Aumentado para 30s (era 15s)
+      receiveTimeout: const Duration(seconds: 60), // Aumentado para 60s (era 30s)
+      sendTimeout: const Duration(seconds: 60), // Aumentado para 60s (era 30s)
     ));
   }
 
@@ -127,10 +127,30 @@ class CoachApiService {
         final tk = await TurnstileService.getToken();
         if (tk != null && tk.isNotEmpty) headers['X-Turnstile-Token'] = tk;
       } catch (_) {}
-      final resp = await client.post('/analisar_foto', data: {
-        if (imageBase64 != null) 'image_base64': imageBase64,
-        if (imageUrl != null) 'image_url': imageUrl,
-      }, options: Options(headers: headers.isEmpty ? null : headers));
+      Response resp;
+      try {
+        resp = await client.post('/analisar_foto', data: {
+          if (imageBase64 != null) 'image_base64': imageBase64,
+          if (imageUrl != null) 'image_url': imageUrl,
+        }, options: Options(headers: headers.isEmpty ? null : headers));
+      } on DioException catch (e) {
+        // If the dedicated vision endpoint is unreachable/timeout, fall back to the main Coach API client
+        final isNetworkError =
+            e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.unknown ||
+            e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.sendTimeout;
+        final canFallbackToMain = (_visionDio != null && _dio != null && !identical(_visionDio, _dio));
+        if (isNetworkError && canFallbackToMain) {
+          resp = await _dio!.post('/analisar_foto', data: {
+            if (imageBase64 != null) 'image_base64': imageBase64,
+            if (imageUrl != null) 'image_url': imageUrl,
+          }, options: Options(headers: headers.isEmpty ? null : headers));
+        } else {
+          rethrow;
+        }
+      }
       final data = (resp.data as Map<String, dynamic>);
       final list = (data['candidatos'] as List?)?.cast<dynamic>().map((e) => (e as Map).map((k, v) => MapEntry(k.toString(), v))).toList() ?? const [];
       return list;
@@ -177,7 +197,19 @@ class CoachApiService {
           }
           rethrow;
         } else {
-          rethrow;
+          // If network/timeout/DNS failure when using dedicated vision base, retry once using the main Coach API client
+          final isNetworkError =
+              e.type == DioExceptionType.connectionError ||
+              e.type == DioExceptionType.unknown ||
+              e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout;
+          final canFallbackToMain = (_visionDio != null && _dio != null && !identical(_visionDio, _dio));
+          if (isNetworkError && canFallbackToMain) {
+            resp = await _dio!.post('/vision/analyze_food', data: payload, options: Options(headers: headers.isEmpty ? null : headers));
+          } else {
+            rethrow;
+          }
         }
       }
       final data = (resp.data as Map).map((key, value) => MapEntry(key.toString(), value));
@@ -265,7 +297,19 @@ class CoachApiService {
           }
           rethrow;
         } else {
-          rethrow;
+          // If network/timeout/DNS failure when using dedicated vision base, retry once using the main Coach API client
+          final isNetworkError =
+              e.type == DioExceptionType.connectionError ||
+              e.type == DioExceptionType.unknown ||
+              e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout;
+          final canFallbackToMain = (_visionDio != null && _dio != null && !identical(_visionDio, _dio));
+          if (isNetworkError && canFallbackToMain) {
+            resp = await _dio!.post('/vision/analyze_food', data: payload, options: Options(headers: headers.isEmpty ? null : headers));
+          } else {
+            rethrow;
+          }
         }
       }
       final data = (resp.data as Map).map((key, value) => MapEntry(key.toString(), value));
@@ -335,9 +379,31 @@ CoachApiException _classifyCoachError(DioException e, {String? context}) {
 
   // Network-level classification
   if (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.unknown) {
-    final msg = 'Não consegui contatar o Coach em ${e.requestOptions.baseUrl}.\n'
-        'Verifique se o servidor está rodando (porta 8002) e o emulador usa 10.0.2.2.';
+    final base = e.requestOptions.baseUrl;
+    String msg;
+    if (base.contains('workers.dev') || base.startsWith('https://')) {
+      msg = 'Não consegui contatar o Coach em $base.\n'
+          'Verifique a conexão do emulador/dispositivo (DNS/Internet). Se usar Cloudflare Worker, confirme o domínio e APP_TOKEN.';
+    } else {
+      msg = 'Não consegui contatar o Coach em $base.\n'
+          'Verifique se o servidor está rodando (porta 8002) e o emulador usa 10.0.2.2.';
+    }
     return CoachApiException('unreachable', msg, status: status);
+  }
+
+  if (e.type == DioExceptionType.connectionTimeout ||
+      e.type == DioExceptionType.sendTimeout ||
+      e.type == DioExceptionType.receiveTimeout) {
+    final base = e.requestOptions.baseUrl;
+    String msg;
+    if (base.contains('workers.dev') || base.startsWith('https://')) {
+      msg = 'Tempo excedido ao contatar $base.\n'
+          'Verifique sua internet/DNS no emulador e a disponibilidade do Worker. Tente novamente em alguns segundos.';
+    } else {
+      msg = 'Tempo excedido ao contatar $base.\n'
+          'Se estiver rodando localmente: confirme que o servidor está ativo na porta 8002 e que o Android usa 10.0.2.2.';
+    }
+    return CoachApiException('timeout', msg, status: status);
   }
 
   if (serverError == 'missing_openai_api_key') {

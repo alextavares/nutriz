@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:nutriz/presentation/daily_tracking_dashboard/daily_tracking_dashboard.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +37,17 @@ void main() {
     await tester.pumpWidget(
       Sizer(
         builder: (context, orientation, deviceType) {
-          return const MaterialApp(home: DailyTrackingDashboard());
+          return const MaterialApp(
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('pt'),
+            home: DailyTrackingDashboard(),
+          );
         },
       ),
     );
@@ -50,4 +62,3 @@ void main() {
     expect(find.textContaining('Iniciar:'), findsOneWidget);
   });
 }
-

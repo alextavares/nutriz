@@ -199,7 +199,7 @@ class _MultiActionFabState extends State<MultiActionFab>
               color: Colors.white,
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
-              shadowColor: Colors.black.withOpacity(0.2),
+              shadowColor: Colors.black.withValues(alpha: 0.2),
               child: InkWell(
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(8),

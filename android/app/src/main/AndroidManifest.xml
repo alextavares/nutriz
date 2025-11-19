@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <!-- Required on Android 12 and below for gallery access -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- Activity recognition for steps (Android 10+) -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <application
             android:label="NUTRIZ"
@@ -60,5 +62,7 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Health Connect app lookup -->
+        <package android:name="com.google.android.apps.healthdata"/>
     </queries>
 </manifest>

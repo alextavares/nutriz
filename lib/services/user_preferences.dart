@@ -219,6 +219,11 @@ class UserPreferences {
       'user_weight_objective_v1'; // ganhar|perder|manter
   static const String _kWeightStartKg = 'user_weight_start_kg_v1';
   static const String _kWeightGoalKg = 'user_weight_goal_kg_v1';
+  // Additional profile goals (YAZIO-like)
+  static const String _kActivityLevel = 'user_activity_level_v1';
+  static const String _kWeeklyWeightDeltaKg =
+      'user_weekly_weight_delta_kg_v1'; // e.g., -0.5 kg/sem
+  static const String _kDailyStepsGoal = 'user_daily_steps_goal_v1';
   // UI prefs: remember expanded/collapsed state of advanced block
   static const String _kUiPrefsExpanded = 'ui_prefs_expanded_v1';
   static const String _kReduceAnimations = 'ui_reduce_animations_v1';
@@ -326,6 +331,41 @@ class UserPreferences {
     } else {
       await prefs.setDouble(_kWeightGoalKg, value);
     }
+  }
+
+  static Future<String> getActivityLevel() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kActivityLevel) ?? 'Moderado';
+  }
+
+  static Future<void> setActivityLevel(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kActivityLevel, value);
+  }
+
+  /// Weekly weight change goal in kg (negative for loss, positive for gain).
+  static Future<double?> getWeeklyWeightDeltaKg() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_kWeeklyWeightDeltaKg);
+  }
+
+  static Future<void> setWeeklyWeightDeltaKg(double? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_kWeeklyWeightDeltaKg);
+    } else {
+      await prefs.setDouble(_kWeeklyWeightDeltaKg, value);
+    }
+  }
+
+  static Future<int> getDailyStepsGoal() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kDailyStepsGoal) ?? 10000;
+  }
+
+  static Future<void> setDailyStepsGoal(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kDailyStepsGoal, value < 0 ? 0 : value);
   }
 
   static Future<void> addSearchHistory(String term, {int maxItems = 8}) async {

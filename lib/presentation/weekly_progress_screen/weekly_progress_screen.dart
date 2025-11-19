@@ -277,80 +277,6 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.weeklyProgressTitle),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.more_vert,
-                color: Theme.of(context).colorScheme.onSurface),
-            onPressed: _openWeekActionsMenu,
-            tooltip: AppLocalizations.of(context)!.menu,
-          ),
-          PopupMenuButton<String>(
-            onSelected: (v) async {
-              if (v == 'export_csv') {
-                await _exportWeekCsv();
-              } else if (v == 'download_csv') {
-                if (kIsWeb) _downloadWeekCsv();
-              } else if (v == 'import_csv') {
-                await _importWeekCsv();
-              } else if (v == 'save_week_tpl') {
-                _promptSaveWeekTemplate();
-              } else if (v == 'apply_week_tpl') {
-                _promptApplyWeekTemplate();
-              } else if (v == 'duplicate_week') {
-                await _promptDuplicateWeek();
-              } else if (v == 'duplicate_week_to') {
-                await _promptDuplicateWeekToDate();
-              } else if (v == 'install_pwa') {
-                await _promptInstallPwa();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                  value: 'export_csv', child: Text(AppLocalizations.of(context)!.exportCsv)),
-              if (kIsWeb)
-                PopupMenuItem(
-                    value: 'download_csv', child: Text(AppLocalizations.of(context)!.downloadCsv)),
-              PopupMenuItem(
-                  value: 'import_csv', child: Text(AppLocalizations.of(context)!.importCsv)),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                  value: 'save_week_tpl',
-                  child: Text(AppLocalizations.of(context)!.saveWeekAsTemplate)),
-              PopupMenuItem(
-                  value: 'apply_week_tpl',
-                  child: Text(AppLocalizations.of(context)!.applyWeekTemplate)),
-              PopupMenuItem(
-                  value: 'duplicate_week',
-                  child: Text(AppLocalizations.of(context)?.duplicateWeekNext ?? 'Duplicate week → next')),
-              PopupMenuItem(
-                  value: 'duplicate_week_to',
-                  child: Text(AppLocalizations.of(context)?.duplicateWeekPickDate ?? 'Duplicate week → pick date')),
-              if (kIsWeb)
-                PopupMenuItem(
-                  value: 'install_pwa',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppLocalizations.of(context)!.installApp),
-                      FutureBuilder<bool>(
-                        future: _canInstallPwa(),
-                        builder: (context, snap) {
-                          final ok = snap.data == true;
-                          return Icon(
-                            ok ? Icons.check_circle : Icons.hourglass_bottom,
-                            size: 16,
-                            color: ok
-                                ? context.semanticColors.success
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -391,22 +317,22 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                 Row(
                   children: [
                     _summaryCard(
-                        'Calorias (semana)',
+                        'Calorias na semana',
                         '$totalCalWeek kcal',
                         Theme.of(context).colorScheme.primary),
                     SizedBox(width: 3.w),
-                    _summaryCard('Média diária', '$avgCal kcal',
+                    _summaryCard('Média por dia', '$avgCal kcal',
                         context.semanticColors.success),
                   ],
                 ),
                 SizedBox(height: 1.5.h),
                 Row(
                   children: [
-                    _summaryCard('Água (semana)', '${totalWaterWeek} ml',
+                    _summaryCard('Água na semana', '${totalWaterWeek} ml',
                         Theme.of(context).colorScheme.primary),
                     SizedBox(width: 3.w),
                     _summaryCard(
-                        'Exercício (semana)',
+                        'Exercício na semana',
                         '${totalExerciseWeek} kcal',
                         context.semanticColors.warning),
                   ],
@@ -1152,7 +1078,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     final DateTime monday = _anchorDate.subtract(Duration(days: (weekday - 1)));
     final labels = [
       AppLocalizations.of(context)!.hdrDate,
-      'Kcal',
+      'Calorias',
       AppLocalizations.of(context)!.hdrWater,
       AppLocalizations.of(context)!.hdrExercise,
       AppLocalizations.of(context)!.hdrCarb,
@@ -1303,7 +1229,7 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               ),
               SizedBox(height: 0.8.h),
               Text(
-                'Total: $totalKcal kcal | Água: ${waterMl} ml | Exercício: ${exKcal} kcal',
+                'Resumo do dia: $totalKcal kcal • Água: ${waterMl} ml • Exercício: ${exKcal} kcal',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w600,

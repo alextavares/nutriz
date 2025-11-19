@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:nutriz/presentation/recipe_browser/recipe_browser.dart';
+import 'package:nutriz/l10n/generated/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   setUp(() {
@@ -22,7 +24,17 @@ void main() {
     SharedPreferences.setMockInitialValues({'premium_status': false});
 
     await tester.pumpWidget(Sizer(builder: (context, orientation, deviceType) {
-      return const MaterialApp(home: RecipeBrowser());
+      return const MaterialApp(
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: Locale('pt'),
+        home: RecipeBrowser(),
+      );
     }));
     await _settle(tester);
 
@@ -34,7 +46,17 @@ void main() {
     SharedPreferences.setMockInitialValues({'premium_status': true});
 
     await tester.pumpWidget(Sizer(builder: (context, orientation, deviceType) {
-      return const MaterialApp(home: RecipeBrowser());
+      return const MaterialApp(
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: Locale('pt'),
+        home: RecipeBrowser(),
+      );
     }));
     await _settle(tester);
 

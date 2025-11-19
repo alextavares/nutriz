@@ -5,11 +5,11 @@ import 'dart:io';
 import 'dart:convert';
 
 import '../../core/app_export.dart';
-import '../../services/coach_api_service.dart';
+import '../../services/coach_api_service.dart' as coach;
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
-import '../../theme/design_tokens.dart';
 import 'package:nutriz/l10n/generated/app_localizations.dart';
+import '../../services/ai_gateway.dart';
 
 abstract class _ChatEntry {}
 
@@ -210,8 +210,12 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
     try {
       final history = _buildHistory();
       final ctx = await _buildDailyContext();
-      final coachReply = await CoachApiService.instance
-          .sendMessage(message: text, history: history, context: ctx);
+      // Usa AiGateway como ponto único (mantém semântica atual).
+      final coachReply = await AiGateway.instance.sendCoachMessage(
+        message: text,
+        history: history,
+        context: ctx,
+      );
       if (!mounted) return;
       setState(() {
         // remove typing
@@ -239,6 +243,7 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
   }
 
   List<CoachMessage> _buildHistory() {
+    // Mantém formato equivalente ao usado no backend, agora tipado via AiGateway.CoachMessage.
     final hist = <CoachMessage>[];
     for (final it in _items) {
       if (it is _ChatText) {
@@ -342,8 +347,8 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
       final bytes = await file.readAsBytes();
       final b64 = base64Encode(bytes);
       setState(() => _items.add(_ChatTyping()));
-      final cands =
-          await CoachApiService.instance.analyzePhoto(imageBase64: b64);
+      // Usa AiGateway para centralizar visão (continua usando backend atual por baixo).
+      final cands = await AiGateway.instance.analyzePhoto(imageBase64: b64);
       if (!mounted) return;
       setState(() {
         // remove typing
@@ -703,7 +708,7 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
   Future<void> _searchAndLogCandidate(String name) async {
     if (name.isEmpty) return;
     try {
-      final items = await CoachApiService.instance.searchFoods(name, topK: 5);
+      final items = await coach.CoachApiService.instance.searchFoods(name, topK: 5);
       if (!mounted) return;
       if (items.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -875,7 +880,7 @@ class _AiCoachChatScreenState extends State<AiCoachChatScreen> {
     final name = (cand['nome'] ?? '').toString();
     if (name.isEmpty) return;
     try {
-      final items = await CoachApiService.instance.searchFoods(name, topK: 3);
+      final items = await coach.CoachApiService.instance.searchFoods(name, topK: 3);
       if (items.isEmpty) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

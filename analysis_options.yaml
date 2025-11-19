@@ -1,0 +1,16 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - nutritracker_clean/**
+  errors:
+    unused_import: info
+    unused_local_variable: info
+    dead_code: info
+
+linter:
+  rules:
+    # Mantém regras padrão do flutter_lints
+    # Regras adicionais específicas podem ser adicionadas aqui se necessário.
+    avoid_print: true
+    prefer_const_constructors: true

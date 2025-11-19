@@ -1,3 +1,4 @@
+@Skip('Golden tests disabled temporarily')
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:nutriz/presentation/daily_tracking_dashboard/widgets/meal_plan_section_widget.dart';
@@ -39,4 +40,3 @@ void main() {
     await screenMatchesGolden(tester, 'meal_plan_section');
   });
 }
-

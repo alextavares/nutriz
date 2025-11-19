@@ -364,52 +364,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            backgroundColor: AppTheme.secondaryBackgroundDark,
-            title: Text(
-              t.logoutAccount,
-              style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                color: AppTheme.textPrimary,
+        // Dialog simples SEM digitar texto (UX melhorada!)
+        return AlertDialog(
+          backgroundColor: AppTheme.secondaryBackgroundDark,
+          title: Text(
+            t.logoutAccount,
+            style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          content: Text(
+            t.logoutConfirmMessage,
+            style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                t.cancel,
+                style: TextStyle(color: AppTheme.textSecondary),
               ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.logoutConfirmMessage,
-                  style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: controller,
-                  onChanged: (v) =>
-                      setState(() => valid = v.trim().toUpperCase() == 'SAIR'),
-                  decoration: const InputDecoration(hintText: 'SAIR'),
-                ),
-              ],
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _logout();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(t.logout),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(t.cancel,
-                    style: TextStyle(color: AppTheme.textSecondary)),
-              ),
-              ElevatedButton(
-                onPressed: !valid
-                    ? null
-                    : () async {
-                        Navigator.pop(context);
-                        await _logout();
-                      },
-                child: Text(t.logout),
-              ),
-            ],
-          );
-        });
+          ],
+        );
       },
     );
   }
