@@ -55,7 +55,7 @@ class GeminiService {
         headers: {
           'Content-Type': 'application/json',
         },
-        connectTimeout: const Duration(seconds: 20),
+        connectTimeout: const Duration(seconds: 30), // Aumentado de 20s para 30s
         receiveTimeout: const Duration(seconds: 60),
         sendTimeout: const Duration(seconds: 60),
       ),

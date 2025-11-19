@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nutriz/l10n/generated/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -18,13 +19,11 @@ import '../../services/fooddb/food_data_central_service.dart';
 import '../../services/fooddb/open_food_facts_service.dart';
 import '../../services/fooddb/food_normalizer.dart';
 import '../../services/env_service.dart';
-import '../../theme/design_tokens.dart';
 import '../../services/coach_api_service.dart';
 import './widgets/camera_controls_widget.dart';
 import './widgets/camera_preview_widget.dart';
 import './widgets/food_analysis_results_widget.dart';
 import './widgets/image_preview_widget.dart';
-import 'package:nutriz/l10n/generated/app_localizations.dart';
 
 class AiFoodDetectionScreen extends StatefulWidget {
   const AiFoodDetectionScreen({Key? key}) : super(key: key);
@@ -369,9 +368,11 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
     if (cameraStatus.isGranted) {
       await _initializeCamera();
     } else {
-      setState(() {
-        _errorMessage = 'Permissão de câmera negada';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Permissão de câmera negada';
+        });
+      }
     }
   }
 
@@ -379,9 +380,11 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
     try {
       _cameras = await availableCameras();
       if (_cameras.isEmpty) {
-        setState(() {
-          _errorMessage = 'Nenhuma câmera encontrada';
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Nenhuma câmera encontrada';
+          });
+        }
         return;
       }
 
@@ -440,10 +443,12 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
       final XFile photo = await _cameraController!.takePicture();
       final File imageFile = File(photo.path);
 
-      setState(() {
-        _selectedImage = imageFile;
-        _showCamera = false;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedImage = imageFile;
+          _showCamera = false;
+        });
+      }
 
       await _analyzeImage(imageFile);
     } catch (e) {
@@ -465,29 +470,49 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
 
       if (pickedImage != null) {
         final File imageFile = File(pickedImage.path);
-        setState(() {
-          _selectedImage = imageFile;
-          _showCamera = false;
-        });
+        if (mounted) {
+          setState(() {
+            _selectedImage = imageFile;
+            _showCamera = false;
+          });
+        }
 
         await _analyzeImage(imageFile);
       }
     } catch (e) {
-      final colors = context.colors;
-      Fluttertoast.showToast(
-        msg: 'Erro ao selecionar imagem: $e',
-        backgroundColor: colors.error,
-        textColor: colors.onError,
-      );
+      if (mounted) {
+        final colors = context.colors;
+        Fluttertoast.showToast(
+          msg: 'Erro ao selecionar imagem: $e',
+          backgroundColor: colors.error,
+          textColor: colors.onError,
+        );
+      }
     }
   }
 
   Future<void> _analyzeImage(File imageFile) async {
+    if (!mounted) return;
     setState(() {
       _isAnalyzing = true;
       _analysisResults = null;
       _errorMessage = null;
     });
+
+    // Quick network sanity check to surface clearer error when offline
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      if (connectivity == ConnectivityResult.none) {
+        if (!mounted) return;
+        setState(() {
+          _isAnalyzing = false;
+          _errorMessage = 'Sem conexão com a internet. Verifique o Wi‑Fi/dados do emulador/dispositivo.';
+        });
+        return;
+      }
+    } catch (_) {
+      // Ignore plugin errors and continue; server/Gemini calls will still report issues
+    }
 
     try {
       FoodNutritionData? results;
@@ -523,11 +548,13 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
 
       final data = results;
 
-      setState(() {
-        _analysisResults = data;
-        _isAnalyzing = false;
-        _completedIndices.clear();
-      });
+      if (mounted) {
+        setState(() {
+          _analysisResults = data;
+          _isAnalyzing = false;
+          _completedIndices.clear();
+        });
+      }
 
       if (data.foods.isEmpty) {
         Fluttertoast.showToast(
@@ -543,10 +570,12 @@ class _AiFoodDetectionScreenState extends State<AiFoodDetectionScreen> {
         );
       }
     } catch (e) {
-      setState(() {
-        _isAnalyzing = false;
-        _errorMessage = 'Erro na análise: ${e.toString()}';
-      });
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _errorMessage = 'Erro na análise: ${e.toString()}';
+        });
+      }
 
       final colors = context.colors;
       Fluttertoast.showToast(

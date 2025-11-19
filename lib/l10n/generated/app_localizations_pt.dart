@@ -338,31 +338,32 @@ class AppLocalizationsPt extends AppLocalizations {
   String get close => 'Fechar';
 
   @override
-  String get weeklyProgressTitle => 'Progresso semanal';
+  String get weeklyProgressTitle => 'Progresso da semana';
 
   @override
   String get menu => 'Menu';
 
   @override
-  String get exportCsv => 'Export CSV';
+  String get exportCsv => 'Exportar CSV';
 
   @override
-  String get downloadCsv => 'Download CSV';
+  String get downloadCsv => 'Baixar CSV';
 
   @override
-  String get importCsv => 'Import CSV';
+  String get importCsv => 'Importar CSV';
 
   @override
-  String get saveWeekAsTemplate => 'Salvar semana como template';
+  String get saveWeekAsTemplate => 'Salvar semana como modelo';
 
   @override
-  String get applyWeekTemplate => 'Aplicar template de semana';
+  String get applyWeekTemplate => 'Aplicar modelo de semana';
 
   @override
-  String get duplicateWeekNext => 'Duplicar semana → próxima';
+  String get duplicateWeekNext => 'Duplicar esta semana para a próxima';
 
   @override
-  String get duplicateWeekPickDate => 'Duplicar semana → escolher data';
+  String get duplicateWeekPickDate =>
+      'Duplicar esta semana escolhendo uma data';
 
   @override
   String get installApp => 'Instalar app';
@@ -372,14 +373,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String daysWithNew(int count) {
-    return '$count dia(s) com itens novos';
+    return '$count dia(s) com novos registros';
   }
 
   @override
-  String get perMealAverages => 'Médias por refeição (kcal/dia)';
+  String get perMealAverages => 'Médias por refeição';
 
   @override
-  String get weeklyMacroAverages => 'Médias semanais de macros';
+  String get weeklyMacroAverages => 'Médias da semana (macros)';
 
   @override
   String get carbsAvg => 'Carboidratos (média)';
@@ -1780,26 +1781,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get onbV3SplashTitle => 'nutriZ';
 
   @override
-  String get onbV3WelcomeTitle => 'nutriZ';
+  String get onbV3WelcomeTitle => 'Bem-vindo ao NutriTracker';
 
   @override
-  String get onbV3Welcome85Million => '85 milhões de usuários felizes';
+  String get onbV3Welcome85Million => 'Milhares de pessoas cuidando da saúde.';
 
   @override
   String get onbV3Welcome20Million =>
-      '20 milhões de alimentos para rastreamento de calorias';
+      'Alimentos do dia a dia, na palma da mão.';
 
   @override
-  String get onbV3WelcomeSubtitle => 'Vamos fazer cada dia valer a pena!';
+  String get onbV3WelcomeSubtitle =>
+      'Vamos cuidar da sua saúde, um dia de cada vez.';
 
   @override
   String get onbV3WelcomeGetStarted => 'Começar';
 
   @override
-  String get onbV3WelcomeAlreadyHaveAccount => 'Já tenho uma conta';
+  String get onbV3WelcomeAlreadyHaveAccount => 'Já tenho conta';
 
   @override
-  String get onbV3GoalTitle => 'Qual é o seu objetivo principal?';
+  String get onbV3GoalTitle => 'Qual é o seu objetivo com o NutriTracker?';
 
   @override
   String get onbV3GoalLoseWeight => 'Perder peso';

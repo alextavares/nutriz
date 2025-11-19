@@ -209,7 +209,7 @@ class _ProfileScreenV2State extends State<ProfileScreenV2> {
 
               // Progresso de peso
               ProfileSection(
-                title: 'Meu Progresso',
+                title: 'Meu progresso',
                 actionLabel: 'Análises',
                 onAction: () {
                   Navigator.of(context).pushNamed(AppRoutes.progressOverview);
@@ -219,7 +219,7 @@ class _ProfileScreenV2State extends State<ProfileScreenV2> {
                   children: [
                     Text(
                       _weightCurrent == null
-                          ? 'Sem dados suficientes ainda'
+                          ? 'Ainda não há dados suficientes.'
                           : 'Peso atual: ${_weightCurrent!.toStringAsFixed(1)} kg',
                       style: textTheme.bodyMedium?.copyWith(
                         color: colors.onSurfaceVariant,
@@ -329,4 +329,5 @@ class _ProfileScreenV2State extends State<ProfileScreenV2> {
 extension _IterableLastOrNull<T> on Iterable<T> {
   T? get lastOrNull => isEmpty ? null : last;
 }
+
 

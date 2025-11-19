@@ -26,7 +26,15 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File scriptsaudit_i18n.ps1)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(Select-Object -First 3)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(tmp/old_dashboard.dart)",
+      "Bash(nc:*)",
+      "Bash(curl:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File test_worker_vision.ps1)"
     ],
     "deny": [],
     "ask": []

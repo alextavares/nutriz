@@ -25,7 +25,8 @@ class BodyMetricsStorage {
 
   /// Saves metrics for given date. Overwrites existing for that date.
   /// Expected fields (all optional):
-  /// weightKg, heightCm, bodyFatPct, waistCm, hipCm, chestCm, notes
+  /// weightKg, heightCm, bodyFatPct, waistCm, hipCm, chestCm,
+  /// bloodPressureSys, bloodPressureDia, bloodGlucoseMgDl, notes
   static Future<void> setForDate(DateTime date, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
     final key = '$_prefix${_dateKey(date)}';
@@ -60,4 +61,3 @@ class BodyMetricsStorage {
     return out;
   }
 }
-

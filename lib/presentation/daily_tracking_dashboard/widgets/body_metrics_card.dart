@@ -16,6 +16,13 @@ class BodyMetricsCard extends StatelessWidget {
   final List<double>? weeklyWeights; // ordered oldest -> newest
   final double? weeklyChange; // last - first over the week
   final void Function(double delta)? onAdjustWeight;
+  final int? bpSys;
+  final int? bpDia;
+  final int? glucoseMgDl;
+  final VoidCallback? onEditBloodPressure;
+  final VoidCallback? onEditGlucose;
+  final List<double>? bpSysSeries7;
+  final List<double>? glucoseSeries7;
 
   const BodyMetricsCard({
     super.key,
@@ -28,12 +35,23 @@ class BodyMetricsCard extends StatelessWidget {
     this.weeklyWeights,
     this.weeklyChange,
     this.onAdjustWeight,
+    this.bpSys,
+    this.bpDia,
+    this.glucoseMgDl,
+    this.onEditBloodPressure,
+    this.onEditGlucose,
+    this.bpSysSeries7,
+    this.glucoseSeries7,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.screenPaddingH, vertical: AppDimensions.md),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.screenPaddingH,
+        vertical: AppDimensions.lg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -43,12 +61,11 @@ class BodyMetricsCard extends StatelessWidget {
             children: [
               Text(
                 AppLocalizations.of(context)!.bodyMetricsTitle,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  letterSpacing: -0.5,
-                ),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                      color: cs.onSurface,
+                    ),
               ),
               TextButton(
                 onPressed: () async {
@@ -56,29 +73,41 @@ class BodyMetricsCard extends StatelessWidget {
                   AnalyticsService.track('body_metrics_view_all_click');
                   onAddMetrics();
                 },
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  minimumSize: const Size(0, 0),
+                ),
                 child: Text(
                   AppLocalizations.of(context)!.bodyMetricsViewAll,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimensions.sm),
 
           // Card principal de peso (branco estilo YAZIO)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
               border: Border.all(
-                color: Colors.grey[300]!,
-                width: 1.5,
+                color: cs.outlineVariant.withValues(alpha: 0.35),
+                width: 1.0,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: cs.shadow.withValues(alpha: 0.03),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: hasEntry ? _buildWeightTracker(context) : _buildEmptyState(context),
           ),
@@ -106,11 +135,13 @@ class BodyMetricsCard extends StatelessWidget {
           iconColor: const Color(0xFFE91E63),
           backgroundColor: const Color(0xFFFCE4EC),
           title: AppLocalizations.of(context)!.bodyMetricsBloodPressure,
-          value: '--/--',
+          value: bpSys != null && bpDia != null ? '${bpSys}x${bpDia}' : '--x--',
           unit: 'mmHg',
+          spark: bpSysSeries7,
+          sparkColor: const Color(0xFFE91E63),
           onTap: () {
             AnalyticsService.track('body_metrics_blood_pressure_click');
-            onAddMetrics();
+            (onEditBloodPressure ?? onAddMetrics).call();
           },
         ),
         _buildMetricCard(
@@ -119,11 +150,13 @@ class BodyMetricsCard extends StatelessWidget {
           iconColor: const Color(0xFF2196F3),
           backgroundColor: const Color(0xFFE3F2FD),
           title: AppLocalizations.of(context)!.bodyMetricsBloodGlucose,
-          value: '--',
+          value: glucoseMgDl != null ? '$glucoseMgDl' : '--',
           unit: 'mg/dL',
+          spark: glucoseSeries7,
+          sparkColor: const Color(0xFF2196F3),
           onTap: () {
             AnalyticsService.track('body_metrics_blood_glucose_click');
-            onAddMetrics();
+            (onEditGlucose ?? onAddMetrics).call();
           },
         ),
         _buildMetricCard(
@@ -165,7 +198,10 @@ class BodyMetricsCard extends StatelessWidget {
     required String value,
     required String unit,
     required VoidCallback onTap,
+    List<double>? spark,
+    Color? sparkColor,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () async {
         await HapticHelper.light();
@@ -175,11 +211,11 @@ class BodyMetricsCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           border: Border.all(
-            color: Colors.grey[300]!,
-            width: 1.5,
+            color: cs.outlineVariant.withValues(alpha: 0.35),
+            width: 1.0,
           ),
         ),
         child: Column(
@@ -200,11 +236,10 @@ class BodyMetricsCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
-                    ),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurfaceVariant,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -217,27 +252,29 @@ class BodyMetricsCard extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black,
-                    letterSpacing: -0.5,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        color: cs.onSurface,
+                      ),
                 ),
                 const SizedBox(width: 4),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 3),
                   child: Text(
                     unit,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurfaceVariant,
+                        ),
                   ),
                 ),
               ],
             ),
+            if (spark != null && spark.length >= 2) ...[
+              const SizedBox(height: 6),
+              SizedBox(height: 18, child: _MiniSparkline(points: spark, color: sparkColor ?? Theme.of(context).colorScheme.primary)),
+            ],
           ],
         ),
       ),
@@ -396,40 +433,39 @@ class BodyMetricsCard extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
         Container(
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: cs.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
             Icons.monitor_weight_outlined,
             size: 40,
-            color: Colors.grey[400],
+            color: cs.onSurfaceVariant,
           ),
         ),
 
         const SizedBox(height: 16),
         Text(
           AppLocalizations.of(context)!.bodyMetricsEmptyTitle,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-          ),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: cs.onSurface,
+              ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context)!.bodyMetricsEmptySubtitle,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-            height: 1.5,
-          ),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.5,
+              ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
@@ -446,11 +482,13 @@ class BodyMetricsCard extends StatelessWidget {
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
+            backgroundColor: cs.primary,
+            foregroundColor: cs.onPrimary,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
           ),
         ),
       ],
@@ -462,21 +500,22 @@ class BodyMetricsCard extends StatelessWidget {
     required IconData icon,
     required VoidCallback onPressed,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
         border: Border.all(
-          color: Colors.grey[300]!,
-          width: 2,
+          color: cs.outlineVariant.withValues(alpha: 0.35),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: cs.shadow.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -484,14 +523,63 @@ class BodyMetricsCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           child: Icon(
             icon,
-            color: Theme.of(context).colorScheme.primary,
+            color: cs.primary,
             size: 28,
           ),
         ),
       ),
     );
+  }
+}
+
+class _MiniSparkline extends StatelessWidget {
+  final List<double> points;
+  final Color color;
+  const _MiniSparkline({required this.points, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _MiniSparkPainter(points, color),
+      size: const Size(double.infinity, double.infinity),
+    );
+  }
+}
+
+class _MiniSparkPainter extends CustomPainter {
+  final List<double> pts;
+  final Color color;
+  _MiniSparkPainter(this.pts, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (pts.isEmpty) return;
+    final maxV = pts.reduce((a, b) => a > b ? a : b);
+    final minV = pts.reduce((a, b) => a < b ? a : b);
+    final range = (maxV - minV).abs() < 0.0001 ? 1.0 : (maxV - minV);
+    final path = Path();
+    for (int i = 0; i < pts.length; i++) {
+      final x = size.width * (i / (pts.length - 1));
+      final norm = (pts[i] - minV) / range;
+      final y = size.height - (norm * size.height);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _MiniSparkPainter oldDelegate) {
+    return oldDelegate.pts != pts || oldDelegate.color != color;
   }
 }

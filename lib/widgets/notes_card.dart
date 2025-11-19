@@ -70,36 +70,6 @@ class NotesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Notes',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  AnalyticsService.track('notes_view_all_click');
-                  onViewAll();
-                },
-                child: Text(
-                  AppLocalizations.of(context)!.notesViewAll,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
           // Main Note Display/Input Card
           InkWell(
             onTap: () async {
@@ -370,7 +340,6 @@ class _MoodButton extends StatelessWidget {
     );
   }
 }
-
 
 
 

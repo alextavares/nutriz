@@ -66,7 +66,7 @@ class _PillButtonState extends State<PillButton> {
           borderRadius: BorderRadius.circular(AppRadii.pill),
           border: Border.all(
             color: _isPressed && widget.enabled
-                ? color.withOpacity(0.3)
+                ? color.withValues(alpha: 0.3)
                 : Colors.transparent,
             width: 1,
           ),

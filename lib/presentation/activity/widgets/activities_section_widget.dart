@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:nutriz/presentation/activity/widgets/steps_connect_card_widget.dart';
 import 'package:nutriz/theme/design_tokens.dart';
+import 'package:nutriz/widgets/dashboard_section_header.dart';
 
 class ActivitiesSectionWidget extends StatelessWidget {
   final VoidCallback onConnect;
   final VoidCallback onManual;
+  final int? steps;
+  final double? kcal;
   final VoidCallback? onMore;
 
   const ActivitiesSectionWidget({
@@ -12,6 +15,8 @@ class ActivitiesSectionWidget extends StatelessWidget {
     required this.onConnect,
     required this.onManual,
     this.onMore,
+    this.steps,
+    this.kcal,
   });
 
   @override
@@ -23,27 +28,18 @@ class ActivitiesSectionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Atividades',
-                  style: textTheme.titleMedium?.copyWith(
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                TextButton(
-                  onPressed: onMore,
-                  child: const Text('Mais'),
-                ),
-              ],
-            ),
+          DashboardSectionHeader(
+            title: 'Atividades',
+            actionLabel: onMore != null ? 'Mais' : null,
+            onAction: onMore,
           ),
           const SizedBox(height: 8),
-          StepsConnectCardWidget(onConnect: onConnect, onManual: onManual),
+          StepsConnectCardWidget(
+            onConnect: onConnect,
+            onManual: onManual,
+            steps: steps,
+            kcal: kcal,
+          ),
           const SizedBox(height: 12),
         ],
       ),

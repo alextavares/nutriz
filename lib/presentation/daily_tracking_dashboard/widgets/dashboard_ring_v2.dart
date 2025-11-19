@@ -131,7 +131,7 @@ class _DashboardRingBodyState extends State<_DashboardRingBody>
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -190,7 +190,7 @@ class _DashboardRingBodyState extends State<_DashboardRingBody>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  _kPrimaryPurple.withOpacity(0.12),
+                  _kPrimaryPurple.withValues(alpha: 0.12),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.7],

@@ -42,6 +42,7 @@ class FastingTimerCard extends StatelessWidget {
   final String? primaryActionLabel;
   final DateTime? startAt;
   final DateTime? endAt;
+  final String? plannedStartLabel;
   final bool showSeconds;
   final double? size;
 
@@ -55,6 +56,7 @@ class FastingTimerCard extends StatelessWidget {
     this.primaryActionLabel,
     this.startAt,
     this.endAt,
+    this.plannedStartLabel,
     this.showSeconds = false,
     this.size,
   });
@@ -107,7 +109,7 @@ class FastingTimerCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                isFasting ? 'Jejum em andamento' : 'Pronto para jejum',
+                isFasting ? 'Jejum em andamento' : 'Pronto para iniciar um jejum',
                 style: text.labelSmall?.copyWith(
                   color: isFasting ? colors.primary : colors.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
@@ -125,6 +127,65 @@ class FastingTimerCard extends StatelessWidget {
               onTimerComplete: onTimerComplete,
               showSeconds: showSeconds,
               size: size,
+              centerBuilder:
+                  (BuildContext context, Duration remaining, bool fastingNow) {
+                String two(int v) => v.toString().padLeft(2, '0');
+                Duration safe = remaining.isNegative ? Duration.zero : remaining;
+                final int h = safe.inHours;
+                final int m = safe.inMinutes.remainder(60);
+                final int s = safe.inSeconds.remainder(60);
+                final String timeLabel = showSeconds
+                    ? '${two(h)}:${two(m)}:${two(s)}'
+                    : '${two(h)}:${two(m)}';
+
+                if (fastingNow) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        timeLabel,
+                        style: text.displaySmall?.copyWith(
+                          color: colors.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 32.sp,
+                        ),
+                      ),
+                      SizedBox(height: 0.8.h),
+                      Text(
+                        'Tempo restante',
+                        style: text.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  final String title = 'Pronto para jejum';
+                  final String subtitle =
+                      plannedStartLabel ?? 'Toque em "Iniciar jejum" abaixo.';
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: text.titleMedium?.copyWith(
+                          color: colors.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 0.6.h),
+                      Text(
+                        subtitle,
+                        textAlign: TextAlign.center,
+                        style: text.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
 
             SizedBox(height: AppSpacing.xl),
