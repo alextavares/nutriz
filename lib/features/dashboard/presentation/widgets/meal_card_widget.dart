@@ -32,8 +32,8 @@ class MealCardWidget extends StatelessWidget {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textPrimary = isDark ? Colors.white : const Color(0xFF1A1A1A);
     final textSecondary = isDark ? Colors.grey[400] : const Color(0xFF6B7280);
-    final addButtonBg = AppTheme.activeBlue;
-    final addButtonIcon = Colors.white;
+    final addButtonBg = isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF3F4F6);
+    final addButtonIcon = isDark ? Colors.grey[400] : const Color(0xFF9CA3AF);
     
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),

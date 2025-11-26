@@ -5,7 +5,7 @@ import 'package:sizer/sizer.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/app_export.dart';
-import 'package:nutriz/presentation/nutrition_details_screen/nutrition_details_screen.dart';
+import '../../../../presentation/nutrition_details_screen/nutrition_details_screen.dart';
 import 'dashboard_view_model.dart';
 import 'widgets/dashboard_hero_widget.dart';
 import 'widgets/meal_card_widget.dart';

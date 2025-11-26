@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:nutriz/features/dashboard/data/dashboard_repository.dart';
+import 'package:nutritracker/features/dashboard/data/dashboard_repository.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   final DashboardRepository _repository = DashboardRepository();

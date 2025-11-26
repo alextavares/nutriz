@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:nutriz/presentation/nutrition_details_screen/nutrition_details_screen.dart';
+import '../../../../presentation/nutrition_details_screen/nutrition_details_screen.dart';
 
 class DashboardHeroWidget extends StatelessWidget {
   final int caloriesConsumed;
