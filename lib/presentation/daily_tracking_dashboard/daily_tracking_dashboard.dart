@@ -5,17 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/app_export.dart';
-import '../../theme/design_tokens.dart';
-import './widgets/circular_progress_chart_widget.dart';
 import './widgets/macronutrient_progress_widget.dart';
 import './widgets/summary_card_widget.dart';
+import './widgets/meal_cards_widget.dart';
 import './widgets/water_tracker_card_v2.dart';
 import './widgets/body_metrics_card.dart';
+import './widgets/activities_card.dart';
 import '../../widgets/notes_card.dart';
 import '../../components/animated_card.dart';
 import '../../services/nutrition_storage.dart';
 import '../../services/user_preferences.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../services/notes_storage.dart';
 import '../../services/body_metrics_storage.dart';
 import '../../services/fasting_storage.dart';
@@ -32,7 +31,6 @@ import 'package:nutriz/util/upload_stub.dart'
     if (dart.library.html) 'package:nutriz/util/upload_web.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
-import 'package:nutriz/l10n/generated/app_localizations.dart';
 import '../../core/l10n_ext.dart';
 
 class DailyTrackingDashboard extends StatefulWidget {
@@ -49,7 +47,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   // Removed old day/week toggle state — we follow YAZIO-like date nav
   final Set<String> _expandedMealKeys = <String>{};
   List<Map<String, dynamic>> _todayEntries = [];
-  List<int> _weeklyCalories = List.filled(7, 0);
   List<int> _weeklyWater = List.filled(7, 0);
   Map<String, dynamic> _lastExerciseMeta = const {};
 
@@ -60,7 +57,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
   // Exercise UI state
   int _exerciseStreak = 0;
-  bool _exerciseExpanded = false;
   Map<String, MealGoals> _mealGoals = const {
     'breakfast': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
     'lunch': MealGoals(kcal: 0, carbs: 0, proteins: 0, fats: 0),
@@ -95,13 +91,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
   int? _eatStartM;
   int? _eatStopH;
   int? _eatStopM;
-
-  // Global animation constants for dashboard sections
-  static const Duration _kAnimDuration = Duration(milliseconds: 900);
-  static const Curve _kAnimCurve = Curves.easeOut;
-  static const double _kDelayLeft = 0.03; // ~27ms
-  static const double _kDelayCenter = 0.06; // ~54ms
-  static const double _kDelayRight = 0.09; // ~81ms
 
   // Mock data for daily tracking
   final Map<String, dynamic> _dailyData = {
@@ -184,37 +173,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
-  Widget _quickActivityChip(String label, VoidCallback onTap) {
-    final w = MediaQuery.of(context).size.width;
-    final double fs = w < 340 ? 9.sp : (w < 380 ? 10.sp : 11.sp);
-    final double padH = w < 360 ? 8 : 10;
-    final double padV = w < 360 ? 4 : 6;
-    final semantic = context.semanticColors;
-    final colors = context.colors;
-    return ActionChip(
-      label: Text(label),
-      onPressed: onTap,
-      visualDensity: VisualDensity.compact,
-      backgroundColor: semantic.success.withValues(alpha: 0.10),
-      labelPadding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-      labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: colors.onSurface,
-            fontWeight: FontWeight.w600,
-            fontSize: fs,
-          ),
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: colors.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-    );
-  }
-
   // Achievements are loaded dynamically from AchievementService
-
-  String _localizedTodayLabel(BuildContext context) {
-    return context.l10n.appbarToday;
-  }
 
   @override
   void didChangeDependencies() {
@@ -387,446 +346,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
-  // Small debug banner with build info (debug-only)
-  Widget _debugBuildInfo(BuildContext context) {
-    if (!kDebugMode) return const SizedBox.shrink();
-    const String buildHash =
-        String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
-    const String buildTime =
-        String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
-    const String appVersion =
-        String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
-    const String buildId =
-        String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
-    final String idOrHash = (buildHash.toLowerCase() != 'unknown' &&
-            buildHash.toLowerCase() != 'n/a')
-        ? buildHash
-        : buildId;
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.info_outline, size: 14, color: cs.onSurfaceVariant),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                'v$appVersion • DEBUG • $idOrHash • $buildTime',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Compact version chip inside the header for easy visual check
-  Widget _versionChip(BuildContext context) {
-    // Show in debug, or when a UI_TAG is explicitly provided via --dart-define
-    const String uiTag = String.fromEnvironment('UI_TAG', defaultValue: '');
-    if (!kDebugMode && uiTag.isEmpty) return const SizedBox.shrink();
-    const String buildHash =
-        String.fromEnvironment('BUILD_HASH', defaultValue: 'n/a');
-    const String buildTime =
-        String.fromEnvironment('BUILD_TIME', defaultValue: 'n/a');
-    const String appVersion =
-        String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0+2');
-    const String buildId =
-        String.fromEnvironment('BUILD_ID', defaultValue: 'n/a');
-    final String idOrHash = (buildHash.toLowerCase() != 'unknown' &&
-            buildHash.toLowerCase() != 'n/a')
-        ? buildHash
-        : buildId;
-    String hhmmZ = '';
-    if (buildTime.contains('T') && buildTime.endsWith('Z')) {
-      final t = buildTime.split('T');
-      if (t.length == 2) {
-        final h = t[1];
-        if (h.length >= 5) {
-          hhmmZ = h.substring(0, 5) + 'Z';
-        }
-      }
-    }
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.45)),
-      ),
-      child: Text(
-        (() {
-          final tag = uiTag.isNotEmpty ? uiTag : 'debug';
-          if (hhmmZ.isNotEmpty)
-            return '$tag • v$appVersion • $idOrHash • $hhmmZ';
-          return '$tag • v$appVersion • $idOrHash';
-        })(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w900,
-            ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-  }
-
-  Widget _topActionsRow(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final iconColor = cs.onSurfaceVariant;
-    final w = MediaQuery.of(context).size.width;
-    final bool compact = w < 380; // telas estreitas: mover ações para menu
-    final bool ultraCompact =
-        w < 350; // ainda mais estreito: simplificar ainda mais
-    const double _iconSize = 20; // YAZIO-like compact size
-    const BoxConstraints _iconConstraints =
-        BoxConstraints(minWidth: 36, minHeight: 36);
-    Widget action(IconData icon, String tip, VoidCallback onTap) => IconButton(
-          tooltip: tip,
-          icon: Icon(icon, size: _iconSize, color: iconColor),
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          constraints: _iconConstraints,
-          onPressed: onTap,
-        );
-
-    Future<void> _pickDate() async {
-      final now = DateTime.now();
-      final picked = await showDatePicker(
-        context: context,
-        firstDate: DateTime(now.year - 1),
-        lastDate: DateTime(now.year + 1),
-        initialDate: _selectedDate,
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: Theme.of(context)
-                  .colorScheme
-                  .copyWith(primary: AppTheme.activeBlue),
-            ),
-            child: child!,
-          );
-        },
-      );
-      if (picked != null && mounted) {
-        setState(() =>
-            _selectedDate = DateTime(picked.year, picked.month, picked.day));
-        await _loadToday();
-        await _loadWeek();
-      }
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
-      child: Row(
-        children: [
-          // Date navigation moved to the top actions row
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_left,
-                size: _iconSize, color: cs.onSurfaceVariant),
-            onPressed: () async {
-              setState(() => _selectedDate =
-                  _selectedDate.subtract(const Duration(days: 1)));
-              await _loadToday();
-              await _loadWeek();
-            },
-          ),
-          Flexible(
-            child: GestureDetector(
-              onTap: _pickDate,
-              child: Builder(builder: (context) {
-                final DateTime t = DateTime.now();
-                final today = DateTime(t.year, t.month, t.day);
-                final sel = DateTime(
-                    _selectedDate.year, _selectedDate.month, _selectedDate.day);
-                final isToday = sel == today;
-                // Formatação adaptativa para garantir legibilidade
-                // Requisito: mostrar dia+semana, sem ano
-                String label;
-                if (isToday) {
-                  label = _localizedTodayLabel(context);
-                } else {
-                  final l10n = context.l10n;
-                  final weekDays = [
-                    l10n.weekMon,
-                    l10n.weekTue,
-                    l10n.weekWed,
-                    l10n.weekThu,
-                    l10n.weekFri,
-                    l10n.weekSat,
-                    l10n.weekSun,
-                  ];
-                  final wd = weekDays[sel.weekday - 1];
-                  final dd = sel.day.toString().padLeft(2, '0');
-                  final mm = sel.month.toString().padLeft(2, '0');
-                  label = ultraCompact ? '$dd/$mm' : '$wd $dd/$mm';
-                }
-                return FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: cs.onSurface,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                        ),
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                );
-              }),
-            ),
-          ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.chevron_right,
-                size: _iconSize, color: cs.onSurfaceVariant),
-            onPressed: () async {
-              setState(() =>
-                  _selectedDate = _selectedDate.add(const Duration(days: 1)));
-              await _loadToday();
-              await _loadWeek();
-            },
-          ),
-          const Spacer(),
-          // Ações principais (estatísticas pode ocultar em telas muito estreitas)
-          if (!ultraCompact)
-            action(Icons.query_stats_outlined, 'Estatísticas', () {
-              Navigator.pushNamed(context, AppRoutes.progressOverview);
-            }),
-          action(Icons.calendar_today_outlined, 'Calendário', _pickDate),
-          action(Icons.smart_toy_outlined, 'Coach de IA', () {
-            Navigator.pushNamed(context, AppRoutes.aiCoachChat);
-          }),
-          // Ações do dia (abre bottom sheet com duplicar, templates e visão de streaks)
-          action(
-              Icons.local_fire_department, 'Ações do dia', _openDayActionsMenu),
-          action(Icons.emoji_events_outlined, context.l10n.achievementsTitle, () {
-            Navigator.pushNamed(context, AppRoutes.achievements);
-          }),
-          if (!compact) ...[
-            action(Icons.accessibility_new_outlined, 'Valores corporais', () {
-              Navigator.pushNamed(context, AppRoutes.bodyMetrics);
-            }),
-            action(Icons.sticky_note_2_outlined, 'Anotações', () {
-              Navigator.pushNamed(context, AppRoutes.notes, arguments: {
-                'date': _selectedDate.toIso8601String(),
-              });
-            }),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: PopupMenuButton<String>(
-                tooltip: 'Mais ações',
-                position: PopupMenuPosition.under,
-                itemBuilder: (context) => [
-                  const PopupMenuItem<String>(
-                      value: 'metrics', child: Text('Valores corporais')),
-                  const PopupMenuItem<String>(
-                      value: 'notes', child: Text('Anotações')),
-                  if (ultraCompact)
-                    const PopupMenuItem<String>(
-                        value: 'stats', child: Text('Estatísticas')),
-                  const PopupMenuItem<String>(
-                      value: 'coach', child: Text('Coach de IA')),
-                ],
-                onSelected: (v) {
-                  switch (v) {
-                    case 'metrics':
-                      Navigator.pushNamed(context, AppRoutes.bodyMetrics);
-                      break;
-                    case 'notes':
-                      Navigator.pushNamed(context, AppRoutes.notes, arguments: {
-                        'date': _selectedDate.toIso8601String(),
-                      });
-                      break;
-                    case 'stats':
-                      Navigator.pushNamed(context, AppRoutes.progressOverview);
-                      break;
-                    case 'coach':
-                      Navigator.pushNamed(context, AppRoutes.aiCoachChat);
-                      break;
-                  }
-                },
-                icon: Icon(Icons.more_vert, size: _iconSize, color: iconColor),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _weekAgenda(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final DateTime selected = _selectedDate;
-    final DateTime t = DateTime.now();
-    final DateTime today = DateTime(t.year, t.month, t.day);
-    final int weekday = selected.weekday; // 1=Mon..7=Sun
-    final DateTime monday = selected.subtract(Duration(days: (weekday - 1)));
-    List<Widget> items = [];
-    // Locale-aware day labels
-    final lang = Localizations.localeOf(context).languageCode.toLowerCase();
-    final labelsPt = const ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
-    final labelsEn = const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final dayLabels = lang == 'pt' ? labelsPt : labelsEn;
-    for (int i = 0; i < 7; i++) {
-      final d = monday.add(Duration(days: i));
-      final bool isSelected = d.year == selected.year &&
-          d.month == selected.month &&
-          d.day == selected.day;
-      final bool isToday =
-          d.year == today.year && d.month == today.month && d.day == today.day;
-      items.add(
-        Expanded(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () async {
-              setState(() => _selectedDate = DateTime(d.year, d.month, d.day));
-              await _loadToday();
-              await _loadWeek();
-            },
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 0.6.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isSelected ? cs.primary : Colors.transparent,
-                      border: Border.all(
-                        color: isSelected
-                            ? cs.primary
-                            : (isToday
-                                ? cs.primary
-                                : cs.outlineVariant.withValues(alpha: 0.6)),
-                        width: isToday && !isSelected ? 1.5 : 1.0,
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      d.day.toString(),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: isSelected ? cs.onPrimary : cs.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                  SizedBox(height: 0.3.h),
-                  Text(
-                    dayLabels[i],
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
-      child: Row(children: items),
-    );
-  }
-
-  Widget _calorieBudgetCard(
-    BuildContext context, {
-    required int goal,
-    required int food,
-    required int exercise,
-    required int remaining,
-  }) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final bool exceeded = remaining < 0;
-    final int display = exceeded ? -remaining : remaining;
-    final TextStyle label =
-        theme.textTheme.bodySmall!.copyWith(color: cs.onSurfaceVariant);
-    final TextStyle numStyle = theme.textTheme.titleLarge!.copyWith(
-      color: exceeded ? AppTheme.errorRed : cs.primary,
-      fontWeight: FontWeight.w700,
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
-    final base = theme.textTheme.bodyMedium!;
-    final double eqSize = base.fontSize ?? 14;
-    final TextStyle eqStyle = base.copyWith(
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
-    final TextStyle opStyle = eqStyle.copyWith(
-      fontSize: eqSize - 2,
-      color: AppTheme.textSecondary,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.0,
-    );
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
-        boxShadow: const [],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Removed duplicated remaining label under the ring (YAZIO does not show it here)
-          // Keep only the compact equation row below for clarity
-          // Equation row
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: eqStyle.copyWith(color: cs.onSurfaceVariant),
-              children: [
-                const TextSpan(text: 'Objetivo '),
-                TextSpan(
-                    text: _fmtInt(goal),
-                    style: eqStyle.copyWith(
-                        color: cs.onSurface, fontWeight: FontWeight.w600)),
-                TextSpan(text: ' − ', style: opStyle),
-                const TextSpan(text: 'Alimentação '),
-                TextSpan(
-                    text: _fmtInt(food),
-                    style: eqStyle.copyWith(
-                        color: AppTheme.warningAmber,
-                        fontWeight: FontWeight.w700)),
-                TextSpan(text: ' + ', style: opStyle),
-                const TextSpan(text: 'Exercício '),
-                TextSpan(
-                    text: _fmtInt(exercise),
-                    style: eqStyle.copyWith(
-                        color: AppTheme.successGreen,
-                        fontWeight: FontWeight.w700)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Removed unused quick action row
 
   @override
@@ -881,157 +400,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     NutritionStorage.changes.removeListener(_onStorageChanged);
     UserPreferences.changes.removeListener(_onUiPrefsChanged);
     super.dispose();
-  }
-
-  // Removed unused highlight clearer
-
-  IconData _macroIconFor(String label) {
-    final l = label.toLowerCase();
-    if (l.contains('carb') || l.contains('carbo')) return Icons.bakery_dining;
-    if (l.contains('prot')) return Icons.set_meal;
-    if (l.contains('gord') || l.contains('fat')) return Icons.local_pizza;
-    return Icons.circle;
-  }
-
-  Color _macroColorFor(String label) {
-    final l = label.toLowerCase();
-    if (l.contains('carb') || l.contains('carbo')) return AppTheme.warningAmber;
-    if (l.contains('prot')) return AppTheme.successGreen;
-    if (l.contains('gord') || l.contains('fat')) return AppTheme.activeBlue;
-    return AppTheme.textSecondary;
-  }
-
-  Widget _overallMacrosRow(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final double fsLabel = w < 340 ? 10.sp : (w < 380 ? 11.sp : 12.sp);
-    final double fsValue = w < 340 ? 11.sp : (w < 380 ? 12.sp : 13.sp);
-    final double barH = w < 360 ? 3 : 4;
-    final double vspace = w < 360 ? 4 : 6;
-
-    Widget cell(String label, int consumed, int total, Color color) {
-      final ratio = total <= 0 ? 0.0 : (consumed / total).clamp(0.0, 1.0);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w800,
-                  fontSize: fsLabel + 3,
-                ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: vspace),
-          // Custom mini progress bar with a dot (YAZIO-like),
-          // always visible even at 0%.
-          LayoutBuilder(builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final dotSize = (barH + 3).clamp(4, 8).toDouble();
-            final trackColor = Theme.of(context)
-                .colorScheme
-                .outlineVariant
-                .withValues(alpha: 0.35);
-            final progressW = (width * ratio).clamp(0.0, width);
-            final dotX = (width * ratio).clamp(0.0, width - dotSize);
-            return SizedBox(
-              height: barH + 6,
-              child: Stack(
-                children: [
-                  // Track
-                  Positioned.fill(
-                    top: 3,
-                    bottom: 3,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: trackColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  // Fill
-                  Positioned(
-                    left: 0,
-                    top: 3,
-                    bottom: 3,
-                    child: Container(
-                      width: progressW,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  // Dot indicator (always visible)
-                  Positioned(
-                    left: dotX,
-                    top: (barH + 6 - dotSize) / 2,
-                    child: Container(
-                      width: dotSize,
-                      height: dotSize,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.35),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-          SizedBox(height: vspace),
-          Text(
-            '${consumed}/${total} g',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  fontSize: fsValue + 1,
-                ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      );
-    }
-
-    final carbsC =
-        (_dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ??
-            0);
-    final carbsT =
-        (_dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 0);
-    final protC =
-        (_dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0);
-    final protT =
-        (_dailyData["macronutrients"]["proteins"]["total"] as int? ?? 0);
-    final fatC =
-        (_dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0);
-    final fatT = (_dailyData["macronutrients"]["fats"]["total"] as int? ?? 0);
-
-    final double hgap = w < 360 ? 8 : 12;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-            child:
-                cell('Carboidratos', carbsC, carbsT, AppColorsDS.macroCarb)),
-        SizedBox(width: hgap),
-        Expanded(
-            child: cell('Proteína', protC, protT, AppColorsDS.macroProtein)),
-        SizedBox(width: hgap),
-        Expanded(child: cell('Gordura', fatC, fatT, AppColorsDS.macroFat)),
-      ],
-    );
   }
 
   Future<void> _refreshFastingBanner() async {
@@ -1362,398 +730,36 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     );
   }
 
-  Widget _macroSummary(String label, int consumed, int goal) {
-    String _short(String l) {
-      final lc = l.toLowerCase();
-      if (lc.startsWith('carb')) return 'C';
-      if (lc.startsWith('prot')) return 'P';
-      if (lc.startsWith('gord') || lc.startsWith('fat')) return 'G';
-      return l.characters.first;
-    }
+  /// Builds the meal data list for MealCardsWidget
+  List<MealData> _buildMealDataList() {
+    final mealKeys = ['breakfast', 'lunch', 'dinner', 'snack'];
+    final mealTitles = {
+      'breakfast': 'Café da manhã',
+      'lunch': 'Almoço',
+      'dinner': 'Jantar',
+      'snack': 'Lanches',
+    };
 
-    final color = _macroColorFor(label);
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.transparent),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(_macroIconFor(label), color: color, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            _short(label),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            "$consumed/$goal g",
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    return mealKeys.map((mealKey) {
+      final totals = _mealTotals[mealKey]!;
+      final goal = _mealGoals[mealKey]?.kcal ?? 0;
+      final currentKcal = totals['kcal'] ?? 0;
 
-  Widget _buildPerMealProgressSection() {
-    List<Map<String, dynamic>> _mealPreview(String mealKey, int maxItems) {
+      // Filtra e ordena as entradas para esta refeição
       final entries = _todayEntries
           .where((e) => (e['mealTime'] as String?) == mealKey)
           .toList();
-      // Most recent first by createdAt, fallback as is
       entries.sort((a, b) => ((b['createdAt'] as String?) ?? '')
           .compareTo((a['createdAt'] as String?) ?? ''));
-      if (entries.length > maxItems) return entries.sublist(0, maxItems);
-      return entries;
-    }
 
-    Color barColorFor(String meal) {
-      switch (meal) {
-        case 'breakfast':
-          return AppTheme.warningAmber;
-        case 'lunch':
-          return AppTheme.successGreen;
-        case 'dinner':
-          return AppTheme.activeBlue;
-        default:
-          return AppTheme.premiumGold;
-      }
-    }
-
-    void _goToLoggingForMeal(String mealKey) {
-      Navigator.pushNamed(context, AppRoutes.addFoodEntry, arguments: {
-        'mealKey': mealKey,
-        'targetDate': _selectedDate.toIso8601String(),
-      }).then((_) async {
-        // Recarrega sempre ao voltar do registro de alimentos,
-        // independente do valor retornado.
-        await _loadToday();
-        await _loadWeek();
-      });
-    }
-
-    IconData mealIconFor(String mealKey) {
-      switch (mealKey) {
-        case 'breakfast':
-          return MdiIcons.coffee; // café da manhã
-        case 'lunch':
-          return MdiIcons.foodForkDrink; // almoço
-        case 'dinner':
-          return MdiIcons.food; // jantar
-        default:
-          return MdiIcons.cookie; // lanches
-      }
-    }
-
-    Widget row(String title, String mealKey) {
-      final totals = _mealTotals[mealKey]!;
-      final goal = _mealGoals[mealKey]?.kcal ?? 0;
-      // Top bar similar ao app de referência
-
-      final value = totals['kcal'] ?? 0;
-      final ratio = goal <= 0 ? 0.0 : (value / goal).clamp(0.0, 1.0);
-      final color = barColorFor(mealKey);
-      void _openMealDetails() {
-        Navigator.pushNamed(context, AppRoutes.detailedMealTrackingScreen,
-            arguments: {
-              'mealKey': mealKey,
-              'date': _selectedDate.toIso8601String(),
-            });
-      }
-
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: _openMealDetails,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Builder(builder: (context) {
-                    final ic = barColorFor(mealKey);
-                    return Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: AppColorsDS.divider,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        mealIconFor(mealKey),
-                        color: ic,
-                        size: 18,
-                      ),
-                    );
-                  }),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                  Builder(
-                    builder: (context) {
-                      final bool over = goal > 0 && value > goal;
-                      final Color kcalColor = over
-                          ? AppTheme.errorRed
-                          : Theme.of(context).colorScheme.onSurfaceVariant;
-                      return Text(
-                        '$value/$goal kcal',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: kcalColor,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
-                            ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  AddButton(
-                    onPressed: () => _goToLoggingForMeal(mealKey),
-                    size: AppDimensions.addButtonSize,
-                    color: AppTheme.activeBlue,
-                  ),
-                  // Removed trailing chevron to match YAZIO-like layout
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: ratio,
-                  minHeight: 3,
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .outlineVariant
-                      .withValues(alpha: 0.35),
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Compact preview of items for this meal (tap to editar)
-              ...(() {
-                final all = _todayEntries
-                    .where((e) => (e['mealTime'] as String?) == mealKey)
-                    .toList()
-                  ..sort((a, b) => ((b['createdAt'] as String?) ?? '')
-                      .compareTo((a['createdAt'] as String?) ?? ''));
-                final bool expanded = _expandedMealKeys.contains(mealKey);
-                final list = expanded ? all : _mealPreview(mealKey, 2);
-                if (list.isEmpty) return <Widget>[];
-                return [
-                  ...list.map((e) => InkWell(
-                        onTap: () => _editEntry(e),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  (e['name'] as String?) ?? '-',
-                                  style: AppTheme.darkTheme.textTheme.bodySmall
-                                      ?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Text(
-                                '${(e['calories'] as num?)?.toInt() ?? 0} kcal',
-                                style: AppTheme.darkTheme.textTheme.bodySmall
-                                    ?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )),
-                  if (all.length > 2)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          setState(() {
-                            if (expanded) {
-                              _expandedMealKeys.remove(mealKey);
-                            } else {
-                              _expandedMealKeys.add(mealKey);
-                            }
-                          });
-                        },
-                        child: Text(expanded ? 'Mostrar menos' : 'Ver todos'),
-                      ),
-                    ),
-                  const SizedBox(height: 10),
-                ];
-              }()),
-            ],
-          ),
-        ),
+      return MealData(
+        key: mealKey,
+        title: mealTitles[mealKey] ?? mealKey,
+        currentKcal: currentKcal,
+        goalKcal: goal,
+        entries: entries.map((e) => MealEntry.fromMap(e)).toList(),
       );
-    }
-
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'Nutrition', trailingText: 'More'),
-        const SizedBox(height: AppDimensions.sm),
-        NutrizCard(
-          padding: const EdgeInsets.all(AppDimensions.cardPadding),
-          child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // YAZIO-like: no section header; list meals directly
-          const SizedBox(height: 8),
-          row('Café da manhã', 'breakfast'),
-          // subtle divider after breakfast (aligns after the icon)
-          const Divider(
-            height: 24,
-            thickness: 1,
-            color: AppColorsDS.divider,
-            indent: 64,
-          ),
-          row('Almoço', 'lunch'),
-          const Divider(height: 24, thickness: 1, color: AppColorsDS.divider, indent: 64),
-          row('Jantar', 'dinner'),
-          const Divider(height: 24, thickness: 1, color: AppColorsDS.divider, indent: 64),
-          row('Lanches', 'snack'),
-        ],
-      ),
-        ),
-      ],
-    );
-  }
-
-  Widget _macroRow(String label, int value, int goal, Color baseColor) {
-    final ratio = goal <= 0 ? 0.0 : (value / goal).clamp(0.0, 1.0);
-    final bool over = goal > 0 && value > goal;
-    final Color color = over ? AppTheme.errorRed : baseColor;
-    return Row(
-      children: [
-        SizedBox(
-          width: 12.w,
-          child: Text(
-            label,
-            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        SizedBox(width: 2.w),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: ratio,
-              minHeight: 3,
-              backgroundColor: AppTheme.dividerGray.withValues(alpha: 0.35),
-              color: color,
-            ),
-          ),
-        ),
-        SizedBox(width: 2.w),
-        Text(
-          goal > 0 ? '$value/$goal g' : '$value g',
-          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-            color: over ? AppTheme.errorRed : AppTheme.textSecondary,
-            fontWeight: over ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Water cups row (YAZIO-like): 250 ml per cup, clickable
-  Widget _waterCupsRow(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const int cupSize = 250;
-    final int goal = (_dailyData["waterGoalMl"] as int);
-    final int current = (_dailyData["waterMl"] as int);
-    // UIv3: use fixed 8 cups for a consistent look (YAZIO-like)
-    const int totalCups = 8;
-    final int filled = (current / cupSize).floor().clamp(0, totalCups);
-
-    List<Widget> cups = [];
-    for (int i = 0; i < totalCups; i++) {
-      final bool isFilled = i < filled;
-      cups.add(GestureDetector(
-        onTap: () async {
-          // Tapping a cup sets to that count (i+1)
-          final targetMl = (i + 1) * cupSize;
-          final next = await NutritionStorage.addWaterMl(
-              _selectedDate, targetMl - current);
-          if (!mounted) return;
-          setState(() => _dailyData["waterMl"] = next);
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 0.8.w, vertical: 0.4.h),
-          child: Icon(
-            isFilled ? Icons.water_drop : Icons.water_drop_outlined,
-            size: 18,
-            color: isFilled
-                ? cs.primary.withValues(alpha: 0.92)
-                : cs.onSurfaceVariant.withValues(alpha: 0.65),
-          ),
-        ),
-      ));
-    }
-
-    return Row(
-      children: [
-        OutlinedButton(
-          onPressed: _removeWater,
-          style: OutlinedButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(6),
-            side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
-            foregroundColor: cs.primary,
-          ),
-          child: const Icon(Icons.remove, size: 16),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: cups),
-          ),
-        ),
-        OutlinedButton(
-          onPressed: _addWater,
-          style: OutlinedButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(6),
-            side: BorderSide(color: cs.primary.withValues(alpha: 0.5)),
-            foregroundColor: cs.primary,
-          ),
-          child: const Icon(Icons.add, size: 16),
-        ),
-      ],
-    );
+    }).toList();
   }
 
   // _editEntry: ver implementação abaixo (com duplicar e seleção de período)
@@ -1803,27 +809,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final remainingCalories = (_dailyData["totalCalories"] as int? ?? 0) -
-        (_dailyData["consumedCalories"] as int? ?? 0);
-
-    String _fmtDate(DateTime d) {
-      String two(int n) => n < 10 ? '0$n' : '$n';
-      return '${two(d.day)}/${two(d.month)}';
-    }
-
-    void _prevDay() {
-      setState(() =>
-          _selectedDate = _selectedDate.subtract(const Duration(days: 1)));
-      _loadToday();
-      _loadWeek();
-    }
-
-  void _nextDay() {
-    setState(
-        () => _selectedDate = _selectedDate.add(const Duration(days: 1)));
-    _loadToday();
-    _loadWeek();
-  }
 
   // Removed unused local helpers: _goToday, _openSearch
 
@@ -1929,7 +914,36 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
 
                 // Per-meal progress (kcal and macros) — aligns with YAZIO cards
                 SizedBox(height: 1.6.h),
-                _buildPerMealProgressSection(),
+                MealCardsWidget(
+                  meals: _buildMealDataList(),
+                  expandedMealKeys: _expandedMealKeys,
+                  onAddFood: (mealKey) {
+                    Navigator.pushNamed(context, AppRoutes.addFoodEntry, arguments: {
+                      'mealKey': mealKey,
+                      'targetDate': _selectedDate.toIso8601String(),
+                    }).then((_) async {
+                      await _loadToday();
+                      await _loadWeek();
+                    });
+                  },
+                  onMealTap: (mealKey) {
+                    Navigator.pushNamed(context, AppRoutes.detailedMealTrackingScreen,
+                        arguments: {
+                          'mealKey': mealKey,
+                          'date': _selectedDate.toIso8601String(),
+                        });
+                  },
+                  onEntryTap: (entry) => _editEntryById(entry.id),
+                  onToggleExpand: (mealKey, expanded) {
+                    setState(() {
+                      if (expanded) {
+                        _expandedMealKeys.add(mealKey);
+                      } else {
+                        _expandedMealKeys.remove(mealKey);
+                      }
+                    });
+                  },
+                ),
                 SizedBox(height: 1.2.h),
                 // Thin divider between meals and water
                 Padding(
@@ -2279,532 +1293,33 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 ),
                 SizedBox(height: 1.2.h),
 
-                // Exercise / Activities (simple)
-                Builder(builder: (context) {
-                  final cs = Theme.of(context).colorScheme;
-                  final int spent = _dailyData["spentCalories"] as int? ?? 0;
-                  return Container(
-                    margin:
-                        EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 3.2.w, vertical: 1.6.w),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.successGreen.withValues(alpha: 0.10),
-                          cs.surface,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: cs.outlineVariant.withValues(alpha: 0.25)),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Watermark icon
-                        Positioned(
-                          right: 6,
-                          top: 6,
-                          child: Icon(
-                            Icons.local_fire_department,
-                            size: 42,
-                            color: context.semanticColors.success
-                                .withValues(alpha: 0.18),
-                          ),
-                        ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 18,
-                              backgroundColor: context.semanticColors.success
-                                  .withValues(alpha: 0.15),
-                              child: Icon(
-                                Icons.local_fire_department,
-                                color: context.semanticColors.success,
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(width: 3.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text('Atividades',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge
-                                                ?.copyWith(
-                                                  color: cs.onSurface,
-                                                  fontWeight: FontWeight.w700,
-                                                )),
-                                      ),
-                                      if (_exerciseStreak > 0)
-                                        Builder(builder: (context) {
-                                          final w =
-                                              MediaQuery.of(context).size.width;
-                                          final double fs = w < 340
-                                              ? 9.sp
-                                              : (w < 380 ? 10.sp : 11.sp);
-                                          final double padH = w < 360 ? 6 : 8;
-                                          final double padV = w < 360 ? 2 : 3;
-                                          final successColor =
-                                              context.semanticColors.success;
-                                          return Chip(
-                                            label: Text(
-                                                'Streak: ${_exerciseStreak}d'),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            backgroundColor: successColor
-                                                .withValues(alpha: 0.12),
-                                            side: BorderSide(
-                                              color: successColor
-                                                  .withValues(alpha: 0.3),
-                                            ),
-                                            labelPadding: EdgeInsets.symmetric(
-                                                horizontal: padH,
-                                                vertical: padV),
-                                            labelStyle: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall
-                                                ?.copyWith(
-                                                  color: successColor,
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: fs,
-                                                ),
-                                          );
-                                        }),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  FutureBuilder<int>(
-                                    future: UserPreferences.getExerciseGoal(),
-                                    builder: (context, snap) {
-                                      final goal = snap.data ?? 300;
-                                      final ratio = goal > 0
-                                          ? (spent / goal).clamp(0.0, 1.0)
-                                          : 0.0;
-                                      final remain =
-                                          (goal - spent).clamp(0, goal);
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              TweenAnimationBuilder<double>(
-                                                key: ValueKey(spent),
-                                                tween: Tween(
-                                                    begin: 0.0,
-                                                    end: spent.toDouble()),
-                                                duration: _kAnimDuration,
-                                                curve: Curves.linear,
-                                                builder: (context, v, _) {
-                                                  if (spent <= 0) {
-                                                    return Text(
-                                                      '${_fmtInt(0)}/${_fmtInt(goal)} kcal',
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodyMedium
-                                                          ?.copyWith(
-                                                            color: AppTheme
-                                                                .successGreen,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                    );
-                                                  }
-                                                  final p = (v / spent)
-                                                      .clamp(0.0, 1.0);
-                                                  final delayed = p <=
-                                                          _kDelayLeft
-                                                      ? 0.0
-                                                      : (p - _kDelayLeft) /
-                                                          (1.0 - _kDelayLeft);
-                                                  final eased = _kAnimCurve
-                                                      .transform(delayed);
-                                                  final shown =
-                                                      (spent * eased).toInt();
-                                                  return Text(
-                                                    '${_fmtInt(shown)}/${_fmtInt(goal)} kcal',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium
-                                                        ?.copyWith(
-                                                          color: AppTheme
-                                                              .successGreen,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(width: 8),
-                                              if (remain > 0)
-                                                TweenAnimationBuilder<double>(
-                                                  key: ValueKey(remain),
-                                                  tween: Tween(
-                                                      begin: 0.0,
-                                                      end: remain.toDouble()),
-                                                  duration: _kAnimDuration,
-                                                  curve: Curves.linear,
-                                                  builder: (context, v, _) {
-                                                    final p = (v / remain)
-                                                        .clamp(0.0, 1.0);
-                                                    final delayed = p <=
-                                                            _kDelayCenter
-                                                        ? 0.0
-                                                        : (p - _kDelayCenter) /
-                                                            (1.0 -
-                                                                _kDelayCenter);
-                                                    final eased = _kAnimCurve
-                                                        .transform(delayed);
-                                                    final shown =
-                                                        (remain * eased)
-                                                            .toInt();
-                                                    return Text(
-                                                        'Faltam ${_fmtInt(shown)} kcal',
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .bodySmall
-                                                            ?.copyWith(
-                                                              color: cs
-                                                                  .onSurfaceVariant,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ));
-                                                  },
-                                                ),
-                                              const SizedBox(width: 6),
-                                              IconButton(
-                                                tooltip: 'Editar meta',
-                                                icon: Icon(Icons.edit_outlined,
-                                                    size: 18,
-                                                    color: cs.onSurfaceVariant),
-                                                onPressed: () =>
-                                                    _openEditExerciseGoalDialog(
-                                                        goal),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 6),
-                                          ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            child:
-                                                TweenAnimationBuilder<double>(
-                                              key: ValueKey(ratio),
-                                              tween: Tween<double>(
-                                                  begin: 0, end: ratio),
-                                              duration: _kAnimDuration,
-                                              curve: Curves.linear,
-                                              builder: (context, val, _) {
-                                                if (ratio <= 0) {
-                                                  return LinearProgressIndicator(
-                                                    value: 0,
-                                                    minHeight: 6,
-                                                    backgroundColor: cs
-                                                        .outlineVariant
-                                                        .withValues(
-                                                            alpha: 0.25),
-                                                    color:
-                                                        AppTheme.successGreen,
-                                                  );
-                                                }
-                                                final p = (val / ratio)
-                                                    .clamp(0.0, 1.0);
-                                                final eased =
-                                                    _kAnimCurve.transform(p);
-                                                return LinearProgressIndicator(
-                                                  value: eased * ratio,
-                                                  minHeight: 4,
-                                                  backgroundColor: cs
-                                                      .outlineVariant
-                                                      .withValues(alpha: 0.20),
-                                                  color: AppTheme.successGreen,
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          if (_lastExerciseMeta.isNotEmpty)
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.fitness_center,
-                                                  size: 16,
-                                                  color: context
-                                                      .semanticColors.success,
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: Builder(
-                                                      builder: (context) {
-                                                    final dt = DateTime.tryParse(
-                                                            ((_lastExerciseMeta[
-                                                                        'savedAt']
-                                                                    as String?) ??
-                                                                '')) ??
-                                                        DateTime.now();
-                                                    final hh = dt.hour
-                                                        .toString()
-                                                        .padLeft(2, '0');
-                                                    final mm = dt.minute
-                                                        .toString()
-                                                        .padLeft(2, '0');
-                                                    return Text(
-                                                      'Último: ' +
-                                                          ((_lastExerciseMeta[
-                                                                      'name']
-                                                                  as String?) ??
-                                                              '-') +
-                                                          ' · +' +
-                                                          (((_lastExerciseMeta[
-                                                                              'kcal']
-                                                                          as num?)
-                                                                      ?.toInt() ??
-                                                                  0)
-                                                              .toString()) +
-                                                          ' kcal' +
-                                                          ((_lastExerciseMeta[
-                                                                      'minutes'] !=
-                                                                  null)
-                                                              ? ' · ' +
-                                                                  ((_lastExerciseMeta[
-                                                                              'minutes']
-                                                                          as num)
-                                                                      .toInt()
-                                                                      .toString()) +
-                                                                  ' min'
-                                                              : '') +
-                                                          ' · ' +
-                                                          hh +
-                                                          ':' +
-                                                          mm,
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodySmall
-                                                          ?.copyWith(
-                                                            color: cs
-                                                                .onSurfaceVariant,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    );
-                                                  }),
-                                                ),
-                                              ],
-                                            ),
-                                          if (_exerciseLogs.isNotEmpty) ...[
-                                            const SizedBox(height: 6),
-                                            Column(
-                                              children: [
-                                                for (final log in _exerciseLogs)
-                                                  Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .watch_later_outlined,
-                                                        size: 14,
-                                                        color: context
-                                                            .semanticColors
-                                                            .success,
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      Expanded(
-                                                        child: Text(
-                                                          '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min',
-                                                          style: Theme.of(
-                                                                  context)
-                                                              .textTheme
-                                                              .labelSmall
-                                                              ?.copyWith(
-                                                                  color: cs
-                                                                      .onSurfaceVariant),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                              ],
-                                            ),
-                                          ],
-                                          const SizedBox(height: 8),
-                                          if (_exerciseLogs.isNotEmpty) ...[
-                                            Column(
-                                              children: [
-                                                for (final log
-                                                    in (_exerciseExpanded
-                                                        ? _exerciseLogs
-                                                        : _exerciseLogs
-                                                            .take(2)))
-                                                  Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .watch_later_outlined,
-                                                        size: 14,
-                                                        color: context
-                                                            .semanticColors
-                                                            .success,
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      Expanded(
-                                                        child: Builder(
-                                                            builder: (context) {
-                                                          final dt = DateTime.tryParse(
-                                                                  (log['savedAt']
-                                                                          as String?) ??
-                                                                      '') ??
-                                                              DateTime.now();
-                                                          final hh = dt.hour
-                                                              .toString()
-                                                              .padLeft(2, '0');
-                                                          final mm = dt.minute
-                                                              .toString()
-                                                              .padLeft(2, '0');
-                                                          return Text(
-                                                            '${(log['name'] ?? '-')}: +${((log['kcal'] as num?)?.toInt() ?? 0)} kcal · ${((log['minutes'] as num?)?.toInt() ?? 0)} min · $hh:$mm',
-                                                            style: Theme.of(
-                                                                    context)
-                                                                .textTheme
-                                                                .labelSmall
-                                                                ?.copyWith(
-                                                                    color: cs
-                                                                        .onSurfaceVariant),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          );
-                                                        }),
-                                                      ),
-                                                    ],
-                                                  ),
-                                              ],
-                                            ),
-                                            Align(
-                                              alignment: Alignment.centerRight,
-                                              child: TextButton.icon(
-                                                onPressed: () => setState(() =>
-                                                    _exerciseExpanded =
-                                                        !_exerciseExpanded),
-                                                icon: Icon(_exerciseExpanded
-                                                    ? Icons.expand_less
-                                                    : Icons.expand_more),
-                                                label:
-                                                    Builder(builder: (context) {
-                                                  final extra =
-                                                      (_exerciseLogs.length > 2)
-                                                          ? (_exerciseLogs
-                                                                  .length -
-                                                              2)
-                                                          : 0;
-                                                  return Text(_exerciseExpanded
-                                                      ? 'Mostrar menos'
-                                                      : (extra > 0
-                                                          ? 'Ver todos (+$extra)'
-                                                          : 'Ver todos'));
-                                                }),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                          ],
-                                          Builder(builder: (context) {
-                                            final w = MediaQuery.of(context)
-                                                .size
-                                                .width;
-                                            final double space =
-                                                w < 360 ? 6.0 : 8.0;
-                                            final double rspace =
-                                                w < 360 ? 4.0 : 6.0;
-                                            return Wrap(
-                                              spacing: space,
-                                              runSpacing: rspace,
-                                              children: [
-                                                _quickActivityChip(
-                                                    'Caminhada 30m', () {
-                                                  Navigator.pushNamed(context,
-                                                      AppRoutes.exerciseLogging,
-                                                      arguments: {
-                                                        'date': _selectedDate
-                                                            .toIso8601String(),
-                                                        'activityName':
-                                                            'Caminhada',
-                                                        'minutes': 30,
-                                                        'intensity': 1,
-                                                      }).then(
-                                                      (_) => _loadExercise());
-                                                }),
-                                                _quickActivityChip(
-                                                    'Corrida 20m', () {
-                                                  Navigator.pushNamed(context,
-                                                      AppRoutes.exerciseLogging,
-                                                      arguments: {
-                                                        'date': _selectedDate
-                                                            .toIso8601String(),
-                                                        'activityName':
-                                                            'Corrida',
-                                                        'minutes': 20,
-                                                        'intensity': 2,
-                                                      }).then(
-                                                      (_) => _loadExercise());
-                                                }),
-                                                _quickActivityChip('Bike 30m',
-                                                    () {
-                                                  Navigator.pushNamed(context,
-                                                      AppRoutes.exerciseLogging,
-                                                      arguments: {
-                                                        'date': _selectedDate
-                                                            .toIso8601String(),
-                                                        'activityName':
-                                                            'Ciclismo',
-                                                        'minutes': 30,
-                                                        'intensity': 1,
-                                                      }).then(
-                                                      (_) => _loadExercise());
-                                                }),
-                                              ],
-                                            );
-                                          }),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: Material(
-                                color: AppTheme.activeBlue,
-                                shape: const CircleBorder(),
-                                child: InkWell(
-                                  customBorder: const CircleBorder(),
-                                  onTap: _addExercise,
-                                  child: const Icon(Icons.add,
-                                      size: 22, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                // Exercise / Activities Card
+                FutureBuilder<int>(
+                  future: UserPreferences.getExerciseGoal(),
+                  builder: (context, snap) {
+                    final goal = snap.data ?? 300;
+                    return ActivitiesCard(
+                      spentCalories: _dailyData["spentCalories"] as int? ?? 0,
+                      goalCalories: goal,
+                      exerciseStreak: _exerciseStreak,
+                      exerciseLogs: _exerciseLogs.map((log) => ExerciseLog.fromMap(log)).toList(),
+                      lastExercise: _lastExerciseMeta.isNotEmpty
+                          ? ExerciseLog.fromMap(_lastExerciseMeta)
+                          : null,
+                      onAddExercise: _addExercise,
+                      onEditGoal: _openEditExerciseGoalDialog,
+                      onQuickActivity: (activityName, minutes, intensity) {
+                        Navigator.pushNamed(context, AppRoutes.exerciseLogging,
+                            arguments: {
+                              'date': _selectedDate.toIso8601String(),
+                              'activityName': activityName,
+                              'minutes': minutes,
+                              'intensity': intensity,
+                            }).then((_) => _loadExercise());
+                      },
+                    );
+                  },
+                ),
 
                 // Macronutrient progress bars (compact)
                 Builder(builder: (context) {
@@ -3365,7 +1880,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
     }
     if (mounted) {
       setState(() {
-        _weeklyCalories = week;
         _weeklyWater = List<int>.from(_weeklyWater);
         _currentWeek = _computeIsoWeekNumber(_selectedDate);
       });
@@ -3512,268 +2026,6 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Metas de macros atualizadas'),
-                  backgroundColor: AppTheme.successGreen,
-                ),
-              );
-            },
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _openEditMealGoalsDialog() async {
-    final current = await UserPreferences.getMealGoals();
-    if (!mounted) return;
-    final bkcal = TextEditingController(
-        text: (current['breakfast']?.kcal ?? 0).toString());
-    final bcarb = TextEditingController(
-        text: (current['breakfast']?.carbs ?? 0).toString());
-    final bprot = TextEditingController(
-        text: (current['breakfast']?.proteins ?? 0).toString());
-    final bfat = TextEditingController(
-        text: (current['breakfast']?.fats ?? 0).toString());
-
-    final lkcal =
-        TextEditingController(text: (current['lunch']?.kcal ?? 0).toString());
-    final lcarb =
-        TextEditingController(text: (current['lunch']?.carbs ?? 0).toString());
-    final lprot = TextEditingController(
-        text: (current['lunch']?.proteins ?? 0).toString());
-    final lfat =
-        TextEditingController(text: (current['lunch']?.fats ?? 0).toString());
-
-    final dkcal =
-        TextEditingController(text: (current['dinner']?.kcal ?? 0).toString());
-    final dcarb =
-        TextEditingController(text: (current['dinner']?.carbs ?? 0).toString());
-    final dprot = TextEditingController(
-        text: (current['dinner']?.proteins ?? 0).toString());
-    final dfat =
-        TextEditingController(text: (current['dinner']?.fats ?? 0).toString());
-
-    final skcal =
-        TextEditingController(text: (current['snack']?.kcal ?? 0).toString());
-    final scarb =
-        TextEditingController(text: (current['snack']?.carbs ?? 0).toString());
-    final sprot = TextEditingController(
-        text: (current['snack']?.proteins ?? 0).toString());
-    final sfat =
-        TextEditingController(text: (current['snack']?.fats ?? 0).toString());
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackgroundDark,
-        title: Text('Metas por refeição',
-            style: AppTheme.darkTheme.textTheme.titleLarge
-                ?.copyWith(color: AppTheme.textPrimary)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Café da manhã',
-                  style: AppTheme.darkTheme.textTheme.titleSmall
-                      ?.copyWith(color: AppTheme.textPrimary)),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: bkcal,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Kcal'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: bcarb,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Carb (g)'))),
-              ]),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: bprot,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Prot (g)'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: bfat,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Gord (g)'))),
-              ]),
-              SizedBox(height: 12),
-              Text('Almoço',
-                  style: AppTheme.darkTheme.textTheme.titleSmall
-                      ?.copyWith(color: AppTheme.textPrimary)),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: lkcal,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Kcal'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: lcarb,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Carb (g)'))),
-              ]),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: lprot,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Prot (g)'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: lfat,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Gord (g)'))),
-              ]),
-              SizedBox(height: 12),
-              Text('Jantar',
-                  style: AppTheme.darkTheme.textTheme.titleSmall
-                      ?.copyWith(color: AppTheme.textPrimary)),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: dkcal,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Kcal'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: dcarb,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Carb (g)'))),
-              ]),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: dprot,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Prot (g)'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: dfat,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Gord (g)'))),
-              ]),
-              SizedBox(height: 12),
-              Text('Lanches',
-                  style: AppTheme.darkTheme.textTheme.titleSmall
-                      ?.copyWith(color: AppTheme.textPrimary)),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: skcal,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Kcal'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: scarb,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Carb (g)'))),
-              ]),
-              SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                    child: TextField(
-                        controller: sprot,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Prot (g)'))),
-                SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: sfat,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            const InputDecoration(labelText: 'Gord (g)'))),
-              ]),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
-                style: TextStyle(color: AppTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final byMeal = <String, MealGoals>{
-                'breakfast': MealGoals(
-                  kcal: int.tryParse(bkcal.text.trim()) ??
-                      (current['breakfast']?.kcal ?? 0),
-                  carbs: int.tryParse(bcarb.text.trim()) ??
-                      (current['breakfast']?.carbs ?? 0),
-                  proteins: int.tryParse(bprot.text.trim()) ??
-                      (current['breakfast']?.proteins ?? 0),
-                  fats: int.tryParse(bfat.text.trim()) ??
-                      (current['breakfast']?.fats ?? 0),
-                ),
-                'lunch': MealGoals(
-                  kcal: int.tryParse(lkcal.text.trim()) ??
-                      (current['lunch']?.kcal ?? 0),
-                  carbs: int.tryParse(lcarb.text.trim()) ??
-                      (current['lunch']?.carbs ?? 0),
-                  proteins: int.tryParse(lprot.text.trim()) ??
-                      (current['lunch']?.proteins ?? 0),
-                  fats: int.tryParse(lfat.text.trim()) ??
-                      (current['lunch']?.fats ?? 0),
-                ),
-                'dinner': MealGoals(
-                  kcal: int.tryParse(dkcal.text.trim()) ??
-                      (current['dinner']?.kcal ?? 0),
-                  carbs: int.tryParse(dcarb.text.trim()) ??
-                      (current['dinner']?.carbs ?? 0),
-                  proteins: int.tryParse(dprot.text.trim()) ??
-                      (current['dinner']?.proteins ?? 0),
-                  fats: int.tryParse(dfat.text.trim()) ??
-                      (current['dinner']?.fats ?? 0),
-                ),
-                'snack': MealGoals(
-                  kcal: int.tryParse(skcal.text.trim()) ??
-                      (current['snack']?.kcal ?? 0),
-                  carbs: int.tryParse(scarb.text.trim()) ??
-                      (current['snack']?.carbs ?? 0),
-                  proteins: int.tryParse(sprot.text.trim()) ??
-                      (current['snack']?.proteins ?? 0),
-                  fats: int.tryParse(sfat.text.trim()) ??
-                      (current['snack']?.fats ?? 0),
-                ),
-              };
-              await UserPreferences.setMealGoals(byMeal);
-              if (!mounted) return;
-              await _loadMealGoals();
-              _checkMealExceeds();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Metas por refeição atualizadas'),
                   backgroundColor: AppTheme.successGreen,
                 ),
               );
@@ -4210,6 +2462,17 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
         );
       },
     );
+  }
+
+  /// Edita uma entrada por ID (usado pelo MealCardsWidget)
+  void _editEntryById(String id) {
+    final entry = _todayEntries.firstWhere(
+      (e) => e['id']?.toString() == id,
+      orElse: () => <String, dynamic>{},
+    );
+    if (entry.isNotEmpty) {
+      _editEntry(entry);
+    }
   }
 
   void _editEntry(Map<String, dynamic> entry) {

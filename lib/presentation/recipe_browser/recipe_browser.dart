@@ -475,8 +475,7 @@ class _RecipeBrowserState extends State<RecipeBrowser>
         children: [
           Row(
             children: [
-              Icon(Icons.workspace_premium_outlined,
-                  color: semantics.premium),
+              Icon(Icons.workspace_premium_outlined, color: semantics.premium),
               SizedBox(width: 2.w),
               Text(
                 'Receitas PRO liberam mais opções',
@@ -647,5 +646,3 @@ class _RecipeBrowserState extends State<RecipeBrowser>
     );
   }
 }
-
-

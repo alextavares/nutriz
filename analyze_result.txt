@@ -1,0 +1,18 @@
+Analyzing daily_tracking_dashboard.dart...                      
+
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:8:8 - unnecessary_import
+warning - Unused import: './widgets/circular_progress_chart_widget.dart' - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:9:8 - unused_import
+warning - Unused import: 'package:material_design_icons_flutter/material_design_icons_flutter.dart' - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:20:8 - unused_import
+warning - Unused import: 'package:nutriz/l10n/generated/app_localizations.dart' - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:37:8 - unused_import
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:168:43 - unnecessary_non_null_assertion
+warning - The declaration '_localizedTodayLabel' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:182:10 - unused_element
+warning - The declaration '_macroIconFor' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:415:12 - unused_element
+warning - The declaration '_macroColorFor' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:423:9 - unused_element
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1054:40 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1055:42 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1056:40 - unnecessary_non_null_assertion
+warning - The declaration '_addWater' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1930:8 - unused_element
+warning - The declaration '_removeWater' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:2066:8 - unused_element
+warning - The value of the local variable 'added' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:2107:10 - unused_local_variable
+warning - The declaration '_openDayActionsMenu' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:2667:8 - unused_element
+
