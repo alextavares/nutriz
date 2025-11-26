@@ -8,6 +8,7 @@ import '../../core/app_export.dart';
 import '../../theme/design_tokens.dart';
 import './widgets/circular_progress_chart_widget.dart';
 import './widgets/macronutrient_progress_widget.dart';
+import './widgets/summary_card_widget.dart';
 import './widgets/water_tracker_card_v2.dart';
 import './widgets/body_metrics_card.dart';
 import '../../widgets/notes_card.dart';
@@ -1902,64 +1903,20 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                 SizedBox(height: 0.6.h),
 
                 // Summary section (ring + macros)
-                SectionHeader(
-                  title: 'Summary',
-                  trailingText: 'Details',
-                  onTrailingTap: _showCalorieBreakdown,
+                // Summary Card (novo widget extraído)
+                SummaryCardWidget(
+                  consumedCalories: _dailyData["consumedCalories"] as int? ?? 0,
+                  totalCalories: _dailyData["totalCalories"] as int? ?? 2000,
+                  burnedCalories: _dailyData["spentCalories"] as int? ?? 0,
+                  carbsConsumed: _dailyData["macronutrients"]["carbohydrates"]["consumed"] as int? ?? 0,
+                  carbsGoal: _dailyData["macronutrients"]["carbohydrates"]["total"] as int? ?? 250,
+                  proteinConsumed: _dailyData["macronutrients"]["proteins"]["consumed"] as int? ?? 0,
+                  proteinGoal: _dailyData["macronutrients"]["proteins"]["total"] as int? ?? 120,
+                  fatConsumed: _dailyData["macronutrients"]["fats"]["consumed"] as int? ?? 0,
+                  fatGoal: _dailyData["macronutrients"]["fats"]["total"] as int? ?? 80,
+                  onTap: _showCalorieBreakdown,
+                  onDetailsTap: _showCalorieBreakdown,
                 ),
-                // Top dashboard header estilo imagem de referência
-                Builder(builder: (context) {
-                  final cs = Theme.of(context).colorScheme;
-                  return Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.symmetric(horizontal: 4.w),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 1.0.h, horizontal: 4.w),
-                    decoration: BoxDecoration(
-                      // Subtle bluish background like YAZIO
-                      color: AppColorsDS.waterTrackerBackground,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: cs.outlineVariant.withValues(alpha: 0.20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: cs.primary.withValues(alpha: 0.06),
-                          blurRadius: 18,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 8),
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Date navigation moved to top actions row
-                        const SizedBox.shrink(),
-                        // Chip "Semana N" removido (YAZIO-like)
-                        SizedBox(height: 0.2.h),
-                        CircularProgressChartWidget(
-                          consumedCalories: _dailyData["consumedCalories"],
-                          remainingCalories: remainingCalories +
-                              ((_dailyData["spentCalories"] as int?) ?? 0),
-                          spentCalories: _dailyData["spentCalories"],
-                          totalCalories: _dailyData["totalCalories"],
-                          onTap: _showCalorieBreakdown,
-                          waterMl: _dailyData["waterMl"] as int,
-                        ),
-
-                        // Removed equation card under ring to match YAZIO (no text under the ring)
-                        SizedBox(height: 0.8.h),
-                        _overallMacrosRow(context),
-                      ],
-                    ),
-                  );
-                }),
                 // Botão de ações removido para interface mais limpa/semelhante ao YAZIO
 
                 // Removed duplicate calorie budget card to avoid repeating remaining kcal and label

@@ -1,0 +1,128 @@
+Analyzing lib...                                                
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\achievement_toast.dart:72:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\coach_mark.dart:70:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\coach_mark.dart:89:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\multi_action_fab.dart:202:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\pill_button.dart:69:25 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\ripple_button.dart:25:14 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\ripple_button.dart:27:14 - deprecated_member_use
+   info - 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\components\soft_button.dart:42:24 - deprecated_member_use
+   info - 'MaterialState' is deprecated and shouldn't be used. Use WidgetState instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\components\soft_button.dart:43:29 - deprecated_member_use
+   info - 'MaterialState' is deprecated and shouldn't be used. Use WidgetState instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\components\soft_button.dart:44:29 - deprecated_member_use
+   info - 'MaterialState' is deprecated and shouldn't be used. Use WidgetState instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\components\soft_button.dart:45:29 - deprecated_member_use
+   info - 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\components\soft_button.dart:48:24 - deprecated_member_use
+   info - 'MaterialState' is deprecated and shouldn't be used. Use WidgetState instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\components\soft_button.dart:49:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_colors.dart:40:54 - deprecated_member_use
+warning - Unused import: '../../../services/daily_goal_service.dart' - lib\features\dashboard\data\dashboard_repository.dart:3:8 - unused_import
+  error - Target of URI doesn't exist: 'package:nutritracker/features/dashboard/data/dashboard_repository.dart' - lib\features\dashboard\presentation\dashboard_view_model.dart:2:8 - uri_does_not_exist
+  error - Undefined class 'DashboardRepository' - lib\features\dashboard\presentation\dashboard_view_model.dart:5:9 - undefined_class
+  error - The method 'DashboardRepository' isn't defined for the type 'DashboardViewModel' - lib\features\dashboard\presentation\dashboard_view_model.dart:5:43 - undefined_method
+warning - The value of the field '_eatingWindowGoal' isn't used - lib\features\dashboard\presentation\dashboard_view_model.dart:86:12 - unused_field
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\activities_widget.dart:41:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\activities_widget.dart:223:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\daily_note_widget.dart:36:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\dashboard_hero_widget.dart:69:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\dashboard_hero_widget.dart:314:41 - deprecated_member_use
+warning - Unused import: '../../../../core/app_export.dart' - lib\features\dashboard\presentation\widgets\meal_card_widget.dart:3:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\meal_card_widget.dart:45:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\measurements_widget.dart:39:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\measurements_widget.dart:221:33 - deprecated_member_use
+warning - The value of the local variable 'buttonBg' isn't used - lib\features\dashboard\presentation\widgets\water_tracker_widget.dart:27:11 - unused_local_variable
+warning - The value of the local variable 'buttonBorder' isn't used - lib\features\dashboard\presentation\widgets\water_tracker_widget.dart:28:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\water_tracker_widget.dart:37:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\widgets\water_tracker_widget.dart:138:33 - deprecated_member_use
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\ai_coach_chat\ai_coach_chat_screen.dart:11:8 - unnecessary_import
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\ai_food_detection_screen\ai_food_detection_screen.dart:21:8 - unnecessary_import
+warning - Duplicate import - lib\presentation\ai_food_detection_screen\ai_food_detection_screen.dart:27:8 - duplicate_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\ai_food_detection_screen\widgets\camera_controls_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\ai_food_detection_screen\widgets\camera_preview_widget.dart:6:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\ai_food_detection_screen\widgets\food_analysis_results_widget.dart:6:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\ai_food_detection_screen\widgets\image_preview_widget.dart:7:8 - unnecessary_import
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:8:8 - unnecessary_import
+warning - Unused import: 'package:nutriz/l10n/generated/app_localizations.dart' - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:34:8 - unused_import
+warning - The value of the field '_weeklyCalories' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:51:13 - unused_field
+warning - The value of the field '_kDelayRight' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:103:23 - unused_field
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:174:43 - unnecessary_non_null_assertion
+warning - The declaration '_debugBuildInfo' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:390:10 - unused_element
+warning - The declaration '_versionChip' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:437:10 - unused_element
+warning - The declaration '_topActionsRow' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:488:10 - unused_element
+warning - The declaration '_weekAgenda' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:675:10 - unused_element
+warning - The declaration '_calorieBudgetCard' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:753:10 - unused_element
+warning - The value of the local variable 'display' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:763:15 - unused_local_variable
+warning - The value of the local variable 'label' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:764:21 - unused_local_variable
+warning - The value of the local variable 'numStyle' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:766:21 - unused_local_variable
+warning - The declaration '_macroSummary' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1364:10 - unused_element
+warning - The value of the local variable 'cs' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1616:11 - unused_local_variable
+warning - The declaration '_macroRow' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1649:10 - unused_element
+warning - The declaration '_waterCupsRow' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1690:10 - unused_element
+warning - The value of the local variable 'goal' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1693:15 - unused_local_variable
+warning - The declaration '_fmtDate' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1808:12 - unused_element
+warning - The declaration '_prevDay' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1813:10 - unused_element
+warning - The declaration '_nextDay' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1820:8 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:1933:47 - deprecated_member_use
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:2057:40 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:2058:42 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:2059:40 - unnecessary_non_null_assertion
+warning - The declaration '_openEditMealGoalsDialog' isn't referenced - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:3569:8 - unused_element
+warning - The value of the local variable 'added' isn't used - lib\presentation\daily_tracking_dashboard\daily_tracking_dashboard.dart:3872:10 - unused_local_variable
+warning - Unused import: 'package:nutriz/l10n/generated/app_localizations.dart' - lib\presentation\daily_tracking_dashboard\widgets\achievement_badges_widget.dart:3:8 - unused_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\daily_tracking_dashboard\widgets\achievement_badges_widget.dart:7:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\body_metrics_card.dart:75:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\body_metrics_card.dart:234:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\body_metrics_card.dart:289:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\body_metrics_card.dart:291:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\dashboard_ring_v2.dart:134:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\dashboard_ring_v2.dart:193:35 - deprecated_member_use
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\daily_tracking_dashboard\widgets\logged_meals_list_widget.dart:6:8 - unnecessary_import
+warning - The declaration '_askMl' isn't referenced - lib\presentation\daily_tracking_dashboard\widgets\water_tracker_card_v2.dart:378:16 - unused_element
+warning - The declaration '_primaryButton' isn't referenced - lib\presentation\daily_tracking_dashboard\widgets\water_tracker_card_v2.dart:426:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\water_tracker_card_v2.dart:510:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\daily_tracking_dashboard\widgets\water_tracker_card_v2.dart:540:38 - deprecated_member_use
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\daily_tracking_dashboard\widgets\weekly_progress_widget.dart:5:8 - unnecessary_import
+   info - The import of 'package:nutriz/theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\enhanced_dashboard_screen\enhanced_dashboard_screen.dart:5:8 - unnecessary_import
+warning - The value of the local variable 'cs' isn't used - lib\presentation\exercise_logging_screen\exercise_logging_screen.dart:262:11 - unused_local_variable
+warning - The declaration '_macroChipsFor' isn't referenced - lib\presentation\food_logging_screen\widgets\food_search_results_widget.dart:484:16 - unused_element
+warning - The declaration '_calcCaloriesPerGram' isn't referenced - lib\presentation\food_logging_screen\widgets\food_search_results_widget.dart:503:10 - unused_element
+warning - A value for optional parameter 'caloriesPerGram' isn't ever given - lib\presentation\food_logging_screen\widgets\food_search_results_widget.dart:579:10 - unused_element_parameter
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\intermittent_fasting_tracker\intermittent_fasting_tracker.dart:10:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\intermittent_fasting_tracker\widgets\achievements_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\intermittent_fasting_tracker\widgets\fasting_control_button_widget.dart:7:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\intermittent_fasting_tracker\widgets\fasting_method_selector_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\intermittent_fasting_tracker\widgets\notification_settings_widget.dart:6:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\intermittent_fasting_tracker\widgets\weekly_calendar_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\login_screen\widgets\app_logo_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\login_screen\widgets\login_form_widget.dart:6:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\login_screen\widgets\social_login_widget.dart:5:8 - unnecessary_import
+warning - The declaration 'toARGB32' isn't referenced - lib\presentation\notes_screen\notes_screen.dart:708:7 - unused_element
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\presentation\notes_screen\notes_screen.dart:708:21 - deprecated_member_use
+warning - Unused import: '../../core/app_export.dart' - lib\presentation\nutrition_details_screen\nutrition_details_screen.dart:3:8 - unused_import
+warning - Unused import: '../../theme/app_theme.dart' - lib\presentation\nutrition_details_screen\nutrition_details_screen.dart:4:8 - unused_import
+warning - The value of the local variable 'colors' isn't used - lib\presentation\nutrition_details_screen\nutrition_details_screen.dart:30:11 - unused_local_variable
+warning - Unused import: '../../services/user_preferences.dart' - lib\presentation\pro_subscription\pro_subscription_screen.dart:6:8 - unused_import
+warning - A value for optional parameter 'oldPrice' isn't ever given - lib\presentation\pro_subscription\pro_subscription_screen.dart:448:10 - unused_element_parameter
+warning - A value for optional parameter 'badge' isn't ever given - lib\presentation\pro_subscription\pro_subscription_screen.dart:449:10 - unused_element_parameter
+warning - The declaration '_ProPlanCard' isn't referenced - lib\presentation\pro_subscription\pro_subscription_screen.dart:473:7 - unused_element
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\profile_screen\profile_screen.dart:8:8 - unnecessary_import
+warning - The value of the local variable 't' isn't used - lib\presentation\profile_screen\profile_screen.dart:2103:11 - unused_local_variable
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\progress_overview\progress_overview.dart:11:8 - unnecessary_import
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\recipe_browser\recipe_browser.dart:6:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\recipe_browser\widgets\empty_state_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\recipe_browser\widgets\filter_chip_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\recipe_browser\widgets\quick_actions_bottom_sheet_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\recipe_browser\widgets\recipe_card_widget.dart:6:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\recipe_browser\widgets\recipe_grid_widget.dart:5:8 - unnecessary_import
+   info - The import of '../../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../../core/app_export.dart' - lib\presentation\recipe_browser\widgets\search_bar_widget.dart:5:8 - unnecessary_import
+warning - The value of the field '_keyOnboardingCompleted' isn't used - lib\presentation\splash_screen\widgets\initialization_service.dart:7:23 - unused_field
+   info - The import of '../../theme/design_tokens.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\streaks\streak_overview_screen.dart:7:8 - unnecessary_import
+   info - The import of '../../theme/app_theme.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\weekly_progress_screen\weekly_progress_screen.dart:12:8 - unnecessary_import
+   info - The import of '../../routes/app_routes.dart' is unnecessary because all of the used elements are also provided by the import of '../../core/app_export.dart' - lib\presentation\weekly_progress_screen\weekly_progress_screen.dart:17:8 - unnecessary_import
+warning - The value of the local variable 'ml' isn't used - lib\presentation\weekly_progress_screen\weekly_progress_screen.dart:1405:33 - unused_local_variable
+warning - The value of the local variable 'dedupItems' isn't used - lib\services\fooddb\food_provider.dart:110:13 - unused_local_variable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\services\purchase_service.dart:107:56 - unnecessary_null_comparison
+warning - The '!' will have no effect because the receiver can't be null - lib\services\purchase_service.dart:108:62 - unnecessary_non_null_assertion
+warning - The operand can't be 'null', so the condition is always 'true' - lib\services\purchase_service.dart:198:56 - unnecessary_null_comparison
+warning - The '!' will have no effect because the receiver can't be null - lib\services\purchase_service.dart:199:62 - unnecessary_non_null_assertion
+warning - The operand can't be 'null', so the condition is always 'true' - lib\services\purchase_service.dart:250:56 - unnecessary_null_comparison
+warning - The '!' will have no effect because the receiver can't be null - lib\services\purchase_service.dart:251:62 - unnecessary_non_null_assertion
+
