@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sizer/sizer.dart';
+import '../../../../theme/design_tokens.dart';
 import '../../../../presentation/nutrition_details_screen/nutrition_details_screen.dart';
 
 class DashboardHeroWidget extends StatelessWidget {
@@ -12,7 +12,6 @@ class DashboardHeroWidget extends StatelessWidget {
   final int proteinGoal;
   final int fatConsumed;
   final int fatGoal;
-  // Fasting props
   final bool isFasting;
   final bool isEatingWindow;
   final String? fastingStatus;
@@ -22,7 +21,7 @@ class DashboardHeroWidget extends StatelessWidget {
   final VoidCallback? onCardTap;
 
   const DashboardHeroWidget({
-    Key? key,
+    super.key,
     required this.caloriesConsumed,
     required this.caloriesGoal,
     this.caloriesBurned = 0,
@@ -39,180 +38,118 @@ class DashboardHeroWidget extends StatelessWidget {
     this.fastingGoal,
     this.onFastingTap,
     this.onCardTap,
-  }) : super(key: key);
+  });
+
+  // Cores dos macros (estilo Yazio)
+  static const Color _carbsColor = Color(0xFFFFB74D);  // Laranja
+  static const Color _proteinColor = Color(0xFF81C784); // Verde
+  static const Color _fatColor = Color(0xFFE57373);     // Vermelho
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    
     final remaining = caloriesGoal - caloriesConsumed + caloriesBurned;
     final progress = caloriesGoal > 0 
         ? (caloriesConsumed / caloriesGoal).clamp(0.0, 1.0) 
         : 0.0;
 
-    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final textPrimary = isDark ? Colors.white : const Color(0xFF2D3142);
-    final textSecondary = isDark ? Colors.white60 : const Color(0xFF9E9E9E);
-    final accentGreen = const Color(0xFF00BFA5);
-    final progressBg = isDark ? const Color(0xFF3A3A3A) : const Color(0xFFEEEEEE);
+    final progressTrackColor = isDark 
+        ? colors.surfaceContainerHighest 
+        : const Color(0xFFE8E8E8);
+    
     final progressColor = remaining < 0 
-        ? const Color(0xFFFF5252) 
-        : const Color(0xFF8B80F9);
+        ? colors.error
+        : colors.primary;
 
     final showFastingBanner = isFasting || isEatingWindow;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      child: Material(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        elevation: isDark ? 0 : 2,
-        shadowColor: Colors.black.withOpacity(0.08),
-        child: Column(
-          children: [
-            // Main Content - Clicável
-            InkWell(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        boxShadow: isDark ? null : const [AppShadows.card],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Conteúdo principal - Clicável
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
               onTap: () => _openNutritionDetails(context),
               borderRadius: showFastingBanner 
-                  ? const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                    )
-                  : BorderRadius.circular(16),
+                  ? const BorderRadius.vertical(top: Radius.circular(AppRadii.lg))
+                  : BorderRadius.circular(AppRadii.lg),
               child: Padding(
-                padding: EdgeInsets.all(4.w),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Resumo',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w700,
-                            color: textPrimary,
-                          ),
-                        ),
-                        Text(
-                          'Detalhes',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            color: accentGreen,
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    SizedBox(height: 2.h),
-                    
-                    // Main Circle Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildSideStat(
-                          value: '$caloriesConsumed',
-                          label: 'Comido',
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                        ),
-                        
-                        // Central Circle
-                        SizedBox(
-                          width: 28.w,
-                          height: 28.w,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 28.w,
-                                height: 28.w,
-                                child: CircularProgressIndicator(
-                                  value: 1.0,
-                                  strokeWidth: 6,
-                                  backgroundColor: Colors.transparent,
-                                  valueColor: AlwaysStoppedAnimation<Color>(progressBg),
-                                  strokeCap: StrokeCap.round,
-                                ),
-                              ),
-                              SizedBox(
-                                width: 28.w,
-                                height: 28.w,
-                                child: CircularProgressIndicator(
-                                  value: progress,
-                                  strokeWidth: 6,
-                                  backgroundColor: Colors.transparent,
-                                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                                  strokeCap: StrokeCap.round,
-                                ),
-                              ),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '$remaining',
-                                    style: TextStyle(
-                                      fontSize: 20.sp,
-                                      fontWeight: FontWeight.w800,
-                                      color: textPrimary,
-                                      height: 1,
-                                    ),
-                                  ),
-                                  SizedBox(height: 0.2.h),
-                                  Text(
-                                    'Restantes',
-                                    style: TextStyle(
-                                      fontSize: 8.sp,
-                                      color: textSecondary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        _buildSideStat(
-                          value: '$caloriesBurned',
-                          label: 'Queimado',
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                        ),
-                      ],
-                    ),
-                    
-                    SizedBox(height: 2.h),
-                    
-                    // Macros Row
+                    // Linha principal: Comido - Círculo - Queimado
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildMacroItemWithDot(
-                          label: 'Carboidratos',
-                          current: carbsConsumed,
-                          goal: carbsGoal,
-                          color: const Color(0xFFFFA726),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
+                        // Comido
+                        _buildSideStat(
+                          context: context,
+                          value: caloriesConsumed,
+                          label: 'Comido',
                         ),
-                        _buildMacroItemWithDot(
-                          label: 'Proteína',
-                          current: proteinConsumed,
-                          goal: proteinGoal,
-                          color: const Color(0xFF66BB6A),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
+                        
+                        // Círculo central
+                        _buildCaloriesCircle(
+                          context: context,
+                          remaining: remaining,
+                          progress: progress,
+                          progressColor: progressColor,
+                          trackColor: progressTrackColor,
                         ),
-                        _buildMacroItemWithDot(
-                          label: 'Gordura',
-                          current: fatConsumed,
-                          goal: fatGoal,
-                          color: const Color(0xFFEF5350),
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
+                        
+                        // Queimado
+                        _buildSideStat(
+                          context: context,
+                          value: caloriesBurned,
+                          label: 'Queimado',
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: AppSpacing.xl),
+                    
+                    // Macros com barras de progresso (estilo Yazio)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildMacroBar(
+                            context: context,
+                            label: 'Carbs',
+                            current: carbsConsumed,
+                            goal: carbsGoal,
+                            color: _carbsColor,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _buildMacroBar(
+                            context: context,
+                            label: 'Proteína',
+                            current: proteinConsumed,
+                            goal: proteinGoal,
+                            color: _proteinColor,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _buildMacroBar(
+                            context: context,
+                            label: 'Gordura',
+                            current: fatConsumed,
+                            goal: fatGoal,
+                            color: _fatColor,
+                          ),
                         ),
                       ],
                     ),
@@ -220,11 +157,11 @@ class DashboardHeroWidget extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // Fasting Banner
-            if (showFastingBanner) _buildFastingBanner(context),
-          ],
-        ),
+          ),
+          
+          // Banner de Jejum
+          if (showFastingBanner) _buildFastingBanner(context),
+        ],
       ),
     );
   }
@@ -244,6 +181,167 @@ class DashboardHeroWidget extends StatelessWidget {
           fatGoal: fatGoal,
         ),
       ),
+    );
+  }
+
+  Widget _buildCaloriesCircle({
+    required BuildContext context,
+    required int remaining,
+    required double progress,
+    required Color progressColor,
+    required Color trackColor,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    
+    return SizedBox(
+      width: 120,
+      height: 120,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Track (fundo)
+          SizedBox(
+            width: 120,
+            height: 120,
+            child: CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: 8,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation<Color>(trackColor),
+              strokeCap: StrokeCap.round,
+            ),
+          ),
+          // Progresso
+          SizedBox(
+            width: 120,
+            height: 120,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 8,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              strokeCap: StrokeCap.round,
+            ),
+          ),
+          // Texto central
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$remaining',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Restantes',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSideStat({
+    required BuildContext context,
+    required int value,
+    required String label,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$value',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: colors.onSurface,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMacroBar({
+    required BuildContext context,
+    required String label,
+    required int current,
+    required int goal,
+    required Color color,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+    final trackColor = isDark 
+        ? colors.surfaceContainerHighest 
+        : const Color(0xFFEEEEEE);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Label e valores
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+            Text(
+              '$current/${goal}g',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Barra de progresso
+        Container(
+          height: 6,
+          decoration: BoxDecoration(
+            color: trackColor,
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: progress,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -268,56 +366,56 @@ class DashboardHeroWidget extends StatelessWidget {
     if (fastingElapsed != null) {
       final hours = fastingElapsed!.inHours;
       final minutes = fastingElapsed!.inMinutes % 60;
-      if (hours > 0) {
-        timeText = '${hours}h ${minutes}m';
-      } else {
-        timeText = '${minutes}m';
-      }
+      timeText = hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
     }
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onFastingTap,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(AppRadii.lg),
         ),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 1.2.h, horizontal: 4.w),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.sm,
+            horizontal: AppSpacing.lg,
+          ),
           decoration: BoxDecoration(
             color: bannerBg,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(AppRadii.lg),
             ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(emoji, style: const TextStyle(fontSize: 16)),
-              SizedBox(width: 2.w),
+              const SizedBox(width: 8),
               Text(
                 'Agora: $statusText',
-                style: TextStyle(
-                  fontSize: 11.sp,
+                style: const TextStyle(
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
               if (timeText.isNotEmpty) ...[
-                SizedBox(width: 1.5.w),
+                const SizedBox(width: 8),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.3.h),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     timeText,
-                    style: TextStyle(
-                      fontSize: 9.sp,
+                    style: const TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -328,74 +426,6 @@ class DashboardHeroWidget extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSideStat({
-    required String value,
-    required String label,
-    required Color textPrimary,
-    required Color textSecondary,
-  }) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w700,
-            color: textPrimary,
-          ),
-        ),
-        SizedBox(height: 0.3.h),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 9.sp,
-            color: textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMacroItemWithDot({
-    required String label,
-    required int current,
-    required int goal,
-    required Color color,
-    required Color textPrimary,
-    required Color textSecondary,
-  }) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 9.sp,
-            fontWeight: FontWeight.w500,
-            color: textSecondary,
-          ),
-        ),
-        SizedBox(height: 0.8.h),
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        SizedBox(height: 0.8.h),
-        Text(
-          '$current / ${goal}g',
-          style: TextStyle(
-            fontSize: 10.sp,
-            fontWeight: FontWeight.w600,
-            color: textPrimary,
-          ),
-        ),
-      ],
     );
   }
 }
