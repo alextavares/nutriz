@@ -1528,6 +1528,7 @@ class _DailyTrackingDashboardState extends State<DailyTrackingDashboard> {
                   AddButton(
                     onPressed: () => _goToLoggingForMeal(mealKey),
                     size: AppDimensions.addButtonSize,
+                    color: AppTheme.activeBlue,
                   ),
                   // Removed trailing chevron to match YAZIO-like layout
                 ],

@@ -4,11 +4,13 @@ import '../app_export.dart';
 class AddButton extends StatelessWidget {
   final VoidCallback onPressed;
   final double? size;
+  final Color? color;
 
   const AddButton({
     super.key,
     required this.onPressed,
     this.size,
+    this.color,
   });
 
   @override
@@ -17,8 +19,8 @@ class AddButton extends StatelessWidget {
     return Container(
       width: buttonSize,
       height: buttonSize,
-      decoration: const BoxDecoration(
-        color: AppColorsDS.addButtonBackground,
+      decoration: BoxDecoration(
+        color: color ?? AppColorsDS.addButtonBackground,
         shape: BoxShape.circle,
       ),
       child: IconButton(

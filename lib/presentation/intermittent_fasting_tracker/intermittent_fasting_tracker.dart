@@ -1331,10 +1331,12 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                           context, '/recipe-browser');
                       break;
                     case 3:
-                      // Navigate to profile
+                      Navigator.pushReplacementNamed(
+                          context, AppRoutes.aiCoachChat);
                       break;
                     case 4:
-                      // Navigate to PRO
+                      Navigator.pushReplacementNamed(
+                          context, AppRoutes.profile);
                       break;
                   }
                 },
@@ -1356,14 +1358,14 @@ class _IntermittentFastingTrackerState extends State<IntermittentFastingTracker>
                       text: AppLocalizations.of(context)!.navRecipes),
                   Tab(
                       icon: const CustomIconWidget(
+                          iconName: 'chat_bubble_outline',
+                          size: 20),
+                      text: AppLocalizations.of(context)!.navCoach),
+                  Tab(
+                      icon: const CustomIconWidget(
                           iconName: 'person',
                           size: 20),
                       text: AppLocalizations.of(context)!.navProfile),
-                  Tab(
-                      icon: const CustomIconWidget(
-                          iconName: 'star',
-                          size: 20),
-                      text: 'PRO'),
                 ])));
   }
 }
